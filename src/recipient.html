@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Open AR Surprise</title>
+  <link rel="stylesheet" href="./css/shared.css" />
+  <link rel="stylesheet" href="./css/recipient.css" />
+</head>
+<body>
+  <main class="recipient-shell">
+    <section id="preview-banner" class="card-panel preview-banner hidden">
+      <span class="eyebrow">Buyer QA mode</span>
+      <h2>Recipient experience preview</h2>
+      <p>You are viewing the real recipient screen in preview mode. The location gate is skipped so the buyer can review the full flow before sharing.</p>
+    </section>
+
+    <section class="card-panel hero-panel">
+      <span class="eyebrow">AR surprise</span>
+      <h1 id="intro-title">A surprise is waiting</h1>
+      <p id="intro-subtitle">Open the link near the right place.</p>
+    </section>
+
+    <section id="recipient-card" class="card-panel recipient-card">
+      <div class="recipient-block">
+        <div class="mini-label">From</div>
+        <div id="sender-line" class="big-line">—</div>
+      </div>
+      <div class="recipient-block">
+        <div class="mini-label">Message</div>
+        <div id="message-line" class="message-line">—</div>
+      </div>
+      <button id="begin-recipient" class="btn btn-primary">Start</button>
+    </section>
+
+    <section id="permission-panel" class="card-panel hidden">
+      <h2>Before you open it</h2>
+      <ul class="plain-list">
+        <li>Allow location to unlock the surprise.</li>
+        <li>Allow camera to view it in AR.</li>
+        <li>WebXR support is required for the full AR mode.</li>
+      </ul>
+      <div class="inline-actions">
+        <button id="check-distance" class="btn btn-primary">Check spot</button>
+      </div>
+      <div id="support-status" class="status-box muted"></div>
+    </section>
+
+    <section id="distance-panel" class="card-panel hidden">
+      <h2>Unlock status</h2>
+      <div id="distance-state" class="distance-state state-far">Not checked</div>
+      <div id="distance-copy" class="status-box muted">Move closer to unlock.</div>
+      <div class="inline-actions">
+        <button id="refresh-distance" class="btn btn-secondary">Check again</button>
+        <button id="launch-ar" class="btn btn-primary" disabled>Open AR stage</button>
+      </div>
+    </section>
+
+    <section id="thanks-panel" class="card-panel thanks-panel hidden">
+      <div class="thanks-head">
+        <div>
+          <h2>Send a thank-you</h2>
+          <p>Pick a ready-made reply, edit it if you want, then copy or share it with the sender.</p>
+        </div>
+      </div>
+      <div id="thanks-templates" class="thanks-template-list"></div>
+      <label>
+        <span>Your thank-you message</span>
+        <textarea id="thanks-message" rows="4" placeholder="Choose a template to start."></textarea>
+      </label>
+      <div class="inline-actions">
+        <button id="copy-thanks" class="btn btn-primary" type="button">Copy thanks</button>
+        <button id="share-thanks" class="btn btn-secondary" type="button">Share</button>
+      </div>
+      <div id="thanks-status" class="status-box muted">Choose a template and send your thanks back to the sender.</div>
+    </section>
+
+    <section id="ar-panel" class="card-panel hidden">
+      <div class="ar-toolbar">
+        <button id="ar-enter" class="btn btn-primary">Enter AR</button>
+        <a id="cta-button" class="btn btn-secondary hidden" href="#" target="_blank" rel="noreferrer">Open link</a>
+      </div>
+      <div id="ar-stage" class="ar-stage"></div>
+      <div id="xr-overlay" class="xr-overlay hidden">
+        <div class="gesture-hint">Long-press the card edge to activate hold mode. Drag to rotate / raise / lower. Pinch to resize.</div>
+        <div class="xr-runtime">
+          <section class="xr-group">
+            <div class="xr-group__title">Position</div>
+            <div class="xr-group__grid">
+              <button data-action="raise" class="icon-btn">Height +</button>
+              <button data-action="lower" class="icon-btn">Height −</button>
+              <button data-action="closer" class="icon-btn">Near</button>
+              <button data-action="farther" class="icon-btn">Far</button>
+            </div>
+          </section>
+          <section class="xr-group">
+            <div class="xr-group__title">Rotate</div>
+            <div class="xr-group__grid">
+              <button data-action="left" class="icon-btn">Rotate L</button>
+              <button data-action="right" class="icon-btn">Rotate R</button>
+            </div>
+          </section>
+          <section class="xr-group">
+            <div class="xr-group__title">Tilt</div>
+            <div class="xr-group__grid">
+              <button data-action="tilt-up" class="icon-btn">Tilt Up</button>
+              <button data-action="tilt-down" class="icon-btn">Tilt Down</button>
+            </div>
+          </section>
+          <section class="xr-group">
+            <div class="xr-group__title">Scale & playback</div>
+            <div class="xr-group__grid">
+              <button data-action="smaller" class="icon-btn">Small</button>
+              <button data-action="bigger" class="icon-btn">Large</button>
+              <button data-action="reset" class="icon-btn">Reset</button>
+              <button data-action="replay" class="icon-btn">Replay</button>
+            </div>
+          </section>
+        </div>
+      </div>
+      <div id="ar-status" class="status-box muted">Ready for WebXR.</div>
+      <button id="replay-sequence" class="btn btn-secondary replay-btn" type="button">Replay sequence</button>
+      <video id="gift-video" class="hidden" playsinline preload="auto" webkit-playsinline></video>
+    </section>
+
+    <section id="expired-panel" class="card-panel hidden">
+      <h2>This surprise is unavailable</h2>
+      <div id="expired-copy" class="status-box muted">This link may be expired or invalid.</div>
+    </section>
+  </main>
+
+  <section id="unlock-popup" class="unlock-popup hidden">
+    <div class="unlock-popup__content">
+      <div class="unlock-popup__eyebrow">Unlocked</div>
+      <div id="unlock-popup-copy" class="unlock-popup__copy">You are inside the unlock zone.</div>
+    </div>
+    <div class="inline-actions">
+      <button id="unlock-popup-open" class="btn btn-primary" type="button">Open now</button>
+      <button id="unlock-popup-close" class="btn btn-secondary" type="button">Later</button>
+    </div>
+  </section>
+
+  <script type="module" src="./js/recipient/app.js"></script>
+</body>
+</html>
