@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>AR Surprise Admin</title>
+  <link rel="stylesheet" href="./css/shared.css" />
+  <link rel="stylesheet" href="./css/admin.css" />
+</head>
+<body>
+  <main class="admin-shell">
+    <section class="card-panel admin-auth">
+      <span class="eyebrow">Hidden admin</span>
+      <h1>Authoring access</h1>
+      <p>Supabase URL, anon key, Google Maps API key, and Map ID are expected from Cloudflare Pages runtime secrets.</p>
+      <div class="status-box muted runtime-note">Required Cloudflare secrets: <strong>SUPABASE_URL</strong>, <strong>SUPABASE_ANON_KEY</strong>, <strong>GOOGLE_MAPS_API_KEY</strong>, <strong>GOOGLE_MAPS_MAP_ID</strong>.</div>
+      <form id="admin-login" class="stack-form compact-auth">
+        <label>
+          <span>Email</span>
+          <input id="admin-email" type="email" placeholder="admin@example.com" />
+        </label>
+        <label>
+          <span>Password</span>
+          <input id="admin-password" type="password" placeholder="••••••••" />
+        </label>
+        <div class="inline-actions">
+          <button class="btn btn-primary" type="submit">Sign in</button>
+          <button id="demo-admin" class="btn btn-secondary" type="button">Demo mode</button>
+        </div>
+      </form>
+      <div id="admin-auth-status" class="status-box muted">Waiting for Cloudflare runtime config.</div>
+    </section>
+
+    <section id="admin-editor" class="card-panel hidden">
+      <div class="section-head">
+        <span class="step">Edit</span>
+        <div>
+          <h2>Gift editor</h2>
+          <p>Front, back, video, style, map point, and visibility tuning.</p>
+        </div>
+      </div>
+      <div class="field-grid two-up">
+        <label><span>Gift slug</span><input id="admin-slug" type="text" placeholder="gift-abc123" /></label>
+        <label><span>Template</span><select id="admin-template"></select></label>
+      </div>
+      <div class="field-grid two-up">
+        <label><span>Status</span><select id="admin-status"><option value="active">Active</option><option value="disabled">Disabled</option><option value="expired">Expired</option></select></label>
+        <label><span>Expires at</span><input id="admin-expires-at" type="datetime-local" /></label>
+      </div>
+      <label><span>Front text</span><textarea id="admin-front-text" rows="2"></textarea></label>
+      <div class="field-grid two-up">
+        <label><span>Front image</span><input id="admin-front-photo" type="file" accept="image/*" /></label>
+        <label><span>Back image</span><input id="admin-back-photo" type="file" accept="image/*" /></label>
+      </div>
+      <label><span>Back text</span><textarea id="admin-back-text" rows="3"></textarea></label>
+      <div class="field-grid two-up">
+        <label><span>Front color</span><input id="admin-front-color" type="color" /></label>
+        <label><span>Accent color</span><input id="admin-accent-color" type="color" /></label>
+      </div>
+
+      <div class="section-head nested-head">
+        <span class="step">Map</span>
+        <div>
+          <h2>Placement point</h2>
+          <p>Search, click, or drag the pin to place the card remotely.</p>
+        </div>
+      </div>
+      <div class="field-grid map-search-grid">
+        <label><span>Place search</span><input id="admin-map-search" type="text" placeholder="Search address or place" /></label>
+        <div class="inline-actions end-align"><button id="admin-map-search-btn" class="btn btn-secondary" type="button">Search</button></div>
+      </div>
+      <div id="admin-map" class="map-box"></div>
+      <div id="admin-map-status" class="status-box muted">Google Maps will load from Cloudflare runtime config.</div>
+      <div class="field-grid three-up compact-grid">
+        <label><span>Lat</span><input id="admin-lat" type="number" step="0.000001" /></label>
+        <label><span>Lng</span><input id="admin-lng" type="number" step="0.000001" /></label>
+        <label><span>Radius</span><select id="admin-radius"><option>30</option><option selected>50</option><option>100</option></select></label>
+      </div>
+      <div class="field-grid two-up compact-grid">
+        <label><span>Card height</span><input id="admin-spawn-height" type="number" min="0.4" max="5" step="0.1" value="1.6" /></label>
+        <label><span>Forward offset</span><input id="admin-forward-distance" type="number" min="0.5" max="8" step="0.1" value="1.6" /></label>
+      </div>
+      <div class="status-box muted">Visibility-first defaults help the recipient raise the card above crowds and move it forward when buildings, walls, or furniture block the view.</div>
+
+      <div class="field-grid three-up compact-grid">
+        <label><span>Video URL</span><input id="admin-video-url" type="url" /></label>
+        <label><span>Start sec</span><input id="admin-video-start" type="number" min="0" step="1" /></label>
+        <label><span>End sec</span><input id="admin-video-end" type="number" min="0" step="1" /></label>
+      </div>
+      <label><span>CTA link</span><input id="admin-cta-link" type="url" /></label>
+      <label class="toggle-row"><input id="admin-banner" type="checkbox" /><span>Banner finale</span></label>
+      <div class="inline-actions">
+        <button id="admin-load" class="btn btn-secondary" type="button">Load</button>
+        <button id="admin-save" class="btn btn-primary" type="button">Save</button>
+      </div>
+      <div id="admin-save-status" class="status-box muted">Signed in editors can update gifts here.</div>
+    </section>
+
+    <section id="recent-gifts" class="card-panel hidden">
+      <div class="section-head">
+        <span class="step">List</span>
+        <div>
+          <h2>Recent gifts</h2>
+          <p>Quick access to saved slugs.</p>
+        </div>
+      </div>
+      <div id="gift-list" class="gift-list"></div>
+    </section>
+  </main>
+
+  <script type="module" src="./js/admin/app.js"></script>
+</body>
+</html>
