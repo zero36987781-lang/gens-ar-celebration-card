@@ -1,0 +1,52 @@
+.recipient-shell { max-width: 760px; margin: 0 auto; padding: 22px 16px 120px; display:flex; flex-direction:column; gap:16px; }
+.hero-panel, .recipient-card { text-align: center; }
+.preview-banner { border-color: rgba(124,58,237,0.35); background: linear-gradient(180deg, rgba(124,58,237,0.16), rgba(17,25,54,0.38)); }
+.recipient-block { margin-bottom: 18px; }
+.mini-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+.big-line { font-size: 24px; font-weight: 800; }
+.message-line { font-size: 16px; line-height: 1.6; }
+.distance-state { min-height: 58px; display:grid; place-items:center; border-radius: 16px; font-size: 22px; font-weight: 800; margin-bottom: 12px; }
+.state-far { background: rgba(239,68,68,0.15); color: #ffd4da; }
+.state-near { background: rgba(245,158,11,0.15); color: #fff0c0; }
+.state-ready { background: rgba(22,163,74,0.16); color: #dcfce7; }
+.state-preview { background: rgba(124,58,237,0.18); color: #efe7ff; }
+.ar-toolbar { display:flex; gap:10px; flex-wrap:wrap; margin-bottom: 12px; }
+.xr-overlay { margin-top: 12px; }
+.xr-runtime { display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:8px; }
+.icon-btn { min-height: 44px; border:0; border-radius: 12px; background: rgba(255,255,255,0.08); color: var(--text); font-size: 14px; font-weight: 700; }
+.ar-stage { min-height: 420px; border-radius: 18px; overflow: hidden; background: radial-gradient(circle at top, rgba(124,58,237,0.22), rgba(0,0,0,0.4)); border: 1px solid rgba(255,255,255,0.08); }
+.ar-stage canvas { display:block; width:100% !important; height:420px !important; }
+.unlock-popup { position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 30; max-width: 720px; margin: 0 auto; border-radius: 20px; border:1px solid rgba(255,255,255,0.08); background: linear-gradient(180deg, rgba(17,25,54,0.94), rgba(11,16,32,0.94)); box-shadow: 0 18px 60px rgba(0,0,0,0.35); padding: 16px; display:flex; justify-content:space-between; gap:14px; align-items:center; backdrop-filter: blur(16px); }
+.unlock-popup__eyebrow { display:inline-flex; padding:6px 10px; border-radius:999px; background: rgba(22,163,74,0.18); color:#dcfce7; font-size:12px; font-weight:700; margin-bottom:8px; }
+.unlock-popup__copy { color: var(--text); font-weight: 600; line-height: 1.5; }
+.unlock-popup .inline-actions { flex-shrink: 0; }
+.thanks-panel { border-color: rgba(124,58,237,0.18); }
+.thanks-head { margin-bottom: 14px; }
+.thanks-head p { margin-bottom: 0; }
+.thanks-template-list { display:flex; flex-wrap:wrap; gap:8px; margin-bottom: 12px; }
+.thanks-panel textarea { min-height: 110px; }
+
+.ar-live-mode { background: transparent !important; }
+.ar-live-mode .recipient-shell { max-width:none; padding:0; gap:0; }
+.ar-live-mode .hero-panel,
+.ar-live-mode .recipient-card,
+.ar-live-mode .permission-panel,
+.ar-live-mode .distance-panel,
+.ar-live-mode .thanks-panel,
+.ar-live-mode .preview-banner,
+.ar-live-mode #unlock-popup,
+.ar-live-mode #expired-panel { display:none !important; }
+.ar-live-mode #ar-panel { position: fixed; inset: 0; z-index: 50; margin: 0; border: 0; border-radius: 0; padding: 12px; background: transparent; box-shadow: none; backdrop-filter: none; display:flex !important; flex-direction:column; justify-content:space-between; }
+.ar-live-mode .ar-toolbar { justify-content: space-between; margin-bottom: 8px; }
+.ar-live-mode .ar-stage { flex: 1; min-height: 100vh; border: 0; border-radius: 0; background: transparent; }
+.ar-live-mode .ar-stage canvas { height: 100vh !important; }
+.ar-live-mode #ar-status { max-width: 560px; background: rgba(11,16,32,0.56); backdrop-filter: blur(12px); }
+.ar-live-mode #xr-overlay { margin-top: auto; }
+.ar-live-mode .xr-runtime { grid-template-columns: repeat(2, minmax(0, 1fr)); background: rgba(11,16,32,0.42); padding: 10px; border-radius: 16px; backdrop-filter: blur(12px); }
+
+@media (max-width: 720px) {
+  .unlock-popup { flex-direction: column; align-items: stretch; }
+}
+@media (max-width: 540px) {
+  .xr-runtime { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
