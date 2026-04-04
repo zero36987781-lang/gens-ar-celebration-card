@@ -1,0 +1,9 @@
+{
+  "name": "webxr-ar-card-mvp",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "python3 -m http.server 4173 -d src",
+    "serve": "python3 -m http.server 4173 -d src"
+  }
+}

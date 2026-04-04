@@ -1,0 +1,12 @@
+.admin-shell { max-width: 860px; margin: 0 auto; padding: 22px 16px 32px; display:flex; flex-direction:column; gap:16px; }
+.compact-auth { max-width: 420px; }
+.runtime-note strong { color: #ffffff; }
+.map-box { min-height: 340px; border-radius: 18px; overflow: hidden; border:1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); }
+.map-search-grid { grid-template-columns: 1fr auto; align-items:end; }
+.end-align { align-items: end; }
+.gift-list { display:grid; gap:10px; }
+.gift-item { display:flex; justify-content:space-between; gap:12px; align-items:center; padding:12px 14px; border-radius:14px; border:1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); text-align:left; }
+.gift-item .meta { color: var(--muted); font-size: 13px; }
+@media (max-width: 860px) {
+  .map-search-grid { grid-template-columns: 1fr; }
+}
