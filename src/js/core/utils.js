@@ -10,10 +10,6 @@ export function generateSlug(prefix = 'gift') {
   return `${prefix}-${token}`;
 }
 
-export function toIsoFromHours(hours) {
-  return new Date(Date.now() + Number(hours) * 60 * 60 * 1000).toISOString();
-}
-
 export function isExpired(dateString) {
   return !dateString || Date.now() > new Date(dateString).getTime();
 }
@@ -104,4 +100,56 @@ export function hexToRgb(hex) {
     g: (intValue >> 8) & 255,
     b: intValue & 255
   };
+}
+
+/* HMS helpers — separate h/m/s fields */
+export function readHms(hEl, mEl, sEl) {
+  const h = Math.max(0, parseInt(hEl?.value, 10) || 0);
+  const m = clamp(parseInt(mEl?.value, 10) || 0, 0, 59);
+  const s = clamp(parseInt(sEl?.value, 10) || 0, 0, 59);
+  return h * 3600 + m * 60 + s;
+}
+
+export function writeHms(totalSeconds, hEl, mEl, sEl) {
+  const safe = Math.max(0, Math.floor(Number(totalSeconds) || 0));
+  const h = Math.floor(safe / 3600);
+  const m = Math.floor((safe % 3600) / 60);
+  const s = safe % 60;
+  if (hEl) hEl.value = String(h).padStart(2, '0');
+  if (mEl) mEl.value = String(m).padStart(2, '0');
+  if (sEl) sEl.value = String(s).padStart(2, '0');
+}
+
+export function bindHmsAutoAdvance(...inputs) {
+  inputs.forEach((input, idx) => {
+    if (!input) return;
+    input.addEventListener('input', () => {
+      input.value = input.value.replace(/[^\d]/g, '').slice(0, 2);
+      if (input.value.length >= 2 && idx < inputs.length - 1) {
+        inputs[idx + 1]?.focus();
+        inputs[idx + 1]?.select();
+      }
+    });
+    input.addEventListener('focus', () => input.select());
+  });
+}
+
+export function parseYouTubeId(url) {
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname.includes('youtu.be')) return parsed.pathname.replace('/', '').trim();
+    if (parsed.hostname.includes('youtube.com')) {
+      if (parsed.pathname === '/watch') return parsed.searchParams.get('v') || '';
+      if (parsed.pathname.startsWith('/embed/')) return parsed.pathname.split('/embed/')[1] || '';
+      if (parsed.pathname.startsWith('/shorts/')) return parsed.pathname.split('/shorts/')[1] || '';
+    }
+    return '';
+  } catch {
+    return '';
+  }
+}
+
+export function formatLocalDateInput(date) {
+  const pad = (v) => String(v).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }

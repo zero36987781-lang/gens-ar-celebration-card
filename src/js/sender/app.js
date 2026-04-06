@@ -1,274 +1,272 @@
 import { TEMPLATES, getTemplateById } from '../core/templates.js';
-import { createRecipientPreviewUrl, createRecipientUrl, generateSlug, getCurrentPosition, qs, readFileAsDataURL, safeUrl, setStatus } from '../core/utils.js';
+import { createRecipientPreviewUrl, createRecipientUrl, generateSlug, getCurrentPosition, qs, qsa, readHms, writeHms, bindHmsAutoAdvance, parseYouTubeId, setStatus, safeUrl, formatLocalDateInput, clamp } from '../core/utils.js';
 import { saveGift } from '../core/data-service.js';
 import { getSupabaseConfig } from '../core/auth.js';
 import { MapPicker } from '../core/maps.js';
 import { applyPageLanguage } from '../core/i18n.js';
+import { PageManager } from '../core/page-manager.js';
+import { CardEditor } from '../core/card-editor.js';
+import { YouTubePreview } from '../core/youtube-preview.js';
 
+/* ---- State ---- */
 const state = {
   templateId: TEMPLATES[0].id,
-  photoData: '',
-  backPhotoData: '',
   lastCreatedSlug: '',
-  mapPicker: null
+  mapPicker: null,
+  frontEditor: null,
+  backEditor: null,
+  frontExport: null,
+  backExport: null,
+  ytPreview: null,
+  pageManager: null
 };
 
-const els = {
-  templateList: qs('#template-list'),
-  form: qs('#gift-form'),
-  shareLink: qs('#share-link'),
-  openLink: qs('#open-link'),
-  previewLink: qs('#preview-link'),
-  statusBox: qs('#status-box'),
-  copyLink: qs('#copy-link'),
-  previewCard: qs('#preview-card'),
-  previewReceiver: qs('#preview-receiver'),
-  previewSender: qs('#preview-sender'),
-  previewTitle: qs('#preview-title'),
-  previewSubtitle: qs('#preview-subtitle'),
-  previewMessage: qs('#preview-message'),
-  previewBackMessage: qs('#preview-back-message'),
-  videoBadge: qs('#video-badge'),
-  videoPreviewStatus: qs('#video-preview-status'),
-  videoPreviewArea: qs('#video-preview-area')
-};
+/* ---- Carousel ---- */
+function initCarousel() {
+  const viewport = qs('#carousel-viewport');
+  const track = qs('#carousel-track');
+  const dotsContainer = qs('#carousel-dots');
+  if (!track || !viewport) return;
 
-function fields() {
-  return {
-    recipientName: qs('#recipient-name'),
-    senderName: qs('#sender-name'),
-    frontColor: qs('#front-color'),
-    accentColor: qs('#accent-color'),
-    photoFile: qs('#photo-file'),
-    backPhotoFile: qs('#back-photo-file'),
-    videoUrl: qs('#video-url'),
-    videoStart: qs('#video-start'),
-    videoEnd: qs('#video-end'),
-    ctaLink: qs('#cta-link'),
-    mapSearch: qs('#map-search'),
-    mapSearchButton: qs('#map-search-btn'),
-    mapEl: qs('#sender-map'),
-    mapStatus: qs('#map-status'),
-    latitude: qs('#latitude'),
-    longitude: qs('#longitude'),
-    unlockRadius: qs('#unlock-radius'),
-    startAt: qs('#start-at'),
-    expiresAt: qs('#expires-at'),
-    spawnHeight: qs('#spawn-height'),
-    forwardDistance: qs('#forward-distance')
+  // Build slides: clone first and last for infinite loop
+  const slides = TEMPLATES.map((t, i) => buildTemplateSlide(t, i));
+  const lastClone = buildTemplateSlide(TEMPLATES[TEMPLATES.length - 1], -1);
+  const firstClone = buildTemplateSlide(TEMPLATES[0], TEMPLATES.length);
+
+  track.innerHTML = '';
+  track.appendChild(lastClone);
+  slides.forEach(s => track.appendChild(s));
+  track.appendChild(firstClone);
+
+  let currentIndex = 0;
+  const totalReal = TEMPLATES.length;
+  const slideWidth = () => {
+    const s = track.children[1];
+    return s ? s.offsetWidth + parseFloat(getComputedStyle(s).marginLeft) * 2 : viewport.offsetWidth;
   };
-}
 
-function formatLocalDateInput(date) {
-  const pad = (value) => String(value).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
+  function setTrackPosition(idx, animate = true) {
+    const offset = -(idx + 1) * slideWidth();
+    track.style.transition = animate ? 'transform 0.35s cubic-bezier(0.25,0.8,0.25,1)' : 'none';
+    track.style.transform = `translateX(${offset}px)`;
+  }
 
-function sanitizeEditableText(value) {
-  return String(value || '').replace(/\u00a0/g, ' ').replace(/\r/g, '').trim();
-}
+  function goTo(idx, animate = true) {
+    currentIndex = idx;
+    setTrackPosition(idx, animate);
+    updateDots();
+    selectTemplate(TEMPLATES[((idx % totalReal) + totalReal) % totalReal].id);
+  }
 
-function getEditableLines(element) {
-  return sanitizeEditableText(element?.innerText || element?.textContent || '');
-}
+  track.addEventListener('transitionend', () => {
+    if (currentIndex < 0) { goTo(totalReal - 1, false); }
+    else if (currentIndex >= totalReal) { goTo(0, false); }
+  });
 
-function parseYouTubeId(url) {
-  try {
-    const parsed = new URL(url);
-    if (parsed.hostname.includes('youtu.be')) return parsed.pathname.replace('/', '').trim();
-    if (parsed.hostname.includes('youtube.com')) {
-      if (parsed.pathname === '/watch') return parsed.searchParams.get('v') || '';
-      if (parsed.pathname.startsWith('/embed/')) return parsed.pathname.split('/embed/')[1] || '';
-      if (parsed.pathname.startsWith('/shorts/')) return parsed.pathname.split('/shorts/')[1] || '';
+  // Touch/drag
+  let startX = 0, isDragging = false, startTranslate = 0;
+  viewport.addEventListener('touchstart', (e) => {
+    startX = e.touches[0].clientX;
+    isDragging = true;
+    startTranslate = -(currentIndex + 1) * slideWidth();
+    track.style.transition = 'none';
+  }, { passive: true });
+
+  viewport.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
+    const dx = e.touches[0].clientX - startX;
+    track.style.transform = `translateX(${startTranslate + dx}px)`;
+  }, { passive: true });
+
+  viewport.addEventListener('touchend', (e) => {
+    if (!isDragging) return;
+    isDragging = false;
+    const dx = e.changedTouches[0].clientX - startX;
+    if (Math.abs(dx) > 40) {
+      goTo(currentIndex + (dx < 0 ? 1 : -1));
+    } else {
+      goTo(currentIndex);
     }
-    return '';
-  } catch {
-    return '';
+  });
+
+  // Dots
+  function renderDots() {
+    if (!dotsContainer) return;
+    dotsContainer.innerHTML = '';
+    TEMPLATES.forEach((_, i) => {
+      const dot = document.createElement('div');
+      dot.className = `carousel-dot${i === 0 ? ' active' : ''}`;
+      dot.addEventListener('click', () => goTo(i));
+      dotsContainer.appendChild(dot);
+    });
   }
-}
 
-function secondsToHms(totalSeconds = 0) {
-  const safe = Math.max(0, Math.floor(Number(totalSeconds) || 0));
-  const hours = Math.floor(safe / 3600);
-  const minutes = Math.floor((safe % 3600) / 60);
-  const seconds = safe % 60;
-  return [hours, minutes, seconds].map((value) => String(value).padStart(2, '0')).join(':');
-}
-
-function parseHms(value) {
-  const raw = String(value || '').replace(/[^\d]/g, '').slice(0, 6);
-  const padded = raw.padStart(6, '0');
-  const hours = Number(padded.slice(0, 2));
-  const minutes = Number(padded.slice(2, 4));
-  const seconds = Number(padded.slice(4, 6));
-  if (minutes > 59 || seconds > 59) return Number.NaN;
-  return (hours * 3600) + (minutes * 60) + seconds;
-}
-
-function maskHmsInput(input) {
-  const raw = String(input.value || '').replace(/[^\d]/g, '').slice(0, 6);
-  const padded = raw.padStart(6, '0');
-  input.value = `${padded.slice(0, 2)}:${padded.slice(2, 4)}:${padded.slice(4, 6)}`;
-}
-
-function setDefaultDateWindow() {
-  const { startAt, expiresAt } = fields();
-  const now = new Date();
-  now.setSeconds(0, 0);
-  const end = new Date(now.getTime() + (24 * 60 * 60 * 1000));
-  startAt.value = formatLocalDateInput(now);
-  expiresAt.value = formatLocalDateInput(end);
-  syncExpiryBounds();
-}
-
-function syncExpiryBounds() {
-  const { startAt, expiresAt } = fields();
-  if (!startAt.value) return;
-  const start = new Date(startAt.value);
-  const max = new Date(start.getTime() + (24 * 60 * 60 * 1000));
-  expiresAt.min = formatLocalDateInput(start);
-  expiresAt.max = formatLocalDateInput(max);
-  if (!expiresAt.value) {
-    expiresAt.value = expiresAt.max;
-    return;
+  function updateDots() {
+    if (!dotsContainer) return;
+    const realIdx = ((currentIndex % totalReal) + totalReal) % totalReal;
+    dotsContainer.querySelectorAll('.carousel-dot').forEach((d, i) => d.classList.toggle('active', i === realIdx));
   }
-  const current = new Date(expiresAt.value);
-  if (current < start) {
-    expiresAt.value = expiresAt.min;
-  } else if (current > max) {
-    expiresAt.value = expiresAt.max;
-  }
+
+  renderDots();
+  requestAnimationFrame(() => goTo(0, false));
+
+  // Click on slide
+  track.addEventListener('click', (e) => {
+    const slide = e.target.closest('.carousel-slide');
+    if (!slide) return;
+    const tplId = slide.dataset.templateId;
+    if (tplId) {
+      const idx = TEMPLATES.findIndex(t => t.id === tplId);
+      if (idx >= 0) goTo(idx);
+    }
+  });
 }
 
-function renderTemplates() {
-  els.templateList.innerHTML = TEMPLATES.map((template) => `
-    <button type="button" class="template-item ${template.id === state.templateId ? 'active' : ''}" data-template-id="${template.id}">
+function buildTemplateSlide(template, idx) {
+  const div = document.createElement('div');
+  div.className = 'carousel-slide';
+  div.dataset.templateId = template.id;
+  div.innerHTML = `
+    <div class="template-item${template.id === state.templateId ? ' active' : ''}">
       <h3>${template.name}</h3>
-      <p>${template.subtitle}</p>
+      <p style="color:var(--muted);font-size:13px;">${template.subtitle}</p>
       <div class="template-swatches">
         <span style="background:${template.frontColor}"></span>
         <span style="background:${template.accentColor}"></span>
       </div>
-    </button>
-  `).join('');
+    </div>
+  `;
+  return div;
 }
 
-function applyTemplate(templateId) {
+function selectTemplate(templateId) {
   state.templateId = templateId;
   const template = getTemplateById(templateId);
-  const f = fields();
-  f.frontColor.value = template.frontColor;
-  f.accentColor.value = template.accentColor;
-  els.previewTitle.textContent = template.title;
-  els.previewSubtitle.textContent = template.subtitle;
-  els.previewMessage.textContent = template.message;
-  els.previewBackMessage.textContent = template.backText;
-  renderTemplates();
-  renderPreviewCard();
-}
 
-function renderPreviewCard() {
-  const f = fields();
-  els.previewCard.style.setProperty('--card-front', f.frontColor.value);
-  els.previewCard.style.setProperty('--card-accent', f.accentColor.value);
-  els.previewReceiver.textContent = f.recipientName.value.trim() || 'Receiver';
-  els.previewSender.textContent = `From ${f.senderName.value.trim() || 'Sender'}`;
-  const hasVideo = Boolean(parseYouTubeId(f.videoUrl.value.trim()));
-  els.videoBadge.classList.toggle('hidden', !hasVideo);
-}
-
-function renderVideoPreview() {
-  const { videoUrl, videoStart, videoEnd } = fields();
-  const url = videoUrl.value.trim();
-  const youtubeId = parseYouTubeId(url);
-  if (!url) {
-    els.videoPreviewArea.innerHTML = '<div class="video-preview-empty">Paste a YouTube URL to preview the selected time segment.</div>';
-    els.videoPreviewStatus.textContent = 'YouTube links only. Paste a valid YouTube URL to preview the selected segment.';
-    renderPreviewCard();
-    return;
+  // Update editors if initialized
+  if (state.frontEditor) {
+    state.frontEditor.state.bg.fill.color = template.frontColor;
+    state.frontEditor.gradientStops = [
+      { id: 1, pos: 0, color: template.frontColor },
+      { id: 2, pos: 100, color: template.accentColor }
+    ];
+    state.frontEditor.importState({
+      titleText: template.title,
+      subtitleText: template.subtitle,
+      messageText: template.message,
+      bgFill: { type: 'solid', color: template.frontColor }
+    });
   }
-  if (!youtubeId) {
-    els.videoPreviewArea.innerHTML = '<div class="video-preview-empty">This version accepts YouTube URLs only.</div>';
-    els.videoPreviewStatus.textContent = 'Non-YouTube links are blocked for now so the sender/admin flow stays consistent.';
-    renderPreviewCard();
-    return;
+  if (state.backEditor) {
+    state.backEditor.importState({
+      titleText: 'Back side',
+      messageText: template.backText,
+      bgFill: { type: 'solid', color: '#0b1224' }
+    });
   }
-  const start = parseHms(videoStart.value);
-  const end = parseHms(videoEnd.value);
-  const safeStart = Number.isFinite(start) ? start : 0;
-  const safeEnd = Number.isFinite(end) ? end : safeStart + 12;
-  const embed = new URL(`https://www.youtube.com/embed/${youtubeId}`);
-  embed.searchParams.set('start', String(safeStart));
-  embed.searchParams.set('end', String(Math.max(safeStart + 1, safeEnd)));
-  embed.searchParams.set('rel', '0');
-  embed.searchParams.set('playsinline', '1');
-  els.videoPreviewArea.innerHTML = `<iframe src="${embed.href}" title="YouTube segment preview" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
-  els.videoPreviewStatus.textContent = `Previewing ${secondsToHms(safeStart)} → ${secondsToHms(Math.max(safeStart + 1, safeEnd))}.`;
-  renderPreviewCard();
+
+  // Highlight active template in carousel
+  qsa('.template-item').forEach(el => {
+    el.classList.toggle('active', el.closest('[data-template-id]')?.dataset.templateId === templateId);
+  });
 }
 
-async function handlePhotoChange(event, type = 'front') {
-  const file = event.target.files?.[0];
-  const next = file ? await readFileAsDataURL(file) : '';
-  if (type === 'front') state.photoData = next;
-  else state.backPhotoData = next;
-  setStatus(els.statusBox, file ? `${type === 'front' ? 'Front' : 'Back'} image attached.` : 'Image removed.', 'success');
+/* ---- HMS fields ---- */
+function initHmsFields() {
+  bindHmsAutoAdvance(qs('#vs-h'), qs('#vs-m'), qs('#vs-s'));
+  bindHmsAutoAdvance(qs('#ve-h'), qs('#ve-m'), qs('#ve-s'));
 }
 
-async function handleUseCurrentLocation() {
+function getVideoStart() { return readHms(qs('#vs-h'), qs('#vs-m'), qs('#vs-s')); }
+function getVideoEnd() { return readHms(qs('#ve-h'), qs('#ve-m'), qs('#ve-s')); }
+
+/* ---- YouTube Preview ---- */
+function initYouTubePreview() {
+  state.ytPreview = new YouTubePreview({
+    urlInput: qs('#video-url'),
+    startHms: getVideoStart,
+    endHms: getVideoEnd,
+    thumbContainer: qs('#yt-thumb-container'),
+    thumbnailImg: qs('#yt-thumbnail'),
+    playerWrap: qs('#yt-player-wrap'),
+    playBtn: qs('#yt-play-btn'),
+    statusEl: qs('#video-preview-status')
+  });
+}
+
+/* ---- Map ---- */
+async function initMap() {
   try {
-    const position = await getCurrentPosition();
-    const lat = position.coords.latitude;
-    const lng = position.coords.longitude;
-    fields().latitude.value = lat.toFixed(6);
-    fields().longitude.value = lng.toFixed(6);
-    state.mapPicker?.setPosition(lat, lng, true);
-    setStatus(fields().mapStatus, 'Current location pinned on the map.', 'success');
+    state.mapPicker = new MapPicker({
+      mapEl: qs('#sender-map'),
+      latInput: qs('#latitude'),
+      lngInput: qs('#longitude'),
+      radiusInput: qs('#unlock-radius'),
+      searchInput: qs('#map-search'),
+      searchButton: qs('#map-search-btn'),
+      statusEl: qs('#map-status')
+    });
+    await state.mapPicker.init();
   } catch (error) {
-    setStatus(fields().mapStatus, error.message || 'Location request failed.', 'error');
+    setStatus(qs('#map-status'), error.message || 'Map failed to load.', 'warn');
   }
 }
 
-function toggleCardFlip(forceBack = null) {
-  const shouldShowBack = typeof forceBack === 'boolean' ? forceBack : !els.previewCard.classList.contains('is-back');
-  els.previewCard.classList.toggle('is-back', shouldShowBack);
-  els.previewCard.classList.toggle('is-front', !shouldShowBack);
+/* ---- Date window ---- */
+function setDefaultDateWindow() {
+  const now = new Date(); now.setSeconds(0, 0);
+  const end = new Date(now.getTime() + (24 * 60 * 60 * 1000));
+  qs('#start-at').value = formatLocalDateInput(now);
+  qs('#expires-at').value = formatLocalDateInput(end);
 }
 
+function syncExpiryBounds() {
+  const startAt = qs('#start-at');
+  const expiresAt = qs('#expires-at');
+  if (!startAt?.value) return;
+  const start = new Date(startAt.value);
+  const max = new Date(start.getTime() + (24 * 60 * 60 * 1000));
+  expiresAt.min = formatLocalDateInput(start);
+  expiresAt.max = formatLocalDateInput(max);
+  if (!expiresAt.value) { expiresAt.value = expiresAt.max; return; }
+  const current = new Date(expiresAt.value);
+  if (current < start) expiresAt.value = expiresAt.min;
+  else if (current > max) expiresAt.value = expiresAt.max;
+}
+
+/* ---- Form data + save ---- */
 function getFormData() {
-  const f = fields();
+  const frontState = state.frontEditor?.getExportState();
+  const backState = state.backEditor?.getExportState();
   const template = getTemplateById(state.templateId);
-  const startSeconds = parseHms(f.videoStart.value);
-  const endSeconds = parseHms(f.videoEnd.value);
+
   return {
     slug: state.lastCreatedSlug || generateSlug('gift'),
     templateId: state.templateId,
-    templateName: getEditableLines(els.previewTitle) || template.title,
-    recipientName: f.recipientName.value.trim(),
-    senderName: f.senderName.value.trim(),
-    message: getEditableLines(els.previewMessage) || template.message,
-    frontSubtitle: getEditableLines(els.previewSubtitle) || template.subtitle,
-    frontText: getEditableLines(els.previewMessage) || template.message,
-    backText: getEditableLines(els.previewBackMessage) || template.backText,
-    frontColor: f.frontColor.value,
-    accentColor: f.accentColor.value,
-    photoData: state.photoData,
-    backPhotoData: state.backPhotoData,
-    videoUrl: safeUrl(f.videoUrl.value.trim()),
-    videoStart: Number.isFinite(startSeconds) ? startSeconds : 0,
-    videoEnd: Number.isFinite(endSeconds) ? endSeconds : 12,
-    mediaSequence: 'card-first',
-    ctaLink: f.ctaLink.value.trim(),
-    latitude: Number(f.latitude.value),
-    longitude: Number(f.longitude.value),
-    unlockRadiusM: Number(f.unlockRadius.value || 50),
-    startAt: f.startAt.value ? new Date(f.startAt.value).toISOString() : new Date().toISOString(),
-    expiresAt: f.expiresAt.value ? new Date(f.expiresAt.value).toISOString() : new Date(Date.now() + (24 * 60 * 60 * 1000)).toISOString(),
-    bannerFinaleEnabled: false,
-    bannerText: '',
-    spawnHeight: Number(f.spawnHeight.value || 3),
-    forwardDistance: Number(f.forwardDistance.value || 2),
-    visibilityMode: 'visibility-first',
+    templateName: frontState?.titleText || template.title,
+    recipientName: qs('#recipient-name')?.value?.trim() || '',
+    senderName: qs('#sender-name')?.value?.trim() || '',
+    message: frontState?.messageText || template.message,
+    frontSubtitle: frontState?.subtitleText || template.subtitle,
+    frontText: frontState?.messageText || template.message,
+    backText: backState?.messageText || template.backText,
+    frontColor: frontState?.bgFill?.color || template.frontColor,
+    accentColor: template.accentColor,
+    photoData: frontState?.imageData || '',
+    backPhotoData: backState?.imageData || '',
+    frontStyle: frontState || null,
+    backStyle: backState || null,
+    videoUrl: safeUrl(qs('#video-url')?.value?.trim() || ''),
+    videoStart: getVideoStart(),
+    videoEnd: getVideoEnd(),
+    ctaLink: qs('#cta-link')?.value?.trim() || '',
+    latitude: Number(qs('#latitude')?.value),
+    longitude: Number(qs('#longitude')?.value),
+    unlockRadiusM: Number(qs('#unlock-radius')?.value || 50),
+    startAt: qs('#start-at')?.value ? new Date(qs('#start-at').value).toISOString() : new Date().toISOString(),
+    expiresAt: qs('#expires-at')?.value ? new Date(qs('#expires-at').value).toISOString() : new Date(Date.now() + (24 * 60 * 60 * 1000)).toISOString(),
+    spawnHeight: Number(qs('#spawn-height')?.value || 3),
+    forwardDistance: Number(qs('#forward-distance')?.value || 2),
     status: 'active',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
@@ -276,135 +274,136 @@ function getFormData() {
 }
 
 function validate(data) {
-  const f = fields();
   if (!data.recipientName) return 'Receiver name is required.';
   if (!data.senderName) return 'Sender name is required.';
   if (!data.message.trim()) return 'Front message is required.';
   if (!Number.isFinite(data.latitude) || !Number.isFinite(data.longitude)) return 'Latitude and longitude are required.';
-  if (!Number.isFinite(data.spawnHeight) || data.spawnHeight < 0.5 || data.spawnHeight > 5.5) return 'Card height must be between 0.5m and 5.5m.';
-  if (!Number.isFinite(data.forwardDistance) || data.forwardDistance < 0.5 || data.forwardDistance > 5.5) return 'Forward distance must be between 0.5m and 5.5m.';
-  if (!Number.isFinite(data.unlockRadiusM) || data.unlockRadiusM < 10 || data.unlockRadiusM > 150) return 'Unlock radius must be between 10m and 150m.';
-  const youtubeId = parseYouTubeId(f.videoUrl.value.trim());
-  if (f.videoUrl.value.trim() && !youtubeId) return 'Only YouTube URLs are accepted in this revision.';
-  if (!Number.isFinite(data.videoStart) || !Number.isFinite(data.videoEnd)) return 'Video time must use HH:MM:SS format.';
-  if (data.videoEnd <= data.videoStart) return 'Video end must be greater than start.';
-  const start = new Date(f.startAt.value);
-  const end = new Date(f.expiresAt.value);
-  if (!(start instanceof Date) || Number.isNaN(start.getTime())) return 'Start date/time is required.';
-  if (!(end instanceof Date) || Number.isNaN(end.getTime())) return 'Expiry date/time is required.';
-  if (end < start) return 'Expiry must be after the selected start time.';
-  if (end.getTime() - start.getTime() > 24 * 60 * 60 * 1000) return 'Expiry must stay within 24 hours of the start time.';
+  if (!Number.isFinite(data.spawnHeight) || data.spawnHeight < 0.5 || data.spawnHeight > 5.5) return 'Card height must be 0.5–5.5m.';
+  if (!Number.isFinite(data.forwardDistance) || data.forwardDistance < 0.5 || data.forwardDistance > 5.5) return 'Forward distance must be 0.5–5.5m.';
+  if (data.videoUrl && !parseYouTubeId(data.videoUrl)) return 'Only YouTube URLs are accepted.';
+  if (data.videoEnd <= data.videoStart) return 'Video end must be after start.';
   return '';
 }
 
-async function handleSubmit(event) {
-  event.preventDefault();
+async function handleCreateLink() {
   const data = getFormData();
   const error = validate(data);
-  if (error) {
-    setStatus(els.statusBox, error, 'error');
-    return;
-  }
+  const statusBox = qs('#status-box');
+  if (error) { setStatus(statusBox, error, 'error'); return; }
 
   try {
     const saved = await saveGift(data);
     state.lastCreatedSlug = saved.slug;
     const shareUrl = createRecipientUrl(saved.slug);
     const previewUrl = createRecipientPreviewUrl(saved.slug);
-    els.shareLink.value = shareUrl;
-    els.openLink.href = shareUrl;
-    els.previewLink.href = previewUrl;
-    els.openLink.classList.remove('disabled-link');
-    els.previewLink.classList.remove('disabled-link');
-    setStatus(els.statusBox, `Saved. Link expires at ${new Date(saved.expiresAt).toLocaleString()}.`, 'success');
-  } catch (saveError) {
-    setStatus(els.statusBox, saveError.message || 'Failed to save the gift.', 'error');
+    qs('#share-link').value = shareUrl;
+    qs('#open-link').href = shareUrl;
+    qs('#preview-link').href = previewUrl;
+    qs('#open-link').classList.remove('disabled-link');
+    qs('#preview-link').classList.remove('disabled-link');
+    setStatus(statusBox, `Saved. Expires ${new Date(saved.expiresAt).toLocaleString()}.`, 'success');
+  } catch (e) {
+    setStatus(statusBox, e.message || 'Failed to save.', 'error');
   }
 }
 
-async function copyLink() {
-  if (!els.shareLink.value) return;
-  await navigator.clipboard.writeText(els.shareLink.value);
-  setStatus(els.statusBox, 'Link copied.', 'success');
-}
+/* ---- Page manager ---- */
+let mapInitialized = false;
 
-async function initMap() {
-  const f = fields();
-  try {
-    state.mapPicker = new MapPicker({
-      mapEl: f.mapEl,
-      latInput: f.latitude,
-      lngInput: f.longitude,
-      radiusInput: f.unlockRadius,
-      searchInput: f.mapSearch,
-      searchButton: f.mapSearchButton,
-      statusEl: f.mapStatus
-    });
-    await state.mapPicker.init();
-  } catch (error) {
-    setStatus(f.mapStatus, error.message || 'Map failed to load. You can still type latitude and longitude manually.', 'warn');
-  }
-}
-
-async function setRuntimeStatus() {
-  const { url, anonKey } = await getSupabaseConfig();
-  if (!url || !anonKey) {
-    setStatus(els.statusBox, 'Running in local/demo save mode until Supabase runtime config is available.', 'muted');
-  }
-}
-
-function bindPreviewEditors() {
-  [els.previewTitle, els.previewSubtitle, els.previewMessage, els.previewBackMessage].forEach((element) => {
-    element?.addEventListener('input', () => renderPreviewCard());
+function initPageManager() {
+  state.pageManager = new PageManager({
+    containerSelector: '.sender-shell',
+    pageSelector: '.sender-shell > .page-view',
+    dotContainerSelector: '#nav-dots',
+    prevBtnSelector: '#nav-prev',
+    nextBtnSelector: '#nav-next',
+    onBeforeEnter: async (nextIndex, currentIndex) => {
+      // Lazy init map only when entering page 4
+      if (nextIndex === 4 && !mapInitialized) {
+        mapInitialized = true;
+        // Wait a frame so the page is in DOM
+        await new Promise(r => requestAnimationFrame(r));
+        await initMap();
+      }
+    },
+    onAfterEnter: (index) => {
+      // Sync receiver/sender name to editor previews
+      const rName = qs('#recipient-name')?.value?.trim() || 'Receiver';
+      const sName = qs('#sender-name')?.value?.trim() || 'Sender';
+      const fpReceiver = qs('#fp-receiver');
+      const fpSender = qs('#fp-sender');
+      if (fpReceiver) fpReceiver.textContent = rName;
+      if (fpSender) fpSender.textContent = `From ${sName}`;
+    }
   });
 }
 
+/* ---- Card editors ---- */
+function initEditors() {
+  state.frontEditor = new CardEditor({
+    prefix: 'front',
+    previewCardSelector: '#front-preview-card',
+    onStateChange: (exportState) => { state.frontExport = exportState; }
+  });
+
+  state.backEditor = new CardEditor({
+    prefix: 'back',
+    previewCardSelector: '#back-preview-card',
+    onStateChange: (exportState) => { state.backExport = exportState; }
+  });
+}
+
+/* ---- Bind events ---- */
 function bindEvents() {
-  const f = fields();
-  els.templateList.addEventListener('click', (event) => {
-    const button = event.target.closest('[data-template-id]');
-    if (!button) return;
-    applyTemplate(button.dataset.templateId);
+  qs('#create-link-btn')?.addEventListener('click', handleCreateLink);
+  qs('#copy-link')?.addEventListener('click', async () => {
+    const link = qs('#share-link')?.value;
+    if (!link) return;
+    await navigator.clipboard.writeText(link);
+    setStatus(qs('#status-box'), 'Link copied.', 'success');
   });
-  f.recipientName.addEventListener('input', renderPreviewCard);
-  f.senderName.addEventListener('input', renderPreviewCard);
-  f.frontColor.addEventListener('input', renderPreviewCard);
-  f.accentColor.addEventListener('input', renderPreviewCard);
-  f.photoFile.addEventListener('change', (event) => handlePhotoChange(event, 'front'));
-  f.backPhotoFile.addEventListener('change', (event) => handlePhotoChange(event, 'back'));
-  f.videoUrl.addEventListener('input', renderVideoPreview);
-  [f.videoStart, f.videoEnd].forEach((input) => {
-    input.addEventListener('input', () => maskHmsInput(input));
-    input.addEventListener('change', () => {
-      maskHmsInput(input);
-      renderVideoPreview();
-    });
-    input.addEventListener('blur', () => {
-      maskHmsInput(input);
-      renderVideoPreview();
-    });
+  qs('#start-at')?.addEventListener('change', syncExpiryBounds);
+  qs('#expires-at')?.addEventListener('change', syncExpiryBounds);
+  qs('#use-current-location')?.addEventListener('click', async () => {
+    try {
+      const pos = await getCurrentPosition();
+      qs('#latitude').value = pos.coords.latitude.toFixed(6);
+      qs('#longitude').value = pos.coords.longitude.toFixed(6);
+      state.mapPicker?.setPosition(pos.coords.latitude, pos.coords.longitude, true);
+    } catch (e) {
+      setStatus(qs('#map-status'), e.message || 'Location failed.', 'error');
+    }
   });
-  f.startAt.addEventListener('change', syncExpiryBounds);
-  f.expiresAt.addEventListener('change', syncExpiryBounds);
-  f.unlockRadius.addEventListener('input', () => state.mapPicker?.updateRadius());
-  qs('#use-current-location').addEventListener('click', handleUseCurrentLocation);
-  els.form.addEventListener('submit', handleSubmit);
-  els.copyLink.addEventListener('click', copyLink);
-  qs('#flip-card').addEventListener('click', () => toggleCardFlip(true));
-  qs('#flip-card-back').addEventListener('click', () => toggleCardFlip(false));
-  bindPreviewEditors();
+
+  // Name syncing
+  qs('#recipient-name')?.addEventListener('input', () => {
+    const val = qs('#recipient-name').value.trim() || 'Receiver';
+    const fpR = qs('#fp-receiver');
+    if (fpR) fpR.textContent = val;
+  });
+  qs('#sender-name')?.addEventListener('input', () => {
+    const val = qs('#sender-name').value.trim() || 'Sender';
+    const fpS = qs('#fp-sender');
+    if (fpS) fpS.textContent = `From ${val}`;
+  });
 }
 
+/* ---- Init ---- */
 async function init() {
   applyPageLanguage();
-  renderTemplates();
+  initCarousel();
+  initEditors();
+  initHmsFields();
+  initYouTubePreview();
   setDefaultDateWindow();
+  initPageManager();
   bindEvents();
-  applyTemplate(state.templateId);
-  renderVideoPreview();
-  renderPreviewCard();
-  await setRuntimeStatus();
-  await initMap();
+  selectTemplate(state.templateId);
+
+  const { url, anonKey } = await getSupabaseConfig();
+  if (!url || !anonKey) {
+    setStatus(qs('#status-box'), 'Running in local/demo mode.', 'muted');
+  }
 }
 
 init();

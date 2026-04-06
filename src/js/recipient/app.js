@@ -1,98 +1,97 @@
 import { getGiftBySlug } from '../core/data-service.js';
-import { formatDistance, getCurrentPosition, haversineMeters, isExpired, isPreviewModeFromLocation, parseSlugFromLocation, qs, setStatus } from '../core/utils.js';
+import { formatDistance, getCurrentPosition, haversineMeters, isExpired, isPreviewModeFromLocation, parseSlugFromLocation, parseYouTubeId, qs, setStatus } from '../core/utils.js';
 import { WebXREngine } from '../ar/webxr-engine.js';
 import { applyPageLanguage } from '../core/i18n.js';
-
-function parseYouTubeId(url) {
-  try {
-    const parsed = new URL(url);
-    if (parsed.hostname.includes('youtu.be')) return parsed.pathname.replace('/', '').trim();
-    if (parsed.hostname.includes('youtube.com')) {
-      if (parsed.pathname === '/watch') return parsed.searchParams.get('v') || '';
-      if (parsed.pathname.startsWith('/embed/')) return parsed.pathname.split('/embed/')[1] || '';
-      if (parsed.pathname.startsWith('/shorts/')) return parsed.pathname.split('/shorts/')[1] || '';
-    }
-    return '';
-  } catch {
-    return '';
-  }
-}
 
 const previewMode = isPreviewModeFromLocation();
 
 const els = {
-  previewBanner: qs('#preview-banner'),
   introTitle: qs('#intro-title'),
   introSubtitle: qs('#intro-subtitle'),
   senderLine: qs('#sender-line'),
   messageLine: qs('#message-line'),
   begin: qs('#begin-recipient'),
-  permissionPanel: qs('#permission-panel'),
   supportStatus: qs('#support-status'),
-  distancePanel: qs('#distance-panel'),
   distanceState: qs('#distance-state'),
   distanceCopy: qs('#distance-copy'),
   refreshDistance: qs('#refresh-distance'),
   launchAr: qs('#launch-ar'),
-  arPanel: qs('#ar-panel'),
   arStage: qs('#ar-stage'),
   xrOverlay: qs('#xr-overlay'),
   gestureHint: qs('#gesture-hint'),
   arStatus: qs('#ar-status'),
   replaySequence: qs('#replay-sequence'),
-  thanksPanel: qs('#thanks-panel'),
   thanksTemplates: qs('#thanks-templates'),
   thanksMessage: qs('#thanks-message'),
   thanksStatus: qs('#thanks-status'),
   copyThanks: qs('#copy-thanks'),
   shareThanks: qs('#share-thanks'),
-  expiredPanel: qs('#expired-panel'),
   expiredCopy: qs('#expired-copy'),
   ctaButton: qs('#cta-button'),
-  giftVideo: qs('#gift-video')
+  giftVideo: qs('#gift-video'),
+  previewBanner: qs('#preview-banner')
 };
 
 let gift = null;
 let engine = null;
 let thanksReady = false;
-let previewAutomationStarted = false;
+let currentStep = 0;
 
-function showPanel(panel) {
-  panel?.classList.remove('hidden');
+function showStep(step) {
+  const allPages = document.querySelectorAll('[data-rpage]');
+  const target = qs(`#r-page-${step}`);
+
+  if (!target) return;
+
+  // Snapshot transition: prepare next page hidden, then swap
+  target.classList.remove('hidden');
+  target.classList.add('page-entering');
+
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    allPages.forEach(p => {
+      if (p !== target) p.classList.add('hidden');
+      p.classList.remove('page-entering');
+    });
+    target.classList.remove('page-entering');
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    currentStep = step;
+  }));
 }
 
 function showUnavailable(message) {
-  [qs('#recipient-card'), els.permissionPanel, els.distancePanel, els.arPanel, els.thanksPanel].forEach((el) => el?.classList.add('hidden'));
-  els.expiredPanel.classList.remove('hidden');
+  qs('#r-page-expired')?.classList.remove('hidden');
+  document.querySelectorAll('[data-rpage]').forEach(p => {
+    if (p.id !== 'r-page-expired') p.classList.add('hidden');
+  });
   setStatus(els.expiredCopy, message, 'warn');
 }
 
 async function detectSupport() {
   if (previewMode) {
-    setStatus(els.supportStatus, 'Buyer preview mode is active. The location gate is simulated and the stage sequence will auto-play.', 'success');
+    setStatus(els.supportStatus, 'Buyer preview mode. AR stage opens directly.', 'success');
     return Boolean(navigator.xr);
   }
   if (!window.isSecureContext) {
-    setStatus(els.supportStatus, 'Full AR needs HTTPS. A touch-ready 3D card will still open in preview mode.', 'warn');
+    setStatus(els.supportStatus, 'Full AR needs HTTPS. 3D preview will open instead.', 'warn');
     return false;
   }
   if (!navigator.xr) {
-    setStatus(els.supportStatus, 'WebXR is not available here. The card will open in interactive 3D preview mode.', 'warn');
+    setStatus(els.supportStatus, 'WebXR not available. Interactive 3D preview will open.', 'warn');
     return false;
   }
   const supported = await navigator.xr.isSessionSupported('immersive-ar');
   if (!supported) {
-    setStatus(els.supportStatus, 'Immersive AR is not supported on this device. Interactive 3D preview will open instead.', 'warn');
+    setStatus(els.supportStatus, 'Immersive AR not supported. 3D preview will open.', 'warn');
     return false;
   }
-  setStatus(els.supportStatus, 'AR is supported. After you open the card, camera mode will start automatically.', 'success');
+  setStatus(els.supportStatus, 'AR supported. Camera mode will start after unlock.', 'success');
   return true;
 }
 
 function renderGift() {
   els.introTitle.textContent = `${gift.recipientName || 'You'}, a surprise is waiting`;
   els.introSubtitle.textContent = previewMode
-    ? 'Buyer preview will automatically step through the real recipient flow.'
+    ? 'Buyer preview — AR stage opens directly.'
     : 'Start, check your location, then open the card.';
   els.senderLine.textContent = gift.senderName || 'Someone special';
   els.messageLine.textContent = gift.message || 'A special message is waiting for you.';
@@ -101,9 +100,116 @@ function renderGift() {
     els.ctaButton.classList.remove('hidden');
   }
   if (previewMode) {
-    els.previewBanner.classList.remove('hidden');
-    els.previewBanner.textContent = 'Buyer preview mode';
+    els.previewBanner?.classList.remove('hidden');
   }
+}
+
+async function checkDistance() {
+  if (previewMode) {
+    els.distanceState.textContent = 'Preview mode';
+    els.distanceState.className = 'distance-state state-preview';
+    setStatus(els.distanceCopy, 'Preview skips location gate.', 'success');
+    els.launchAr.disabled = false;
+    return;
+  }
+
+  try {
+    const position = await getCurrentPosition();
+    const dist = haversineMeters(position.coords.latitude, position.coords.longitude, Number(gift.latitude), Number(gift.longitude));
+    const radius = Number(gift.unlockRadiusM || 50);
+
+    if (dist <= radius) {
+      els.distanceState.textContent = 'Unlocked';
+      els.distanceState.className = 'distance-state state-ready';
+      setStatus(els.distanceCopy, `Inside unlock area (${formatDistance(dist)} away).`, 'success');
+      els.launchAr.disabled = false;
+    } else if (dist <= radius * 2) {
+      els.distanceState.textContent = 'Almost there';
+      els.distanceState.className = 'distance-state state-near';
+      setStatus(els.distanceCopy, `Move closer. ${formatDistance(dist)} away.`, 'warn');
+      els.launchAr.disabled = true;
+    } else {
+      els.distanceState.textContent = 'Too far';
+      els.distanceState.className = 'distance-state state-far';
+      setStatus(els.distanceCopy, `${formatDistance(dist)} away. Move closer.`, 'error');
+      els.launchAr.disabled = true;
+    }
+  } catch (error) {
+    setStatus(els.distanceCopy, error.message || 'Location check failed.', 'error');
+  }
+}
+
+/* ---- Gesture hint: stays visible until horizontal drag ---- */
+let hintVisible = false;
+let hintDismissedByDrag = false;
+
+function showGestureHint() {
+  if (hintDismissedByDrag) return;
+  els.xrOverlay?.classList.remove('hidden', 'hint-fading');
+  hintVisible = true;
+}
+
+function fadeGestureHint() {
+  els.xrOverlay?.classList.add('hint-fading');
+  hintVisible = false;
+}
+
+function bindGestureHintBehavior() {
+  // Hint stays visible after longpress. Only dismissed when horizontal drag starts.
+  let startX = 0;
+  const stage = els.arStage;
+  if (!stage) return;
+
+  stage.addEventListener('pointerdown', (e) => {
+    startX = e.clientX;
+    // Show hint on every interaction (unless already dismissed by drag)
+    showGestureHint();
+  });
+
+  stage.addEventListener('pointermove', (e) => {
+    if (!hintVisible) return;
+    const dx = Math.abs(e.clientX - startX);
+    // Dismiss hint once user starts a real horizontal drag
+    if (dx > 20) {
+      fadeGestureHint();
+      hintDismissedByDrag = true;
+    }
+  });
+}
+
+async function launchCardStage() {
+  showStep(3);
+  setStatus(els.arStatus, 'Preparing the card stage.', 'muted');
+
+  if (!engine) {
+    engine = new WebXREngine({
+      mountEl: els.arStage,
+      statusEl: els.arStatus,
+      overlayEl: els.xrOverlay,
+      videoEl: els.giftVideo,
+      gift,
+      previewMode
+    });
+    await engine.init();
+    bindGestureHintBehavior();
+  }
+  await engine.prepareMedia();
+
+  try {
+    await engine.enterAR();
+  } catch (error) {
+    if (!engine.placed) {
+      engine.placeNow();
+      await engine.startSequence();
+      showGestureHint();
+    }
+    setStatus(els.arStatus, error.message || 'Interactive 3D card active.', 'warn');
+  }
+}
+
+function revealThanksPanel() {
+  ensureThanksPanel();
+  showStep(4);
 }
 
 function getThanksTemplates() {
@@ -115,199 +221,83 @@ function getThanksTemplates() {
   ];
 }
 
-function selectThanksTemplate(message) {
-  els.thanksMessage.value = message;
-  setStatus(els.thanksStatus, 'Template applied. Edit it freely, then copy or share it.', 'success');
-}
-
 function ensureThanksPanel() {
   if (thanksReady) return;
   els.thanksTemplates.innerHTML = '';
-  getThanksTemplates().forEach((message, index) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = `btn ${index === 0 ? 'btn-primary' : 'btn-secondary'}`;
-    button.textContent = `Template ${index + 1}`;
-    button.addEventListener('click', () => selectThanksTemplate(message));
-    els.thanksTemplates.appendChild(button);
-  });
-  selectThanksTemplate(getThanksTemplates()[0]);
-  thanksReady = true;
-}
-
-function revealThanksPanel() {
-  ensureThanksPanel();
-  els.thanksPanel.classList.remove('hidden');
-  if (!previewMode) {
-    els.thanksPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-}
-
-async function copyThanksMessage() {
-  const text = els.thanksMessage?.value.trim();
-  if (!text) return;
-  await navigator.clipboard.writeText(text);
-  setStatus(els.thanksStatus, 'Thank-you message copied.', 'success');
-}
-
-async function shareThanksMessage() {
-  const text = els.thanksMessage?.value.trim();
-  if (!text) return;
-  if (navigator.share) {
-    try {
-      await navigator.share({ text });
-      setStatus(els.thanksStatus, 'Share sheet opened.', 'success');
-      return;
-    } catch {
-      // fallback below
-    }
-  }
-  await copyThanksMessage();
-}
-
-function setArLiveMode(enabled) {
-  document.body.classList.toggle('ar-live-mode', enabled);
-}
-
-function setUnlockedState(copy, tone = 'success', label = 'Ready') {
-  showPanel(els.distancePanel);
-  els.distanceState.textContent = label;
-  els.distanceState.className = `distance-state ${previewMode ? 'state-preview' : 'state-ready'}`;
-  setStatus(els.distanceCopy, copy, tone);
-  els.launchAr.disabled = false;
-}
-
-async function handleBegin() {
-  showPanel(els.permissionPanel);
-  await detectSupport();
-  els.permissionPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-async function checkDistance() {
-  if (previewMode) {
-    setUnlockedState('Preview mode skips the location gate and will open the card automatically.', 'success', 'Preview mode');
-    return;
-  }
-
-  try {
-    const position = await getCurrentPosition();
-    const latestDistance = haversineMeters(
-      position.coords.latitude,
-      position.coords.longitude,
-      Number(gift.latitude),
-      Number(gift.longitude)
-    );
-    const radius = Number(gift.unlockRadiusM || 50);
-    showPanel(els.distancePanel);
-
-    if (latestDistance <= radius) {
-      els.distanceState.textContent = 'Unlocked';
-      els.distanceState.className = 'distance-state state-ready';
-      setStatus(
-        els.distanceCopy,
-        `You are inside the unlock area (${formatDistance(latestDistance)} away). Open the card to load it ${Number(gift.forwardDistance || 2).toFixed(1)}m in front of you.${parseYouTubeId(gift.videoUrl || '') ? ' YouTube media remains editor-preview only for runtime stability.' : ''}`,
-        'success'
-      );
-      els.launchAr.disabled = false;
-    } else if (latestDistance <= radius * 2) {
-      els.distanceState.textContent = 'Almost there';
-      els.distanceState.className = 'distance-state state-near';
-      setStatus(els.distanceCopy, `Move a little closer. You are ${formatDistance(latestDistance)} away.`, 'warn');
-      els.launchAr.disabled = true;
-    } else {
-      els.distanceState.textContent = 'Too far';
-      els.distanceState.className = 'distance-state state-far';
-      setStatus(els.distanceCopy, `You are ${formatDistance(latestDistance)} away. Move closer to open the card.`, 'error');
-      els.launchAr.disabled = true;
-    }
-  } catch (error) {
-    showPanel(els.distancePanel);
-    setStatus(els.distanceCopy, error.message || 'Location check failed.', 'error');
-  }
-}
-
-async function launchCardStage() {
-  showPanel(els.arPanel);
-  setStatus(els.arStatus, 'Preparing the card stage. Tap empty space to bring the gesture hint back.', 'muted');
-  if (!engine) {
-    engine = new WebXREngine({
-      mountEl: els.arStage,
-      statusEl: els.arStatus,
-      overlayEl: els.xrOverlay,
-      videoEl: els.giftVideo,
-      gift,
-      previewMode
+  getThanksTemplates().forEach((msg, i) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `btn ${i === 0 ? 'btn-primary' : 'btn-secondary'}`;
+    btn.textContent = `Template ${i + 1}`;
+    btn.addEventListener('click', () => {
+      els.thanksMessage.value = msg;
+      setStatus(els.thanksStatus, 'Template applied.', 'success');
     });
-    await engine.init();
-  }
-  await engine.prepareMedia();
-  try {
-    await engine.enterAR();
-  } catch (error) {
-    if (!engine.placed) {
-      engine.placeNow();
-      await engine.startSequence();
-      engine.showHintTemporarily();
-    }
-    setStatus(els.arStatus, error.message || 'Immersive AR could not start, so the interactive 3D card remains available.', 'warn');
-  }
-}
-
-async function startPreviewAutomation() {
-  if (!previewMode || previewAutomationStarted) return;
-  previewAutomationStarted = true;
-  document.body.classList.add('preview-direct-ar');
-  [qs('#recipient-card'), els.permissionPanel, els.distancePanel].forEach((el) => el?.classList.add('hidden'));
-  showPanel(els.arPanel);
-  setStatus(els.arStatus, 'Buyer preview opens directly in the AR / 3D stage.', 'success');
-  await launchCardStage();
+    els.thanksTemplates.appendChild(btn);
+  });
+  els.thanksMessage.value = getThanksTemplates()[0];
+  thanksReady = true;
 }
 
 async function init() {
   applyPageLanguage();
   const slug = parseSlugFromLocation();
-  try {
-    gift = await getGiftBySlug(slug);
-  } catch (error) {
-    showUnavailable(error.message || 'The card could not be loaded.');
-    return;
-  }
 
-  if (!gift) {
-    showUnavailable('This link is invalid.');
-    return;
-  }
+  try { gift = await getGiftBySlug(slug); }
+  catch (e) { showUnavailable(e.message || 'Card could not be loaded.'); return; }
 
-  if (!previewMode && gift.status === 'disabled') {
-    showUnavailable('This card is currently disabled.');
-    return;
-  }
-
-  if (!previewMode && (isExpired(gift.expiresAt) || gift.status === 'expired')) {
-    showUnavailable('This card has expired.');
-    return;
-  }
+  if (!gift) { showUnavailable('This link is invalid.'); return; }
+  if (!previewMode && gift.status === 'disabled') { showUnavailable('This card is disabled.'); return; }
+  if (!previewMode && (isExpired(gift.expiresAt) || gift.status === 'expired')) { showUnavailable('This card has expired.'); return; }
 
   renderGift();
-  els.begin.addEventListener('click', handleBegin);
-  els.refreshDistance.addEventListener('click', checkDistance);
-  qs('#check-distance').addEventListener('click', checkDistance);
-  els.launchAr.addEventListener('click', launchCardStage);
-  els.replaySequence.addEventListener('click', async () => {
-    if (!engine) {
-      await launchCardStage();
-      return;
-    }
+
+  // Buyer preview → jump straight to AR
+  if (previewMode) {
+    document.body.classList.add('buyer-preview-mode');
+    await launchCardStage();
+    return;
+  }
+
+  // Normal recipient flow
+  els.begin?.addEventListener('click', async () => {
+    showStep(1);
+    await detectSupport();
+  });
+
+  qs('#check-distance')?.addEventListener('click', async () => {
+    await checkDistance();
+    showStep(2);
+  });
+
+  els.refreshDistance?.addEventListener('click', checkDistance);
+  els.launchAr?.addEventListener('click', launchCardStage);
+
+  els.replaySequence?.addEventListener('click', async () => {
+    if (!engine) { await launchCardStage(); return; }
     await engine.replay();
   });
-  els.copyThanks.addEventListener('click', copyThanksMessage);
-  els.shareThanks.addEventListener('click', shareThanksMessage);
-  window.addEventListener('ar-session-started', () => setArLiveMode(true));
-  window.addEventListener('ar-session-ended', () => setArLiveMode(false));
+
+  els.copyThanks?.addEventListener('click', async () => {
+    const text = els.thanksMessage?.value?.trim();
+    if (!text) return;
+    await navigator.clipboard.writeText(text);
+    setStatus(els.thanksStatus, 'Copied.', 'success');
+  });
+
+  els.shareThanks?.addEventListener('click', async () => {
+    const text = els.thanksMessage?.value?.trim();
+    if (!text) return;
+    if (navigator.share) {
+      try { await navigator.share({ text }); return; } catch {}
+    }
+    await navigator.clipboard.writeText(text);
+    setStatus(els.thanksStatus, 'Copied (share not available).', 'success');
+  });
+
+  window.addEventListener('ar-session-started', () => document.body.classList.add('ar-live-mode'));
+  window.addEventListener('ar-session-ended', () => document.body.classList.remove('ar-live-mode'));
   window.addEventListener('ar-sequence-complete', revealThanksPanel);
-  if (previewMode) {
-    await startPreviewAutomation();
-  }
 }
 
 init();

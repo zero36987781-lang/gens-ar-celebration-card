@@ -7,21 +7,11 @@ export async function getRuntimeConfig() {
     try {
       const response = await fetch('/api/runtime-config', { cache: 'no-store' });
       if (!response.ok) {
-        return {
-          supabaseUrl: '',
-          supabaseAnonKey: '',
-          googleMapsApiKey: '',
-          googleMapsMapId: ''
-        };
+        return { supabaseUrl: '', supabaseAnonKey: '', googleMapsApiKey: '', googleMapsMapId: '' };
       }
       return await response.json();
     } catch {
-      return {
-        supabaseUrl: '',
-        supabaseAnonKey: '',
-        googleMapsApiKey: '',
-        googleMapsMapId: ''
-      };
+      return { supabaseUrl: '', supabaseAnonKey: '', googleMapsApiKey: '', googleMapsMapId: '' };
     }
   })();
 

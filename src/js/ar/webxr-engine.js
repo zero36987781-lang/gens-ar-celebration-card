@@ -2,44 +2,8 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
 import { RoundedBoxGeometry } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { clamp, hexToRgb, safeUrl } from '../core/utils.js';
 
-function parseYouTubeId(url) {
-  try {
-    const parsed = new URL(url);
-    if (parsed.hostname.includes('youtu.be')) return parsed.pathname.replace('/', '').trim();
-    if (parsed.hostname.includes('youtube.com')) {
-      if (parsed.pathname === '/watch') return parsed.searchParams.get('v') || '';
-      if (parsed.pathname.startsWith('/embed/')) return parsed.pathname.split('/embed/')[1] || '';
-      if (parsed.pathname.startsWith('/shorts/')) return parsed.pathname.split('/shorts/')[1] || '';
-    }
-    return '';
-  } catch {
-    return '';
-  }
-}
-
 function isDirectVideoUrl(url) {
   return /\.(mp4|webm|ogg)(\?|#|$)/i.test(String(url || ''));
-}
-
-function createGlowTexture() {
-  const canvas = document.createElement('canvas');
-  canvas.width = 1024;
-  canvas.height = 1536;
-  const ctx = canvas.getContext('2d');
-  const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-  grad.addColorStop(0, 'rgba(255,255,255,1)');
-  grad.addColorStop(0.35, 'rgba(214,233,255,0.96)');
-  grad.addColorStop(0.7, 'rgba(155,183,255,0.9)');
-  grad.addColorStop(1, 'rgba(255,255,255,0.86)');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.lineWidth = 34;
-  ctx.strokeStyle = grad;
-  ctx.shadowColor = 'rgba(255,255,255,0.55)';
-  ctx.shadowBlur = 36;
-  ctx.beginPath();
-  ctx.roundRect(42, 42, canvas.width - 84, canvas.height - 84, 74);
-  ctx.stroke();
-  return new THREE.CanvasTexture(canvas);
 }
 
 function drawWrappedParagraphs(ctx, text, x, y, maxWidth, lineHeight) {
@@ -47,10 +11,7 @@ function drawWrappedParagraphs(ctx, text, x, y, maxWidth, lineHeight) {
   let cursorY = y;
   paragraphs.forEach((paragraph, index) => {
     const words = paragraph.split(/\s+/).filter(Boolean);
-    if (!words.length) {
-      cursorY += lineHeight;
-      return;
-    }
+    if (!words.length) { cursorY += lineHeight; return; }
     let line = '';
     words.forEach((word) => {
       const testLine = `${line}${word} `;
@@ -62,31 +23,24 @@ function drawWrappedParagraphs(ctx, text, x, y, maxWidth, lineHeight) {
         line = testLine;
       }
     });
-    if (line.trim()) {
-      ctx.fillText(line.trim(), x, cursorY);
-      cursorY += lineHeight;
-    }
+    if (line.trim()) { ctx.fillText(line.trim(), x, cursorY); cursorY += lineHeight; }
     if (index !== paragraphs.length - 1) cursorY += lineHeight * 0.28;
   });
 }
 
-function buildTextCanvas({ width = 1024, height = 1536, background = '#7c3aed', accent = '#f59e0b', title = '', subtitle = '', body = '', footer = '', photoData = '' }) {
+/* Build card face canvas — NO ambient glow overlay, exact color match */
+function buildTextCanvas({ width = 1024, height = 1536, background = '#7c3aed', title = '', subtitle = '', body = '', footer = '', footerColor = '#f59e0b', photoData = '' }) {
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext('2d');
 
+  // Exact background color — no gradient overlay
   ctx.fillStyle = background;
   ctx.fillRect(0, 0, width, height);
 
-  const accentRgb = hexToRgb(accent);
-  const glow = ctx.createRadialGradient(width * 0.26, height * 0.24, 20, width * 0.26, height * 0.24, width * 0.85);
-  glow.addColorStop(0, `rgba(${accentRgb.r}, ${accentRgb.g}, ${accentRgb.b}, 0.52)`);
-  glow.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.fillStyle = glow;
-  ctx.fillRect(0, 0, width, height);
-
-  ctx.fillStyle = 'rgba(255,255,255,0.1)';
+  // Subtle inner border
+  ctx.fillStyle = 'rgba(255,255,255,0.06)';
   ctx.beginPath();
   ctx.roundRect(44, 44, width - 88, height - 88, 54);
   ctx.fill();
@@ -118,7 +72,7 @@ function buildTextCanvas({ width = 1024, height = 1536, background = '#7c3aed', 
   ctx.font = '700 54px Inter, Arial, sans-serif';
   drawWrappedParagraphs(ctx, body, 92, photoData ? 720 : 340, width - 184, 66);
 
-  ctx.fillStyle = accent;
+  ctx.fillStyle = footerColor;
   ctx.font = '600 34px Inter, Arial, sans-serif';
   drawWrappedParagraphs(ctx, footer, 92, height - 144, width - 184, 42);
 
@@ -142,30 +96,18 @@ export class WebXREngine {
     this.gift = gift;
     this.previewMode = previewMode;
 
-    this.renderer = null;
-    this.scene = null;
-    this.camera = null;
-    this.session = null;
+    this.renderer = null; this.scene = null; this.camera = null; this.session = null;
     this.contentGroup = new THREE.Group();
     this.cardGroup = new THREE.Group();
-    this.videoPlane = null;
-    this.videoTexture = null;
-    this.cardMesh = null;
-    this.edgeGlow = null;
-    this.floorCircle = null;
+    this.videoPlane = null; this.videoTexture = null;
+    this.cardMesh = null; this.glowMesh = null; this.floorCircle = null;
 
-    this.placed = false;
-    this.sequenceComplete = false;
-    this.autoPlacedInSession = false;
-    this.pendingArPlacement = false;
-    this.flipProgress = 0;
+    this.placed = false; this.sequenceComplete = false;
+    this.autoPlacedInSession = false; this.pendingArPlacement = false;
     this.isCardBack = false;
 
-    this.baseScale = 1;
-    this.yawOffset = 0;
-    this.pitchOffset = 0;
-    this.localOffsetX = 0;
-    this.localOffsetY = 0;
+    this.baseScale = 1; this.yawOffset = 0; this.pitchOffset = 0;
+    this.localOffsetX = 0; this.localOffsetY = 0;
     this.forwardDistance = clamp(Number(this.gift.forwardDistance || 2), 0.5, 5.5);
     this.heightOffset = clamp(Number(this.gift.spawnHeight || 3), 0.5, 5.5);
 
@@ -180,13 +122,10 @@ export class WebXREngine {
     this.raycaster = new THREE.Raycaster();
     this.activePointers = new Map();
     this.longPressTimer = null;
-    this.longPressPointerId = null;
-    this.longPressContext = 'none';
     this.gestureMode = 'none';
     this.lastTapTime = 0;
     this.lastPointerPoint = { x: 0, y: 0 };
     this.lastPinchDistance = 0;
-    this.hintTimer = null;
   }
 
   async init() {
@@ -198,14 +137,13 @@ export class WebXREngine {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     this.renderer.setSize(this.mountEl.clientWidth || window.innerWidth, 620);
     this.renderer.xr.enabled = !this.previewMode;
+    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.mountEl.innerHTML = '';
     this.mountEl.appendChild(this.renderer.domElement);
     this.renderer.domElement.style.touchAction = 'none';
 
-    this.scene.add(new THREE.HemisphereLight(0xffffff, 0x1b2544, 1.3));
-    const dir = new THREE.DirectionalLight(0xffffff, 1.1);
-    dir.position.set(2, 4, 2);
-    this.scene.add(dir);
+    // Lights — minimal so MeshBasicMaterial colors stay exact
+    this.scene.add(new THREE.AmbientLight(0xffffff, 0.5));
 
     this.buildGiftMeshes();
     this.bindStageGestures();
@@ -221,8 +159,7 @@ export class WebXREngine {
       this.anchorForward.set(0, 0, -1);
       this.placeNow();
       this.startSequence();
-      this.showHintTemporarily();
-      this.setStatus('Interactive preview ready. Long-press the card to move it, drag outside to rotate / tilt, pinch to zoom, double-tap to flip.', 'success');
+      this.setStatus('Interactive preview ready. Long-press card to move, drag outside to rotate, pinch to zoom, double-tap to flip.', 'success');
     }
   }
 
@@ -230,69 +167,64 @@ export class WebXREngine {
     const mediaUrl = safeUrl(this.gift.videoUrl);
     if (!this.videoEl || !mediaUrl || !isDirectVideoUrl(mediaUrl)) return;
     this.videoEl.crossOrigin = 'anonymous';
-    this.videoEl.preload = 'auto';
-    this.videoEl.playsInline = true;
-    this.videoEl.setAttribute('playsinline', 'true');
-    this.videoEl.setAttribute('webkit-playsinline', 'true');
-    if (this.videoEl.src !== mediaUrl) {
-      this.videoEl.src = mediaUrl;
-    }
+    this.videoEl.preload = 'auto'; this.videoEl.playsInline = true;
+    if (this.videoEl.src !== mediaUrl) this.videoEl.src = mediaUrl;
     this.videoEl.load();
-    try {
-      await this.videoEl.play();
-      this.videoEl.pause();
-    } catch {
-      // warm-up may fail before a user gesture
-    }
+    try { await this.videoEl.play(); this.videoEl.pause(); } catch {}
   }
 
   buildGiftMeshes() {
-    const title = this.gift.templateName || 'CHARIEL';
+    const frontColor = this.gift.frontColor || '#7c3aed';
+    const accentColor = this.gift.accentColor || '#f59e0b';
+
     const frontCanvas = buildTextCanvas({
-      background: this.gift.frontColor || '#7c3aed',
-      accent: this.gift.accentColor || '#f59e0b',
-      title,
+      background: frontColor,
+      title: this.gift.templateName || 'CHARIEL',
       subtitle: this.gift.frontSubtitle || '',
-      body: this.gift.frontText || this.gift.message || 'A special message is waiting for you.',
+      body: this.gift.frontText || this.gift.message || '',
       footer: `From ${this.gift.senderName || 'Someone special'}`,
+      footerColor: accentColor,
       photoData: this.gift.photoData || ''
     });
 
     const backCanvas = buildTextCanvas({
       background: '#0b1224',
-      accent: this.gift.accentColor || '#f59e0b',
       title: 'Back side',
       subtitle: this.gift.recipientName ? `For ${this.gift.recipientName}` : '',
-      body: this.gift.backText || this.gift.message || 'Open your card in AR.',
+      body: this.gift.backText || '',
       footer: 'CHARIEL',
+      footerColor: accentColor,
       photoData: this.gift.backPhotoData || ''
     });
 
     const frontTexture = makeCanvasTexture(frontCanvas);
     const backTexture = makeCanvasTexture(backCanvas);
-    const edgeColor = new THREE.Color(this.gift.frontColor || '#7c3aed').multiplyScalar(0.76);
-    const edgeMaterial = new THREE.MeshStandardMaterial({ color: edgeColor, roughness: 0.62, metalness: 0.08 });
+
+    // All MeshBasicMaterial — no lighting interference, colors stay fixed
+    const edgeColor = new THREE.Color(frontColor).multiplyScalar(0.76);
+    const edgeMaterial = new THREE.MeshBasicMaterial({ color: edgeColor });
+
     this.cardMesh = new THREE.Mesh(
       new RoundedBoxGeometry(0.62, 0.88, 0.04, 8, 0.02),
-      [edgeMaterial, edgeMaterial, edgeMaterial, edgeMaterial, new THREE.MeshBasicMaterial({ map: frontTexture }), new THREE.MeshBasicMaterial({ map: backTexture })]
+      [edgeMaterial, edgeMaterial, edgeMaterial, edgeMaterial,
+       new THREE.MeshBasicMaterial({ map: frontTexture }),
+       new THREE.MeshBasicMaterial({ map: backTexture })]
     );
     this.cardMesh.rotation.y = Math.PI;
 
-    const glowTexture = createGlowTexture();
-    const glowMaterial = new THREE.MeshBasicMaterial({
-      map: glowTexture,
+    // 3D glow — slightly larger RoundedBox wrapping entire card
+    const glowGeom = new RoundedBoxGeometry(0.68, 0.94, 0.08, 8, 0.03);
+    const glowMat = new THREE.MeshBasicMaterial({
       color: new THREE.Color('#dff7ff'),
-      transparent: true,
-      opacity: 0.95,
-      depthWrite: false,
+      transparent: true, opacity: 0.18,
+      depthWrite: false, side: THREE.BackSide,
       blending: THREE.AdditiveBlending
     });
-    this.edgeGlow = new THREE.Mesh(new THREE.PlaneGeometry(0.75, 1.02), glowMaterial);
-    this.edgeGlow.position.set(0, 0, 0.02);
+    this.glowMesh = new THREE.Mesh(glowGeom, glowMat);
 
     this.cardGroup.clear();
+    this.cardGroup.add(this.glowMesh);
     this.cardGroup.add(this.cardMesh);
-    this.cardGroup.add(this.edgeGlow);
 
     this.floorCircle = new THREE.Mesh(
       new THREE.CircleGeometry(0.08, 28).rotateX(-Math.PI / 2),
@@ -305,14 +237,13 @@ export class WebXREngine {
     this.contentGroup.add(this.floorCircle);
     this.contentGroup.visible = false;
 
+    // Direct video
     const mediaUrl = safeUrl(this.gift.videoUrl);
     if (mediaUrl && isDirectVideoUrl(mediaUrl)) {
       this.videoEl.src = mediaUrl;
       this.videoEl.crossOrigin = 'anonymous';
-      this.videoEl.loop = false;
-      this.videoEl.muted = false;
-      this.videoEl.playsInline = true;
-      this.videoEl.preload = 'auto';
+      this.videoEl.loop = false; this.videoEl.muted = false;
+      this.videoEl.playsInline = true; this.videoEl.preload = 'auto';
       this.videoTexture = new THREE.VideoTexture(this.videoEl);
       this.videoTexture.colorSpace = THREE.SRGBColorSpace;
       const videoMaterial = new THREE.MeshBasicMaterial({ map: this.videoTexture, toneMapped: false, transparent: true, opacity: 0.995 });
@@ -331,7 +262,7 @@ export class WebXREngine {
     canvas.addEventListener('pointerup', this.onPointerUp);
     canvas.addEventListener('pointercancel', this.onPointerUp);
     canvas.addEventListener('wheel', this.onWheel, { passive: false });
-    canvas.addEventListener('contextmenu', (event) => event.preventDefault());
+    canvas.addEventListener('contextmenu', (e) => e.preventDefault());
   }
 
   handleResize = () => {
@@ -344,18 +275,9 @@ export class WebXREngine {
   };
 
   setGlowMode(active) {
-    if (!this.edgeGlow?.material) return;
-    this.edgeGlow.material.color.set(active ? '#8b5cf6' : '#dff7ff');
-    this.edgeGlow.material.opacity = active ? 1 : 0.95;
-  }
-
-  showHintTemporarily() {
-    if (!this.overlayEl) return;
-    this.overlayEl.classList.remove('hidden', 'is-dimmed');
-    window.clearTimeout(this.hintTimer);
-    this.hintTimer = window.setTimeout(() => {
-      this.overlayEl.classList.add('is-dimmed');
-    }, 3600);
+    if (!this.glowMesh?.material) return;
+    this.glowMesh.material.color.set(active ? '#8b5cf6' : '#dff7ff');
+    this.glowMesh.material.opacity = active ? 0.35 : 0.18;
   }
 
   stagePointerToRay(event) {
@@ -381,13 +303,10 @@ export class WebXREngine {
   onPointerDown = (event) => {
     this.activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
     this.lastPointerPoint = { x: event.clientX, y: event.clientY };
-    this.showHintTemporarily();
 
     const now = performance.now();
     if (now - this.lastTapTime < 280 && this.screenIntersectsCard(event)) {
-      this.flipCard();
-      this.lastTapTime = 0;
-      return;
+      this.flipCard(); this.lastTapTime = 0; return;
     }
     this.lastTapTime = now;
 
@@ -398,8 +317,6 @@ export class WebXREngine {
     }
 
     const onCard = this.screenIntersectsCard(event);
-    this.longPressPointerId = event.pointerId;
-    this.longPressContext = onCard ? 'card' : 'outside';
     this.gestureMode = onCard ? 'card-pending' : 'view';
 
     window.clearTimeout(this.longPressTimer);
@@ -407,7 +324,7 @@ export class WebXREngine {
       this.longPressTimer = window.setTimeout(() => {
         this.gestureMode = 'move';
         this.setGlowMode(true);
-        this.setStatus('Edit mode active. Drag on the card to move it left, right, up, or down.', 'success');
+        this.setStatus('Edit mode. Drag to move the card.', 'success');
       }, 360);
     }
   };
@@ -425,7 +342,6 @@ export class WebXREngine {
       this.baseScale = clamp(this.baseScale + delta, 0.5, 5.5);
       this.lastPinchDistance = nextDistance;
       this.applyPlacement();
-      this.setStatus(`Zoom ${this.baseScale.toFixed(2)}x.`, 'success');
       return;
     }
 
@@ -437,7 +353,6 @@ export class WebXREngine {
       this.localOffsetX = clamp(this.localOffsetX + dx * 0.0028, -1.8, 1.8);
       this.localOffsetY = clamp(this.localOffsetY - dy * 0.0035, -1.8, 2.8);
       this.applyPlacement();
-      this.setStatus(`Moved. L/R ${this.localOffsetX.toFixed(2)} · U/D ${this.localOffsetY.toFixed(2)} · scale ${this.baseScale.toFixed(2)}x.`, 'success');
       return;
     }
 
@@ -445,20 +360,15 @@ export class WebXREngine {
       this.yawOffset -= dx * 0.007;
       this.pitchOffset = clamp(this.pitchOffset + dy * 0.0055, -0.9, 0.9);
       this.applyPlacement();
-      this.setStatus(`View adjusted. Rotation ${this.yawOffset.toFixed(2)} · tilt ${this.pitchOffset.toFixed(2)}.`, 'success');
     }
   };
 
   onPointerUp = (event) => {
     this.activePointers.delete(event.pointerId);
     window.clearTimeout(this.longPressTimer);
-    this.longPressTimer = null;
-    this.longPressPointerId = null;
     if (this.gestureMode === 'move') {
       this.setGlowMode(false);
-      this.setStatus('Edit mode ended. Tap empty space anytime to bring the hint back.', 'muted');
-    } else if (this.gestureMode === 'view' && !this.screenIntersectsCard(event)) {
-      this.showHintTemporarily();
+      this.setStatus('Edit mode ended.', 'muted');
     }
     this.gestureMode = this.activePointers.size >= 2 ? 'pinch' : 'none';
   };
@@ -468,14 +378,12 @@ export class WebXREngine {
     event.preventDefault();
     this.baseScale = clamp(this.baseScale + (event.deltaY < 0 ? 0.12 : -0.12), 0.5, 5.5);
     this.applyPlacement();
-    this.setStatus(`Zoom ${this.baseScale.toFixed(2)}x.`, 'success');
   };
 
   flipCard() {
     this.isCardBack = !this.isCardBack;
-    this.flipProgress = this.isCardBack ? Math.PI : 0;
-    this.cardMesh.rotation.y = Math.PI + this.flipProgress;
-    this.setStatus(this.isCardBack ? 'Back side shown.' : 'Front side shown.', 'success');
+    this.cardMesh.rotation.y = Math.PI + (this.isCardBack ? Math.PI : 0);
+    this.setStatus(this.isCardBack ? 'Back side.' : 'Front side.', 'success');
   }
 
   placeNow() {
@@ -527,9 +435,6 @@ export class WebXREngine {
 
   async playVideoSegment() {
     if (!this.videoPlane || !this.videoEl?.src) {
-      if (parseYouTubeId(this.gift.videoUrl || '')) {
-        this.setStatus('YouTube segment preview is supported in the editor. For runtime stability, the AR card opens without inline video texture.', 'muted');
-      }
       this.sequenceComplete = true;
       window.dispatchEvent(new CustomEvent('ar-sequence-complete'));
       return;
@@ -541,15 +446,12 @@ export class WebXREngine {
     this.videoPlane.visible = true;
     this.videoEl.currentTime = start;
 
-    try {
-      await this.videoEl.play();
-    } catch {
-      this.setStatus('Video playback is waiting for the next valid gesture.', 'warn');
+    try { await this.videoEl.play(); } catch {
+      this.setStatus('Video waiting for gesture.', 'warn');
     }
 
     if (this.videoEndHandler) {
       this.videoEl.removeEventListener('timeupdate', this.videoEndHandler);
-      this.videoEndHandler = null;
     }
 
     this.videoEndHandler = () => {
@@ -559,7 +461,7 @@ export class WebXREngine {
         this.videoEndHandler = null;
         this.sequenceComplete = true;
         window.dispatchEvent(new CustomEvent('ar-sequence-complete'));
-        this.setStatus('Card sequence completed. The thank-you block is now ready.', 'success');
+        this.setStatus('Card sequence completed.', 'success');
       }
     };
     this.videoEl.addEventListener('timeupdate', this.videoEndHandler);
@@ -574,22 +476,14 @@ export class WebXREngine {
 
   async replay() {
     if (!this.placed) return;
-    if (this.videoEl?.src) {
-      this.videoEl.pause();
-      this.videoEl.currentTime = clamp(Number(this.gift.videoStart || 0), 0, 36000);
-    }
+    if (this.videoEl?.src) { this.videoEl.pause(); this.videoEl.currentTime = clamp(Number(this.gift.videoStart || 0), 0, 36000); }
     await this.startSequence();
-    this.showHintTemporarily();
     this.setStatus('Sequence restarted.', 'success');
   }
 
   async enterAR() {
-    if (this.previewMode) {
-      throw new Error('Buyer preview is already showing the interactive 3D card. Open the same link on a supported mobile device for immersive AR.');
-    }
-    if (!navigator.xr || !window.isSecureContext) {
-      throw new Error('Immersive AR is unavailable here. The interactive 3D card remains active instead.');
-    }
+    if (this.previewMode) throw new Error('Preview mode active. Open on mobile for immersive AR.');
+    if (!navigator.xr || !window.isSecureContext) throw new Error('Immersive AR unavailable. 3D card active.');
     if (this.session) return;
 
     const session = await navigator.xr.requestSession('immersive-ar', {
@@ -603,25 +497,19 @@ export class WebXREngine {
     await this.renderer.xr.setSession(session);
     this.pendingArPlacement = true;
     this.autoPlacedInSession = false;
-    this.showHintTemporarily();
     window.dispatchEvent(new CustomEvent('ar-session-started'));
-    this.setStatus('AR started. The card is being placed directly in front of you.', 'success');
+    this.setStatus('AR started. Card placed in front of you.', 'success');
   }
 
   render(_time, _frame) {
     if (!this.renderer || !this.scene || !this.camera) return;
-
     if (this.session && this.pendingArPlacement && !this.autoPlacedInSession) {
       this.placeInFrontOfCamera();
       this.autoPlacedInSession = true;
       this.pendingArPlacement = false;
       this.startSequence();
     }
-
-    if (!this.previewMode && this.placed && this.session) {
-      this.orientTowardCamera();
-    }
-
+    if (!this.previewMode && this.placed && this.session) this.orientTowardCamera();
     this.renderer.render(this.scene, this.camera);
   }
 
@@ -637,16 +525,12 @@ export class WebXREngine {
     this.autoPlacedInSession = false;
     this.setGlowMode(false);
     window.dispatchEvent(new CustomEvent('ar-session-ended'));
-    this.setStatus('AR session ended. The thank-you block remains available below.', 'muted');
+    this.setStatus('AR session ended.', 'muted');
   }
 
   dispose() {
     window.clearTimeout(this.longPressTimer);
-    window.clearTimeout(this.hintTimer);
-    if (this.videoEndHandler) {
-      this.videoEl?.removeEventListener('timeupdate', this.videoEndHandler);
-      this.videoEndHandler = null;
-    }
+    if (this.videoEndHandler) this.videoEl?.removeEventListener('timeupdate', this.videoEndHandler);
     this.session?.end?.();
     this.renderer?.setAnimationLoop(null);
     this.videoEl?.pause?.();
