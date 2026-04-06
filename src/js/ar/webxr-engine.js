@@ -153,6 +153,8 @@ export class WebXREngine {
     this.cardMesh = null;
     this.edgeGlow = null;
     this.floorCircle = null;
+    this.cameraStream = null;
+    this.cameraVideoEl = null;
 
     this.placed = false;
     this.sequenceComplete = false;
@@ -222,7 +224,26 @@ export class WebXREngine {
       this.placeNow();
       this.startSequence();
       this.showHintTemporarily();
+      await this.initCameraBackground();
       this.setStatus('Interactive preview ready. Long-press the card to move it, drag outside to rotate / tilt, pinch to zoom, double-tap to flip.', 'success');
+    }
+  }
+
+  async initCameraBackground() {
+    try {
+      this.cameraVideoEl = document.createElement('video');
+      this.cameraVideoEl.setAttribute('autoplay', '');
+      this.cameraVideoEl.setAttribute('muted', '');
+      this.cameraVideoEl.setAttribute('playsinline', '');
+      this.cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      this.cameraVideoEl.srcObject = this.cameraStream;
+      await this.cameraVideoEl.play();
+      const texture = new THREE.VideoTexture(this.cameraVideoEl);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      this.scene.background = texture;
+    } catch (error) {
+      console.warn('Camera preview unavailable:', error);
+      this.scene.background = new THREE.Color(0x09101f);
     }
   }
 
@@ -641,6 +662,17 @@ export class WebXREngine {
   }
 
   dispose() {
+    if (this.cameraStream) {
+      this.cameraStream.getTracks().forEach((track) => track.stop());
+      this.cameraStream = null;
+    }
+    if (this.cameraVideoEl) {
+      this.cameraVideoEl.pause();
+      this.cameraVideoEl.removeAttribute('src');
+      this.cameraVideoEl.load();
+      this.cameraVideoEl = null;
+    }
+
     window.clearTimeout(this.longPressTimer);
     window.clearTimeout(this.hintTimer);
     if (this.videoEndHandler) {

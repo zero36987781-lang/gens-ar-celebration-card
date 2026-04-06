@@ -414,7 +414,13 @@ async function setRuntimeStatus() {
 
 function bindPreviewEditors() {
   [els.previewTitle, els.previewSubtitle, els.previewMessage, els.previewBackMessage].forEach((element) => {
-    element?.addEventListener('input', () => renderPreviewCard());
+    if (!element) return;
+    element.addEventListener('input', () => renderPreviewCard());
+    element.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+      document.execCommand('insertText', false, text);
+    });
   });
 }
 
