@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -268,3 +269,275 @@
   <script type="module" src="./js/sender/app.js"></script>
 </body>
 </html>
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>CHARIEL — Sender Studio</title>
+  <meta name="title" content="CHARIEL — Sender Studio" />
+  <link rel="stylesheet" href="./css/shared.css" />
+  <link rel="stylesheet" href="./css/sender.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand-wrap">
+      <div class="brand-mark">C</div>
+      <div class="brand-block">
+        <div class="brand">CHARIEL</div>
+        <div class="brand-sub">Sender Studio</div>
+      </div>
+    </div>
+    <span class="ghost-link">AR celebration card</span>
+  </header>
+
+  <main class="sender-shell">
+    <section class="hero card-panel page-view" data-step="1">
+      <span class="eyebrow">CHARIEL STANDARD</span>
+      <h1>Build the card directly in the preview.</h1>
+      <p>Names live at the top, message editing happens on the card, and every template updates title, subtitle, default copy, colors, and layout in one step.</p>
+      <div class="field-grid two-up hero-names">
+        <label class="glass-field">
+          <span>Receiver</span>
+          <input id="recipient-name" type="text" maxlength="40" placeholder="Emma" />
+        </label>
+        <label class="glass-field">
+          <span>Sender</span>
+          <input id="sender-name" type="text" maxlength="30" placeholder="Minji" />
+        </label>
+      </div>
+    </section>
+
+    <section class="builder-grid" id="builder-grid">
+      <div class="card-panel left-col page-view" data-step="1">
+        <div class="section-head">
+          <span class="step">1</span>
+          <div>
+            <h2>Template carousel</h2>
+            <p>Selecting a template updates title, subtitle, message, color, and the card layout preset.</p>
+          </div>
+        </div>
+        <div id="template-list" class="template-list"></div>
+      </div>
+
+      <div class="card-panel right-col page-view page-hidden" data-step="2">
+        <div class="section-head">
+          <span class="step">2</span>
+          <div>
+            <h2>Primary card input</h2>
+            <p>Edit front and back text directly in the preview. The auxiliary form below only handles media, map, and delivery settings.</p>
+          </div>
+        </div>
+
+        <div id="live-preview" class="live-preview">
+          <article id="preview-card" class="chariel-card is-front" aria-live="polite">
+            <div class="chariel-card__glow"></div>
+            <div class="chariel-card__face chariel-card__face--front">
+              <div class="chariel-card__topline">
+                <span id="preview-receiver" class="card-mini-name">Receiver</span>
+                <span id="video-badge" class="video-badge hidden">Video</span>
+              </div>
+              <div>
+                <div id="preview-title" class="card-title" contenteditable="true" spellcheck="false">Happy Birthday</div>
+                <div id="preview-subtitle" class="card-subtitle" contenteditable="true" spellcheck="false">A bright surprise for your special day.</div>
+              </div>
+              <div id="preview-message" class="card-message" contenteditable="true" spellcheck="false">Happy Birthday! Wishing you joy, laughter, and a beautiful year ahead.</div>
+              <div class="card-footer-row">
+                <div id="preview-sender" class="card-footer-name">From Minji</div>
+                <button id="flip-card" class="btn btn-secondary card-flip-btn" type="button">Flip</button>
+              </div>
+            </div>
+            <div class="chariel-card__face chariel-card__face--back">
+              <div class="chariel-card__back-label">Back side</div>
+              <div id="preview-back-message" class="card-back-message" contenteditable="true" spellcheck="false">Thank you for being such a special part of my life.</div>
+              <div class="card-footer-row">
+                <div class="card-side-hint">Double-check the back side before sharing.</div>
+                <button id="flip-card-back" class="btn btn-secondary card-flip-btn" type="button">Front</button>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div class="stack-form aux-form">
+          <div class="field-grid two-up">
+            <label class="glass-field">
+              <span>Front image</span>
+              <input id="photo-file" type="file" accept="image/*" />
+            </label>
+            <label class="glass-field">
+              <span>Back image</span>
+              <input id="back-photo-file" type="file" accept="image/*" />
+            </label>
+          </div>
+
+          <label class="glass-field">
+            <span>YouTube URL</span>
+            <input id="video-url" type="url" placeholder="https://www.youtube.com/watch?v=..." />
+          </label>
+
+          <div class="field-grid two-up">
+            <div class="glass-field">
+              <span>Start time</span>
+              <div class="hms-group">
+                <input class="hms-input" id="vs-h" type="text" inputmode="numeric" maxlength="2" value="00" placeholder="H" />
+                <span class="hms-sep">:</span>
+                <input class="hms-input" id="vs-m" type="text" inputmode="numeric" maxlength="2" value="00" placeholder="M" />
+                <span class="hms-sep">:</span>
+                <input class="hms-input" id="vs-s" type="text" inputmode="numeric" maxlength="2" value="00" placeholder="S" />
+              </div>
+            </div>
+            <div class="glass-field">
+              <span>End time</span>
+              <div class="hms-group">
+                <input class="hms-input" id="ve-h" type="text" inputmode="numeric" maxlength="2" value="00" placeholder="H" />
+                <span class="hms-sep">:</span>
+                <input class="hms-input" id="ve-m" type="text" inputmode="numeric" maxlength="2" value="00" placeholder="M" />
+                <span class="hms-sep">:</span>
+                <input class="hms-input" id="ve-s" type="text" inputmode="numeric" maxlength="2" value="12" placeholder="S" />
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-field video-preview-block">
+            <span>Segment preview</span>
+            <div id="video-preview-status" class="field-hint">Paste a YouTube link to preview the selected segment.</div>
+            <div id="video-preview-area" class="video-preview-area"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-panel right-col page-view page-hidden" data-step="3">
+        <div class="section-head">
+          <span class="step">3</span>
+          <div>
+            <h2>Delivery rules & Map placement</h2>
+            <p>Set unlock rules and location for your Celebration Card.</p>
+          </div>
+        </div>
+        </div>
+        <div class="stack-form aux-form">
+
+          <div class="field-grid two-up">
+            <label class="glass-field">
+              <span>CTA link</span>
+              <input id="cta-link" type="url" placeholder="https://..." />
+            </label>
+            <label class="glass-field">
+              <span>Unlock radius (m)</span>
+              <input id="unlock-radius" type="number" min="10" max="150" step="5" value="50" inputmode="numeric" />
+            </label>
+          </div>
+
+          <div class="field-grid two-up">
+            <label class="glass-field">
+              <span>Start date & time</span>
+              <input id="start-at" type="datetime-local" />
+            </label>
+            <label class="glass-field">
+              <span>Expires at (within 24h)</span>
+              <input id="expires-at" type="datetime-local" />
+            </label>
+          </div>
+
+          <div class="field-grid two-up compact-grid">
+            <label class="glass-field">
+              <span>Card height (m)</span>
+              <input id="spawn-height" type="number" min="0.5" max="5.5" step="0.1" value="3.0" inputmode="decimal" />
+            </label>
+            <label class="glass-field">
+              <span>Forward distance (m)</span>
+              <input id="forward-distance" type="number" min="0.5" max="5.5" step="0.1" value="2.0" inputmode="decimal" />
+            </label>
+          </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="card-panel right-col page-view page-hidden" data-step="4">
+        <div class="section-head">
+          <span class="step">4</span>
+          <div>
+            <h2>Map placement</h2>
+            <p>Use a fixed center pin. Pan the map below the pin and keep the radius visible as a transparent outline only.</p>
+          </div>
+        </div>
+
+        <form id="gift-form" class="stack-form aux-form" novalidate>
+
+          <div class="field-grid map-search-grid">
+            <label class="glass-field">
+              <span>Place search</span>
+              <input id="map-search" type="text" placeholder="Search address or place" />
+            </label>
+            <div class="inline-actions end-align">
+              <button id="map-search-btn" type="button" class="btn btn-secondary">Search</button>
+            </div>
+          </div>
+          <div id="sender-map" class="map-box"></div>
+          <div id="map-status" class="status-box muted">Map status will appear here.</div>
+
+          <div class="field-grid two-up compact-grid">
+            <label class="glass-field">
+              <span>Latitude</span>
+              <input id="latitude" type="number" step="0.000001" placeholder="37.566500" inputmode="decimal" />
+            </label>
+            <label class="glass-field">
+              <span>Longitude</span>
+              <input id="longitude" type="number" step="0.000001" placeholder="126.978000" inputmode="decimal" />
+            </label>
+          </div>
+          <div class="inline-actions">
+            <button id="use-current-location" type="button" class="btn btn-secondary">Use my location</button>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Create link</button>
+            <button id="copy-link" type="button" class="btn btn-secondary">Copy</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="preview-grid page-view page-hidden" data-step="5">
+      <div class="card-panel success-panel">
+        <div class="section-head">
+          <span class="step">5</span>
+          <div>
+            <h2>Share</h2>
+            <p>Create the recipient URL, copy it, or open live / preview QA screens side-by-side.</p>
+          </div>
+        </div>
+        <div class="share-stack">
+          <label class="glass-field">
+            <span>Public link</span>
+            <input id="share-link" type="text" readonly placeholder="Not created yet" />
+          </label>
+          <div class="inline-actions share-actions">
+            <a id="open-link" class="btn btn-secondary disabled-link" href="#" target="_blank" rel="noreferrer">Open live</a>
+            <a id="preview-link" class="btn btn-secondary disabled-link" href="#" target="_blank" rel="noreferrer">Buyer preview</a>
+          </div>
+          <div id="status-box" class="status-box muted">No gift created yet.</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Bottom nav -->
+  <nav class="bottom-nav" id="bottom-nav">
+    <button id="nav-prev" class="btn btn-secondary nav-btn" type="button" disabled>◀ Previous</button>
+    <div class="nav-dots" id="nav-dots">
+      <div class="dot active"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+    <button id="nav-next" class="btn btn-primary nav-btn" type="button">Next ▶</button>
+  </nav>
+
+  <script type="module" src="./js/sender/app.js"></script>
+</body>
+</html>
+>>>>>>> e93c725ef76b8826e893dfc9671ad518db6440c4
