@@ -247,7 +247,7 @@ export class WebXREngine {
   }
 
   buildGiftMeshes() {
-    const title = this.gift.templateName || 'CHARIEL';
+    const title = this.gift.frontTitle || this.gift.templateName || 'CHARIEL';
     const frontCanvas = buildTextCanvas({
       background: this.gift.frontColor || '#7c3aed',
       accent: this.gift.accentColor || '#f59e0b',

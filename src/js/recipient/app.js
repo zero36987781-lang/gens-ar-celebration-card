@@ -55,7 +55,6 @@ const els = {
   expiredCopy: qs('#expired-copy'),
   ctaButton: qs('#cta-button'),
   giftVideo: qs('#gift-video'),
-  // ★ Camera AR elements
   toggleCameraAr: qs('#toggle-camera-ar'),
   cameraFeed: qs('#camera-feed')
 };
@@ -65,7 +64,7 @@ let engine = null;
 let thanksReady = false;
 let previewAutomationStarted = false;
 
-// ★ Camera AR state
+// Camera AR state
 let cameraStream = null;
 let cameraArActive = false;
 
@@ -147,7 +146,7 @@ function renderGift() {
     ? 'Buyer preview will automatically step through the real recipient flow.'
     : 'Start, check your location, then open the card.';
   els.senderLine.textContent = gift.senderName || 'Someone special';
-  els.messageLine.textContent = gift.message || 'A special message is waiting for you.';
+  els.messageLine.textContent = gift.message || gift.frontText || 'A special message is waiting for you.';
   if (gift.ctaLink) {
     els.ctaButton.href = gift.ctaLink;
     els.ctaButton.classList.remove('hidden');
@@ -256,7 +255,7 @@ async function checkDistance() {
       els.distanceState.className = 'distance-state state-ready';
       setStatus(
         els.distanceCopy,
-        `You are inside the unlock area (${formatDistance(latestDistance)} away). Open the card to load it ${Number(gift.forwardDistance || 2).toFixed(1)}m in front of you.${parseYouTubeId(gift.videoUrl || '') ? ' YouTube media remains editor-preview only for runtime stability.' : ''}`,
+        `You are inside the unlock area (${formatDistance(latestDistance)} away). Open the card to load it ${Number(gift.forwardDistance || 2).toFixed(1)}m in front of you.`,
         'success'
       );
       els.launchAr.disabled = false;
@@ -279,6 +278,12 @@ async function checkDistance() {
 
 async function launchCardStage() {
   showPanel(els.arPanel);
+
+  // ★ Always show Camera AR button when ar-panel is visible
+  if (els.toggleCameraAr) {
+    els.toggleCameraAr.classList.remove('hidden');
+  }
+
   setStatus(els.arStatus, 'Preparing the card stage. Tap empty space to bring the gesture hint back.', 'muted');
   if (!engine) {
     engine = new WebXREngine({
@@ -305,10 +310,9 @@ async function launchCardStage() {
 }
 
 /* ══════════════════════════════════════════
-   ★ Camera AR — buyer preview can toggle
-     the rear camera as a background behind
-     the 3D card to simulate what the
-     real recipient would see.
+   ★ Camera AR — toggle the rear camera as
+     a background behind the 3D card.
+     Available in BOTH preview and live mode.
    ══════════════════════════════════════════ */
 async function toggleCameraAr() {
   if (cameraArActive) {
@@ -341,7 +345,6 @@ async function toggleCameraAr() {
     if (els.cameraFeed) {
       els.cameraFeed.srcObject = cameraStream;
       els.cameraFeed.classList.remove('hidden');
-      // Make sure the video plays (some browsers need this)
       try { await els.cameraFeed.play(); } catch { /* autoplay attr handles it */ }
     }
     els.arStage?.classList.add('camera-ar-mode');
@@ -360,11 +363,7 @@ async function startPreviewAutomation() {
   [qs('#recipient-card'), els.envPanel, els.distancePanel].forEach((el) => el?.classList.add('hidden'));
   showPanel(els.arPanel);
 
-  // ★ Show the Camera AR toggle button in preview mode
-  if (els.toggleCameraAr) {
-    els.toggleCameraAr.classList.remove('hidden');
-  }
-
+  // Camera AR button is shown via launchCardStage
   setStatus(els.arStatus, 'Buyer preview — 3D stage ready. Tap "📷 Camera AR" to overlay the card on your camera feed.', 'success');
   await launchCardStage();
 }
@@ -410,7 +409,7 @@ async function init() {
   els.copyThanks.addEventListener('click', copyThanksMessage);
   els.shareThanks.addEventListener('click', shareThanksMessage);
 
-  // ★ Camera AR toggle event
+  // Camera AR toggle event
   els.toggleCameraAr?.addEventListener('click', toggleCameraAr);
 
   window.addEventListener('ar-session-started', () => setArLiveMode(true));
@@ -425,7 +424,6 @@ init();
 
 window.addEventListener('beforeunload', () => {
   engine?.dispose();
-  // ★ Clean up camera stream on page unload
   if (cameraStream) {
     cameraStream.getTracks().forEach(track => track.stop());
     cameraStream = null;
