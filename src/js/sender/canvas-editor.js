@@ -1,39 +1,35 @@
 // src/js/sender/canvas-editor.js
-// Full canvas editor with Fill/Stroke/BG modes, Solid/Gradient/Harmony color tabs,
-// text CRUD, image (background + insert) with resize & opacity, touch-first UX.
-
 const CanvasEditor = (() => {
-  /* ─── State ─── */
   let layers = { front: [], back: [] };
   let activeSide = 'front';
   let selectedId = null;
-  let nextId = 1;
-
-  // Color engine state (per-layer, but shared UI)
-  let colorMode = 'fill'; // fill | stroke | bg
-  let activeTab = 0;      // 0=solid 1=gradient 2=harmony 3=props
+  let nextId = 100;
+  let colorMode = 'fill';
   let gradientStops = [
     { id: 1, pos: 0, color: '#007AFF' },
     { id: 2, pos: 100, color: '#AF52DE' }
   ];
   let gradientAngle = 135;
   let activeStopId = null;
+  let _initialized = false;
+
+  // Single global drag state — prevents duplicate listeners
+  let _drag = null;
+  let _pinch = null;
 
   const colors = [
-    '#FF3B30', '#FF9500', '#FFCC00', '#34C759', '#007AFF', '#5856D6',
-    '#AF52DE', '#FF2D55', '#FFFFFF', '#1C1C1E', '#8E8E93', '#C7C7CC',
-    '#0A84FF', '#30D158', '#FFD60A', '#FF6482', '#BF5AF2', '#64D2FF',
-    '#AC8E68', '#2C2C2E', '#48484A', '#636366', '#D1D1D6', '#F2F2F7'
+    '#FF3B30','#FF9500','#FFCC00','#34C759','#007AFF','#5856D6',
+    '#AF52DE','#FF2D55','#FFFFFF','#1C1C1E','#8E8E93','#C7C7CC',
+    '#0A84FF','#30D158','#FFD60A','#FF6482','#BF5AF2','#64D2FF',
+    '#AC8E68','#2C2C2E','#48484A','#636366','#D1D1D6','#F2F2F7'
   ];
 
-  /* ─── DOM refs ─── */
   const $ = (id) => document.getElementById(id);
   const els = {};
 
   function cacheDom() {
     els.stageFront = $('canvas-stage-front');
     els.stageBack = $('canvas-stage-back');
-    els.toolbar = $('canvas-toolbar');
     els.solidGrid = $('solidGrid');
     els.palGrid = $('palGrid');
     els.harmonyArea = $('harmonyArea');
@@ -44,6 +40,7 @@ const CanvasEditor = (() => {
     els.angRange = $('angRange');
     els.angVal = $('angVal');
     els.scaleSlider = $('scale-slider');
+    els.scaleLabel = $('scale-label');
     els.opacitySlider = $('opacity-slider');
     els.imgWidthSlider = $('img-width-slider');
     els.imageProps = $('image-props');
@@ -57,75 +54,91 @@ const CanvasEditor = (() => {
     els.btnRemoveStop = $('btn-remove-stop');
   }
 
-  /* ─── Helpers ─── */
   function uid() { return String(nextId++); }
+  function stage(side) { return side === 'front' ? els.stageFront : els.stageBack; }
+  function sel() { return selectedId ? (layers[activeSide].find(l => l.id === selectedId) || null) : null; }
 
-  function getStage(side) {
-    return side === 'front' ? els.stageFront : els.stageBack;
+  function gradCSS(stops, ang) {
+    const s = [...stops].sort((a,b) => a.pos - b.pos);
+    return `linear-gradient(${ang}deg, ${s.map(x => `${x.color} ${x.pos}%`).join(', ')})`;
   }
 
-  function selectedLayer() {
-    if (!selectedId) return null;
-    return layers[activeSide].find(l => l.id === selectedId) || null;
+  function hexRgb(hex) {
+    const h = hex.replace('#','');
+    const n = h.length===3 ? h.split('').map(c=>c+c).join('') : h;
+    const v = parseInt(n,16);
+    return { r:(v>>16)&255, g:(v>>8)&255, b:v&255 };
   }
 
-  function buildGradientCSS(stops, angle) {
-    const sorted = [...stops].sort((a, b) => a.pos - b.pos);
-    return `linear-gradient(${angle}deg, ${sorted.map(s => `${s.color} ${s.pos}%`).join(', ')})`;
+  function readFile(file) {
+    return new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(file); });
   }
 
-  function hexToRgb(hex) {
-    const h = hex.replace('#', '');
-    const n = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
-    const v = parseInt(n, 16);
-    return { r: (v >> 16) & 255, g: (v >> 8) & 255, b: v & 255 };
-  }
-
-  function readFileAsDataURL(file) {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.readAsDataURL(file);
-    });
-  }
-
-  /* ─── Init ─── */
+  /* ── Init ── */
   function init() {
+    if (_initialized) return;
     cacheDom();
     if (!els.stageFront) return;
+    _initialized = true;
 
-    // Default layers
-    layers = {
-      front: [
-        { id: uid(), type: 'text', text: 'Happy Birthday', x: 20, y: 40, fontSize: 34, opacity: 1, fillType: 'solid', fillColor: '#FFFFFF', strokeColor: 'transparent', gradStops: null, gradAngle: 135, side: 'front' },
-        { id: uid(), type: 'text', text: 'Wishing you joy and laughter.', x: 20, y: 180, fontSize: 17, opacity: 1, fillType: 'solid', fillColor: 'rgba(255,255,255,0.88)', strokeColor: 'transparent', gradStops: null, gradAngle: 135, side: 'front' }
-      ],
-      back: [
-        { id: uid(), type: 'text', text: 'Thank you for everything.', x: 20, y: 50, fontSize: 20, opacity: 1, fillType: 'solid', fillColor: '#FFFFFF', strokeColor: 'transparent', gradStops: null, gradAngle: 135, side: 'back' }
-      ]
-    };
-
+    resetDefaultLayers();
     buildSwatches();
-    bindToolbar();
+    bindToolbarButtons();
     bindTabs();
     bindModeSelector();
     bindPropertySliders();
-    bindGradientEngine();
+    bindGradient();
     bindFileInputs();
+    bindGlobalPointer();
     renderLayers();
   }
 
-  /* ─── Swatch grids ─── */
+  function resetDefaultLayers() {
+    layers = {
+      front: [
+        { id: uid(), type:'text', text:'Happy Birthday', x:20, y:36, fontSize:32, opacity:1, fillType:'solid', fillColor:'#FFFFFF', strokeColor:'transparent', gradStops:null, gradAngle:135 },
+        { id: uid(), type:'text', text:'A bright surprise for your special day.', x:20, y:78, fontSize:14, opacity:0.88, fillType:'solid', fillColor:'rgba(255,255,255,0.88)', strokeColor:'transparent', gradStops:null, gradAngle:135 },
+        { id: uid(), type:'text', text:'Happy Birthday! Wishing you joy, laughter,\nand a beautiful year ahead.', x:20, y:120, fontSize:16, opacity:1, fillType:'solid', fillColor:'#FFFFFF', strokeColor:'transparent', gradStops:null, gradAngle:135 },
+        { id: uid(), type:'text', text:'From Sender', x:20, y:320, fontSize:13, opacity:0.92, fillType:'solid', fillColor:'rgba(255,255,255,0.92)', strokeColor:'transparent', gradStops:null, gradAngle:135 }
+      ],
+      back: [
+        { id: uid(), type:'text', text:'Back side', x:20, y:30, fontSize:12, opacity:0.7, fillType:'solid', fillColor:'rgba(255,255,255,0.7)', strokeColor:'transparent', gradStops:null, gradAngle:135 },
+        { id: uid(), type:'text', text:'Thank you for being such a\nspecial part of my life.', x:20, y:80, fontSize:17, opacity:1, fillType:'solid', fillColor:'#FFFFFF', strokeColor:'transparent', gradStops:null, gradAngle:135 }
+      ]
+    };
+  }
+
+  /* ── Apply template data to canvas layers ── */
+  function applyTemplateToLayers(tpl) {
+    // Front: title[0], subtitle[1], message[2], sender[3]
+    const f = layers.front;
+    if (f[0]) f[0].text = tpl.title || 'Title';
+    if (f[1]) f[1].text = tpl.subtitle || '';
+    if (f[2]) f[2].text = tpl.message || '';
+    // Back
+    const b = layers.back;
+    if (b[1]) b[1].text = tpl.backText || '';
+    renderLayers();
+  }
+
+  function updateSenderReceiver(senderName, receiverName) {
+    const f = layers.front;
+    if (f[3]) f[3].text = `From ${senderName || 'Sender'}`;
+    // We don't have a receiver layer by default, but we could add one. For now, skip.
+    renderLayers();
+  }
+
+  /* ── Swatches ── */
   function buildSwatches() {
     els.solidGrid.innerHTML = '';
     els.palGrid.innerHTML = '';
     colors.forEach(c => {
-      els.solidGrid.appendChild(makeSwatch(c, handleSolidPick));
-      els.palGrid.appendChild(makeSwatch(c, handleHarmonyBase));
+      els.solidGrid.appendChild(mkSwatch(c, onSolidPick));
+      els.palGrid.appendChild(mkSwatch(c, onHarmonyBase));
     });
   }
 
-  function makeSwatch(color, handler) {
+  function mkSwatch(color, handler) {
     const d = document.createElement('div');
     d.className = 'swatch';
     d.style.backgroundColor = color;
@@ -137,98 +150,63 @@ const CanvasEditor = (() => {
     return d;
   }
 
-  /* ─── Color handlers ─── */
-  function handleSolidPick(color) {
-    const layer = selectedLayer();
+  function onSolidPick(color) {
+    const layer = sel();
+    if (colorMode === 'bg') { applyBg('solid', color); return; }
     if (!layer) return;
-
-    if (colorMode === 'fill') {
-      layer.fillType = 'solid';
-      layer.fillColor = color;
-    } else if (colorMode === 'stroke') {
-      layer.strokeColor = color;
-    } else if (colorMode === 'bg') {
-      // Apply to the card background, not a layer
-      applyCardBackground('solid', color);
-    }
+    if (colorMode === 'fill') { layer.fillType = 'solid'; layer.fillColor = color; }
+    else if (colorMode === 'stroke') { layer.strokeColor = color; }
     renderLayers();
   }
 
-  function handleHarmonyBase(hex) {
-    const { r, g, b } = hexToRgb(hex);
-    const tones = [
-      `rgb(${255 - r},${255 - g},${255 - b})`,
-      `rgb(${g},${b},${r})`,
-      `rgb(${b},${r},${g})`,
-      `rgba(${r},${g},${b},0.4)`
-    ];
+  function onHarmonyBase(hex) {
+    const {r,g,b} = hexRgb(hex);
+    const tones = [`rgb(${255-r},${255-g},${255-b})`,`rgb(${g},${b},${r})`,`rgb(${b},${r},${g})`,`rgba(${r},${g},${b},0.4)`];
     els.harmonyArea.innerHTML = '';
     tones.forEach(t => {
       const box = document.createElement('div');
       box.className = 'harmony-box';
       box.style.backgroundColor = t;
-      box.addEventListener('click', () => handleSolidPick(t));
+      box.addEventListener('click', () => onSolidPick(t));
       els.harmonyArea.appendChild(box);
     });
-    // Also apply base color immediately
-    handleSolidPick(hex);
+    onSolidPick(hex);
   }
 
-  function applyGradientToSelected() {
-    const layer = selectedLayer();
+  function applyGradSel() {
+    const layer = sel();
+    const css = gradCSS(gradientStops, gradientAngle);
+    if (colorMode === 'bg') { applyBg('gradient', css); return; }
     if (!layer) return;
-
-    const css = buildGradientCSS(gradientStops, gradientAngle);
-
     if (colorMode === 'fill') {
       layer.fillType = 'gradient';
       layer.gradStops = JSON.parse(JSON.stringify(gradientStops));
       layer.gradAngle = gradientAngle;
-    } else if (colorMode === 'bg') {
-      applyCardBackground('gradient', css);
     }
     renderLayers();
   }
 
-  function applyCardBackground(type, value) {
-    const stage = getStage(activeSide);
-    if (type === 'solid') {
-      stage.style.background = `linear-gradient(145deg, ${value}, ${value})`;
-    } else {
-      stage.style.background = value;
-    }
+  function applyBg(type, value) {
+    const s = stage(activeSide);
+    s.style.background = type === 'solid' ? value : value;
   }
 
-  /* ─── Gradient engine ─── */
-  function bindGradientEngine() {
-    els.gradTrack.addEventListener('click', (e) => {
+  /* ── Gradient ── */
+  function bindGradient() {
+    function addStopAt(clientX) {
       const r = els.gradTrack.getBoundingClientRect();
-      const pos = Math.round(((e.clientX - r.left) / r.width) * 100);
-      gradientStops.push({ id: Date.now(), pos, color: '#8E8E93' });
-      activeStopId = gradientStops[gradientStops.length - 1].id;
-      renderStops();
-      applyGradientToSelected();
-    });
+      const pos = Math.round(((clientX - r.left) / r.width) * 100);
+      const ns = { id: Date.now(), pos: Math.max(0,Math.min(100,pos)), color: '#8E8E93' };
+      gradientStops.push(ns);
+      activeStopId = ns.id;
+      renderStops(); applyGradSel();
+    }
+    els.gradTrack.addEventListener('click', e => addStopAt(e.clientX));
+    els.gradTrack.addEventListener('touchstart', e => { e.preventDefault(); addStopAt(e.touches[0].clientX); }, {passive:false});
 
-    // Touch support for gradient track
-    els.gradTrack.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      const touch = e.touches[0];
-      const r = els.gradTrack.getBoundingClientRect();
-      const pos = Math.round(((touch.clientX - r.left) / r.width) * 100);
-      gradientStops.push({ id: Date.now(), pos, color: '#8E8E93' });
-      activeStopId = gradientStops[gradientStops.length - 1].id;
-      renderStops();
-      applyGradientToSelected();
-    }, { passive: false });
-
-    els.stopColorInput.addEventListener('input', (e) => {
-      const stop = gradientStops.find(s => s.id === activeStopId);
-      if (stop) {
-        stop.color = e.target.value;
-        renderStops();
-        applyGradientToSelected();
-      }
+    els.stopColorInput.addEventListener('input', e => {
+      const s = gradientStops.find(x => x.id === activeStopId);
+      if (s) { s.color = e.target.value; renderStops(); applyGradSel(); }
     });
 
     els.btnRemoveStop.addEventListener('click', () => {
@@ -236,15 +214,13 @@ const CanvasEditor = (() => {
       gradientStops = gradientStops.filter(s => s.id !== activeStopId);
       activeStopId = null;
       els.stopSettings.classList.add('hidden');
-      renderStops();
-      applyGradientToSelected();
+      renderStops(); applyGradSel();
     });
 
     els.angRange.addEventListener('input', () => {
       gradientAngle = Number(els.angRange.value);
       els.angVal.textContent = gradientAngle;
-      renderStops();
-      applyGradientToSelected();
+      renderStops(); applyGradSel();
     });
   }
 
@@ -252,66 +228,50 @@ const CanvasEditor = (() => {
     els.stopContainer.innerHTML = '';
     gradientStops.forEach(s => {
       const h = document.createElement('div');
-      h.className = 'stop-handle';
+      h.className = 'stop-handle' + (s.id === activeStopId ? ' active-stop' : '');
       h.style.left = s.pos + '%';
       h.style.backgroundColor = s.color;
-      if (s.id === activeStopId) h.classList.add('active-stop');
 
-      // Pointer (mouse) drag
-      const startDrag = (startX) => {
+      const beginDrag = (sx) => {
         activeStopId = s.id;
         els.stopSettings.classList.remove('hidden');
-        els.stopColorInput.value = s.color;
+        els.stopColorInput.value = s.color.startsWith('#') ? s.color : '#8E8E93';
 
-        const move = (clientX) => {
+        const mv = cx => {
           const r = els.gradTrack.getBoundingClientRect();
-          s.pos = Math.max(0, Math.min(100, Math.round(((clientX - r.left) / r.width) * 100)));
+          s.pos = Math.max(0, Math.min(100, Math.round(((cx - r.left) / r.width) * 100)));
           h.style.left = s.pos + '%';
-          updateGradTrackVisual();
-          applyGradientToSelected();
+          updateGradVis(); applyGradSel();
         };
-
-        const upMouse = () => {
-          window.removeEventListener('mousemove', onMouseMove);
-          window.removeEventListener('mouseup', upMouse);
-        };
-        const onMouseMove = (e) => move(e.clientX);
-
-        const upTouch = () => {
-          window.removeEventListener('touchmove', onTouchMove);
-          window.removeEventListener('touchend', upTouch);
-        };
-        const onTouchMove = (e) => { e.preventDefault(); move(e.touches[0].clientX); };
-
-        window.addEventListener('mousemove', onMouseMove);
-        window.addEventListener('mouseup', upMouse);
-        window.addEventListener('touchmove', onTouchMove, { passive: false });
-        window.addEventListener('touchend', upTouch);
+        const mmm = e => mv(e.clientX);
+        const tmt = e => { e.preventDefault(); mv(e.touches[0].clientX); };
+        const up = () => { window.removeEventListener('mousemove',mmm); window.removeEventListener('mouseup',up); window.removeEventListener('touchmove',tmt); window.removeEventListener('touchend',up); };
+        window.addEventListener('mousemove',mmm);
+        window.addEventListener('mouseup',up);
+        window.addEventListener('touchmove',tmt,{passive:false});
+        window.addEventListener('touchend',up);
       };
 
-      h.addEventListener('mousedown', (e) => { e.stopPropagation(); startDrag(e.clientX); });
-      h.addEventListener('touchstart', (e) => { e.stopPropagation(); e.preventDefault(); startDrag(e.touches[0].clientX); }, { passive: false });
-
-      h.addEventListener('click', (e) => {
+      h.addEventListener('mousedown', e => { e.stopPropagation(); beginDrag(e.clientX); });
+      h.addEventListener('touchstart', e => { e.stopPropagation(); e.preventDefault(); beginDrag(e.touches[0].clientX); }, {passive:false});
+      h.addEventListener('click', e => {
         e.stopPropagation();
         activeStopId = s.id;
         els.stopSettings.classList.remove('hidden');
-        els.stopColorInput.value = s.color;
+        els.stopColorInput.value = s.color.startsWith('#') ? s.color : '#8E8E93';
         renderStops();
       });
-
       els.stopContainer.appendChild(h);
     });
-
-    updateGradTrackVisual();
+    updateGradVis();
   }
 
-  function updateGradTrackVisual() {
-    const sorted = [...gradientStops].sort((a, b) => a.pos - b.pos);
+  function updateGradVis() {
+    const sorted = [...gradientStops].sort((a,b) => a.pos - b.pos);
     els.gradTrack.style.background = `linear-gradient(90deg, ${sorted.map(s => `${s.color} ${s.pos}%`).join(', ')})`;
   }
 
-  /* ─── Mode selector (Fill/Stroke/BG) ─── */
+  /* ── Mode / Tabs ── */
   function bindModeSelector() {
     document.querySelectorAll('#canvas-toolbar .obj-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -322,82 +282,93 @@ const CanvasEditor = (() => {
     });
   }
 
-  /* ─── Tabs ─── */
   function bindTabs() {
     document.querySelectorAll('#canvas-toolbar .ctab').forEach(t => {
       t.addEventListener('click', () => {
         document.querySelectorAll('#canvas-toolbar .ctab').forEach(x => x.classList.remove('active'));
         document.querySelectorAll('#canvas-toolbar .canvas-section').forEach(x => x.classList.remove('active'));
         t.classList.add('active');
-        activeTab = Number(t.dataset.tab);
-        const sec = $(`csec${activeTab}`);
+        const sec = $(`csec${t.dataset.tab}`);
         if (sec) sec.classList.add('active');
       });
     });
   }
 
-  /* ─── Property sliders ─── */
-  function bindPropertySliders() {
-    els.opacitySlider.addEventListener('input', (e) => {
-      const layer = selectedLayer();
-      if (layer) {
-        layer.opacity = parseFloat(e.target.value);
-        renderLayers();
-      }
-    });
+  function switchToTab(idx) {
+    document.querySelectorAll('#canvas-toolbar .ctab').forEach((t,i) => t.classList.toggle('active', i===idx));
+    document.querySelectorAll('#canvas-toolbar .canvas-section').forEach((s,i) => s.classList.toggle('active', i===idx));
+  }
 
-    els.scaleSlider.addEventListener('input', (e) => {
-      const layer = selectedLayer();
-      if (!layer) return;
-      const val = parseFloat(e.target.value);
-      if (layer.type === 'text') {
-        layer.fontSize = val;
-      } else if (layer.type === 'image') {
-        layer.width = val;
-      }
+  /* ── Property sliders ── */
+  function bindPropertySliders() {
+    els.opacitySlider.addEventListener('input', e => {
+      const l = sel(); if (!l) return;
+      l.opacity = parseFloat(e.target.value);
       renderLayers();
     });
-
-    els.imgWidthSlider.addEventListener('input', (e) => {
-      const layer = selectedLayer();
-      if (layer && layer.type === 'image') {
-        layer.width = parseFloat(e.target.value);
-        renderLayers();
-      }
+    els.scaleSlider.addEventListener('input', e => {
+      const l = sel(); if (!l) return;
+      const v = parseFloat(e.target.value);
+      if (l.type === 'text') l.fontSize = v;
+      else if (l.type === 'image') l.width = v;
+      renderLayers();
+    });
+    els.imgWidthSlider.addEventListener('input', e => {
+      const l = sel(); if (l && l.type === 'image') { l.width = parseFloat(e.target.value); renderLayers(); }
     });
   }
 
-  /* ─── Toolbar buttons ─── */
-  function bindToolbar() {
+  function syncSliders() {
+    const l = sel();
+    if (!l) { els.imageProps.classList.add('hidden'); return; }
+    els.opacitySlider.value = l.opacity ?? 1;
+    if (l.type === 'text') {
+      els.scaleSlider.value = l.fontSize || 24;
+      els.scaleLabel.textContent = 'Font Size';
+      els.imageProps.classList.add('hidden');
+    } else if (l.type === 'image') {
+      els.scaleSlider.value = l.width || 200;
+      els.scaleLabel.textContent = 'Size';
+      els.imageProps.classList.remove('hidden');
+      els.imgWidthSlider.value = l.width || 200;
+    } else if (l.type === 'background') {
+      els.scaleLabel.textContent = 'N/A';
+      els.imageProps.classList.add('hidden');
+    }
+  }
+
+  function updateBtns() {
+    const has = !!selectedId;
+    if (els.btnDel) els.btnDel.disabled = !has;
+    if (els.btnDup) els.btnDup.disabled = !has;
+  }
+
+  /* ── Toolbar buttons ── */
+  function bindToolbarButtons() {
     els.btnAddText.addEventListener('click', () => {
       const id = uid();
       layers[activeSide].push({
-        id, type: 'text', text: 'New Text',
-        x: 30, y: 80 + layers[activeSide].length * 30,
-        fontSize: 24, opacity: 1,
-        fillType: 'solid', fillColor: '#FFFFFF',
-        strokeColor: 'transparent',
-        gradStops: null, gradAngle: 135,
-        side: activeSide
+        id, type:'text', text:'New Text',
+        x:30, y:60 + layers[activeSide].length * 28,
+        fontSize:24, opacity:1, fillType:'solid', fillColor:'#FFFFFF',
+        strokeColor:'transparent', gradStops:null, gradAngle:135
       });
       selectedId = id;
-      renderLayers();
-      syncSlidersToLayer();
+      renderLayers(); syncSliders();
     });
 
     els.btnDel.addEventListener('click', () => {
       if (!selectedId) return;
       layers[activeSide] = layers[activeSide].filter(l => l.id !== selectedId);
       selectedId = null;
-      renderLayers();
-      updateButtonStates();
+      renderLayers(); updateBtns();
     });
 
     els.btnDup.addEventListener('click', () => {
-      const layer = selectedLayer();
-      if (!layer) return;
+      const l = sel(); if (!l) return;
       const id = uid();
-      const dup = { ...JSON.parse(JSON.stringify(layer)), id, x: layer.x + 15, y: layer.y + 15 };
+      const dup = JSON.parse(JSON.stringify(l));
+      dup.id = id; dup.x += 15; dup.y += 15;
       layers[activeSide].push(dup);
       selectedId = id;
       renderLayers();
@@ -407,393 +378,248 @@ const CanvasEditor = (() => {
     els.btnAddImg.addEventListener('click', () => els.imgFileInput.click());
   }
 
-  /* ─── File inputs ─── */
+  /* ── File inputs ── */
   function bindFileInputs() {
-    els.bgFileInput.addEventListener('change', async (e) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      const dataUrl = await readFileAsDataURL(file);
-
-      // Remove existing bg layer on this side
+    els.bgFileInput.addEventListener('change', async e => {
+      const f = e.target.files?.[0]; if (!f) return;
+      const url = await readFile(f);
       layers[activeSide] = layers[activeSide].filter(l => l.type !== 'background');
-
-      layers[activeSide].unshift({
-        id: uid(), type: 'background', src: dataUrl,
-        opacity: 1, side: activeSide
-      });
-      renderLayers();
-      e.target.value = '';
+      layers[activeSide].unshift({ id: uid(), type:'background', src:url, opacity:1 });
+      renderLayers(); e.target.value = '';
     });
-
-    els.imgFileInput.addEventListener('change', async (e) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      const dataUrl = await readFileAsDataURL(file);
+    els.imgFileInput.addEventListener('change', async e => {
+      const f = e.target.files?.[0]; if (!f) return;
+      const url = await readFile(f);
       const id = uid();
-      layers[activeSide].push({
-        id, type: 'image', src: dataUrl,
-        x: 30, y: 60, width: 200, opacity: 1, side: activeSide
-      });
+      layers[activeSide].push({ id, type:'image', src:url, x:30, y:60, width:180, opacity:1 });
       selectedId = id;
-      renderLayers();
-      syncSlidersToLayer();
-      e.target.value = '';
+      renderLayers(); syncSliders(); e.target.value = '';
     });
   }
 
-  /* ─── Sync sliders to selected layer ─── */
-  function syncSlidersToLayer() {
-    const layer = selectedLayer();
-    if (!layer) return;
-    els.opacitySlider.value = layer.opacity ?? 1;
-    if (layer.type === 'text') {
-      els.scaleSlider.value = layer.fontSize || 24;
-      els.scaleSlider.closest('.glass-field').querySelector('span').textContent = 'Font Size';
-      els.imageProps.classList.add('hidden');
-    } else if (layer.type === 'image') {
-      els.scaleSlider.value = layer.width || 200;
-      els.scaleSlider.closest('.glass-field').querySelector('span').textContent = 'Size';
-      els.imageProps.classList.remove('hidden');
-      els.imgWidthSlider.value = layer.width || 200;
-    } else {
-      els.imageProps.classList.add('hidden');
-    }
+  /* ══════════════════════════════════════════════════════════
+     GLOBAL POINTER — single set of move/up listeners.
+     Each layer's pointerdown just sets _drag / _pinch state.
+     ══════════════════════════════════════════════════════════ */
+  function bindGlobalPointer() {
+    // Deselect on stage tap
+    document.addEventListener('pointerdown', e => {
+      if (e.target.classList.contains('canvas-stage') || e.target.classList.contains('canvas-fixed-bottom')) {
+        selectedId = null;
+        renderLayers(); updateBtns();
+      }
+    });
+
+    // Mouse
+    window.addEventListener('mousemove', e => {
+      if (!_drag) return;
+      e.preventDefault();
+      _drag.layer.x = _drag.ix + (e.clientX - _drag.sx);
+      _drag.layer.y = _drag.iy + (e.clientY - _drag.sy);
+      if (_drag.dom) _drag.dom.style.transform = `translate(${_drag.layer.x}px,${_drag.layer.y}px)`;
+    });
+    window.addEventListener('mouseup', () => { _drag = null; });
+
+    // Touch
+    window.addEventListener('touchmove', e => {
+      if (_drag && e.touches.length === 1) {
+        e.preventDefault();
+        const t = e.touches[0];
+        _drag.layer.x = _drag.ix + (t.clientX - _drag.sx);
+        _drag.layer.y = _drag.iy + (t.clientY - _drag.sy);
+        if (_drag.dom) _drag.dom.style.transform = `translate(${_drag.layer.x}px,${_drag.layer.y}px)`;
+      }
+      if (_pinch && e.touches.length === 2) {
+        e.preventDefault();
+        const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+        const scale = d / _pinch.startDist;
+        const nv = Math.max(10, Math.min(800, Math.round(_pinch.startVal * scale)));
+        if (_pinch.layer.type === 'text') _pinch.layer.fontSize = nv;
+        else if (_pinch.layer.type === 'image') _pinch.layer.width = nv;
+        renderLayers(); syncSliders();
+      }
+    }, { passive: false });
+    window.addEventListener('touchend', e => {
+      if (e.touches.length === 0) { _drag = null; _pinch = null; }
+    });
   }
 
-  function updateButtonStates() {
-    const hasSelection = !!selectedId;
-    els.btnDel.disabled = !hasSelection;
-    els.btnDup.disabled = !hasSelection;
-  }
-
-  /* ─── Render all layers ─── */
+  /* ── Render ── */
   function renderLayers() {
-    ['front', 'back'].forEach(side => {
-      const stage = getStage(side);
-      if (!stage) return;
-
-      // Remove rendered layers (keep fixed bottom & glow)
-      Array.from(stage.children).forEach(child => {
-        if (!child.classList.contains('canvas-fixed-bottom') && !child.classList.contains('chariel-card__glow')) {
-          child.remove();
-        }
+    ['front','back'].forEach(side => {
+      const s = stage(side); if (!s) return;
+      Array.from(s.children).forEach(ch => {
+        if (!ch.classList.contains('canvas-fixed-bottom') && !ch.classList.contains('chariel-card__glow')) ch.remove();
       });
-
-      layers[side].forEach(layer => {
-        if (layer.type === 'background') {
-          renderBackgroundLayer(stage, layer);
-        } else if (layer.type === 'text') {
-          renderTextLayer(stage, layer);
-        } else if (layer.type === 'image') {
-          renderImageLayer(stage, layer);
-        }
+      layers[side].forEach(l => {
+        if (l.type === 'background') renderBgLayer(s, l);
+        else if (l.type === 'text') renderTextLayer(s, l);
+        else if (l.type === 'image') renderImgLayer(s, l);
       });
     });
-
-    updateButtonStates();
+    updateBtns();
   }
 
-  /* ─── Background layer ─── */
-  function renderBackgroundLayer(stage, layer) {
-    const div = document.createElement('div');
-    div.className = 'bg-layer';
-    div.style.backgroundImage = `url(${layer.src})`;
-    div.style.opacity = layer.opacity ?? 1;
-    div.dataset.layerId = layer.id;
-
-    // Tap to select background for opacity adjustment
-    div.style.pointerEvents = 'auto';
-    div.addEventListener('pointerdown', (e) => {
+  function renderBgLayer(s, l) {
+    const d = document.createElement('div');
+    d.className = 'bg-layer' + (l.id === selectedId ? ' selected-bg' : '');
+    d.style.backgroundImage = `url(${l.src})`;
+    d.style.opacity = l.opacity ?? 1;
+    d.style.pointerEvents = 'auto';
+    d.addEventListener('pointerdown', e => {
       e.stopPropagation();
-      selectedId = layer.id;
-      renderLayers();
-      syncSlidersToLayer();
-      // Switch to properties tab
-      switchToTab(3);
+      selectedId = l.id; renderLayers(); syncSliders(); switchToTab(3);
     });
-
-    if (layer.id === selectedId) div.classList.add('selected-bg');
-
-    // Insert before fixed-bottom
-    const fixedBottom = stage.querySelector('.canvas-fixed-bottom');
-    stage.insertBefore(div, fixedBottom);
+    const fb = s.querySelector('.canvas-fixed-bottom');
+    s.insertBefore(d, fb);
   }
 
-  /* ─── Text layer ─── */
-  function renderTextLayer(stage, layer) {
-    const dom = document.createElement('div');
-    dom.className = `canvas-layer text-layer ${layer.id === selectedId ? 'selected' : ''}`;
-    dom.style.transform = `translate(${layer.x}px, ${layer.y}px)`;
-    dom.style.opacity = layer.opacity ?? 1;
-    dom.style.fontSize = `${layer.fontSize || 24}px`;
-    dom.style.fontWeight = '800';
-    dom.style.lineHeight = '1.15';
-    dom.style.letterSpacing = '-0.02em';
-    dom.dataset.layerId = layer.id;
+  function renderTextLayer(s, l) {
+    const d = document.createElement('div');
+    const isSel = l.id === selectedId;
+    d.className = 'canvas-layer text-layer' + (isSel ? ' selected' : '');
+    d.style.transform = `translate(${l.x}px,${l.y}px)`;
+    d.style.opacity = l.opacity ?? 1;
+    d.style.fontSize = `${l.fontSize||24}px`;
+    d.style.fontWeight = '800';
+    d.style.lineHeight = '1.2';
+    d.style.letterSpacing = '-0.02em';
 
-    // Fill
-    if (layer.fillType === 'gradient' && layer.gradStops) {
-      const css = buildGradientCSS(layer.gradStops, layer.gradAngle || 135);
-      dom.style.background = css;
-      dom.style.webkitBackgroundClip = 'text';
-      dom.style.webkitTextFillColor = 'transparent';
-      dom.style.backgroundClip = 'text';
+    if (l.fillType === 'gradient' && l.gradStops) {
+      d.style.background = gradCSS(l.gradStops, l.gradAngle||135);
+      d.style.webkitBackgroundClip = 'text';
+      d.style.webkitTextFillColor = 'transparent';
+      d.style.backgroundClip = 'text';
     } else {
-      dom.style.color = layer.fillColor || '#FFFFFF';
-      dom.style.webkitTextFillColor = '';
-      dom.style.background = '';
+      d.style.color = l.fillColor || '#FFFFFF';
+    }
+    if (l.strokeColor && l.strokeColor !== 'transparent') {
+      d.style.webkitTextStroke = `1.5px ${l.strokeColor}`;
     }
 
-    // Stroke
-    if (layer.strokeColor && layer.strokeColor !== 'transparent') {
-      dom.style.webkitTextStroke = `1.5px ${layer.strokeColor}`;
+    d.textContent = l.text;
+    if (isSel) { d.contentEditable = 'true'; d.spellcheck = false; }
+    d.addEventListener('input', () => { l.text = d.innerText; });
+    d.addEventListener('blur', () => { l.text = d.innerText; window.getSelection()?.removeAllRanges(); });
+
+    if (isSel) {
+      const rh = document.createElement('div');
+      rh.className = 'resize-handle-layer';
+      bindResizeHandle(rh, l, 'fontSize');
+      d.appendChild(rh);
     }
 
-    dom.textContent = layer.text;
-
-    // If selected, make editable
-    if (layer.id === selectedId) {
-      dom.contentEditable = 'true';
-      dom.spellcheck = false;
-    }
-
-    dom.addEventListener('input', () => { layer.text = dom.innerText; });
-    dom.addEventListener('blur', () => { layer.text = dom.innerText; window.getSelection()?.removeAllRanges(); });
-
-    // Append resize handle
-    if (layer.id === selectedId) {
-      const handle = document.createElement('div');
-      handle.className = 'resize-handle-layer';
-      bindPinchResize(handle, layer, 'fontSize');
-      dom.appendChild(handle);
-    }
-
-    bindLayerPointer(dom, layer);
-
-    const fixedBottom = stage.querySelector('.canvas-fixed-bottom');
-    stage.insertBefore(dom, fixedBottom);
+    bindLayerDown(d, l);
+    const fb = s.querySelector('.canvas-fixed-bottom');
+    s.insertBefore(d, fb);
   }
 
-  /* ─── Image layer ─── */
-  function renderImageLayer(stage, layer) {
-    const dom = document.createElement('div');
-    dom.className = `canvas-layer image-layer ${layer.id === selectedId ? 'selected' : ''}`;
-    dom.style.transform = `translate(${layer.x}px, ${layer.y}px)`;
-    dom.style.opacity = layer.opacity ?? 1;
-    dom.style.width = `${layer.width || 200}px`;
-    dom.dataset.layerId = layer.id;
+  function renderImgLayer(s, l) {
+    const d = document.createElement('div');
+    const isSel = l.id === selectedId;
+    d.className = 'canvas-layer image-layer' + (isSel ? ' selected' : '');
+    d.style.transform = `translate(${l.x}px,${l.y}px)`;
+    d.style.opacity = l.opacity ?? 1;
+    d.style.width = `${l.width||200}px`;
 
     const img = document.createElement('img');
-    img.src = layer.src;
-    img.style.width = '100%';
-    img.style.height = 'auto';
-    img.style.display = 'block';
-    img.style.borderRadius = '8px';
-    img.style.pointerEvents = 'none';
-    img.draggable = false;
-    dom.appendChild(img);
+    img.src = l.src; img.draggable = false;
+    img.style.cssText = 'width:100%;height:auto;display:block;border-radius:8px;pointer-events:none;';
+    d.appendChild(img);
 
-    // Resize handle
-    if (layer.id === selectedId) {
-      const handle = document.createElement('div');
-      handle.className = 'resize-handle-layer';
-      bindPinchResize(handle, layer, 'width');
-      dom.appendChild(handle);
+    if (isSel) {
+      const rh = document.createElement('div');
+      rh.className = 'resize-handle-layer';
+      bindResizeHandle(rh, l, 'width');
+      d.appendChild(rh);
     }
 
-    bindLayerPointer(dom, layer);
-
-    const fixedBottom = stage.querySelector('.canvas-fixed-bottom');
-    stage.insertBefore(dom, fixedBottom);
+    bindLayerDown(d, l);
+    const fb = s.querySelector('.canvas-fixed-bottom');
+    s.insertBefore(d, fb);
   }
 
-  /* ─── Pointer / Touch handling for layer drag ─── */
-  function bindLayerPointer(dom, layer) {
-    let isDragging = false;
-    let startX, startY, initX, initY;
-    let pinchStartDist = 0;
-    let pinchStartVal = 0;
+  /* ── Per-layer pointerdown only (no move/up — those are global) ── */
+  function bindLayerDown(dom, layer) {
+    let lastTap = 0;
 
-    const onDown = (clientX, clientY, e) => {
+    const down = (cx, cy, e) => {
       e.stopPropagation();
-
-      // Select
       if (selectedId !== layer.id) {
         selectedId = layer.id;
-        renderLayers();
-        syncSlidersToLayer();
-        return; // first tap = select only
-      }
-
-      // If text and already selected, allow editing (don't drag)
-      if (layer.type === 'text' && dom.contentEditable === 'true') {
-        // Check if user tapped inside text content — let native editing work
+        renderLayers(); syncSliders();
         return;
       }
-
-      isDragging = true;
-      startX = clientX;
-      startY = clientY;
-      initX = layer.x;
-      initY = layer.y;
+      // Already selected text in edit mode — allow native caret
+      if (layer.type === 'text' && dom.contentEditable === 'true') return;
+      // Start drag
+      _drag = { layer, dom, sx:cx, sy:cy, ix:layer.x, iy:layer.y };
     };
 
-    const onMove = (clientX, clientY) => {
-      if (!isDragging) return;
-      layer.x = initX + (clientX - startX);
-      layer.y = initY + (clientY - startY);
-      dom.style.transform = `translate(${layer.x}px, ${layer.y}px)`;
-    };
-
-    const onUp = () => { isDragging = false; };
-
-    // Mouse events
-    dom.addEventListener('mousedown', (e) => onDown(e.clientX, e.clientY, e));
-    window.addEventListener('mousemove', (e) => { if (isDragging) { e.preventDefault(); onMove(e.clientX, e.clientY); } });
-    window.addEventListener('mouseup', onUp);
-
-    // Touch events
-    dom.addEventListener('touchstart', (e) => {
+    dom.addEventListener('mousedown', e => down(e.clientX, e.clientY, e));
+    dom.addEventListener('touchstart', e => {
       if (e.touches.length === 1) {
-        onDown(e.touches[0].clientX, e.touches[0].clientY, e);
-      } else if (e.touches.length === 2) {
-        // Pinch to resize
-        isDragging = false;
-        pinchStartDist = Math.hypot(
-          e.touches[0].clientX - e.touches[1].clientX,
-          e.touches[0].clientY - e.touches[1].clientY
-        );
-        pinchStartVal = layer.type === 'text' ? (layer.fontSize || 24) : (layer.width || 200);
+        down(e.touches[0].clientX, e.touches[0].clientY, e);
+      } else if (e.touches.length === 2 && selectedId === layer.id) {
+        _drag = null;
+        _pinch = {
+          layer,
+          startDist: Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY),
+          startVal: layer.type === 'text' ? (layer.fontSize||24) : (layer.width||200)
+        };
       }
     }, { passive: false });
-
-    dom.addEventListener('touchmove', (e) => {
-      if (e.touches.length === 1 && isDragging) {
-        e.preventDefault();
-        onMove(e.touches[0].clientX, e.touches[0].clientY);
-      } else if (e.touches.length === 2 && pinchStartDist > 0) {
-        e.preventDefault();
-        const dist = Math.hypot(
-          e.touches[0].clientX - e.touches[1].clientX,
-          e.touches[0].clientY - e.touches[1].clientY
-        );
-        const scale = dist / pinchStartDist;
-        const newVal = Math.max(10, Math.min(800, Math.round(pinchStartVal * scale)));
-        if (layer.type === 'text') {
-          layer.fontSize = newVal;
-        } else if (layer.type === 'image') {
-          layer.width = newVal;
-        }
-        renderLayers();
-        syncSlidersToLayer();
-      }
-    }, { passive: false });
-
-    dom.addEventListener('touchend', (e) => {
-      if (e.touches.length === 0) {
-        isDragging = false;
-        pinchStartDist = 0;
-      }
-    });
 
     // Double-tap to edit text
     if (layer.type === 'text') {
-      let lastTap = 0;
-      dom.addEventListener('touchend', (e) => {
+      dom.addEventListener('touchend', () => {
         const now = Date.now();
-        if (now - lastTap < 300) {
+        if (now - lastTap < 300 && selectedId === layer.id) {
           dom.contentEditable = 'true';
           dom.focus();
         }
         lastTap = now;
       });
+      dom.addEventListener('dblclick', () => {
+        if (selectedId === layer.id) { dom.contentEditable = 'true'; dom.focus(); }
+      });
     }
   }
 
-  /* ─── Corner resize handle (drag) ─── */
-  function bindPinchResize(handle, layer, prop) {
-    let startX, startVal;
-
-    const onDown = (clientX, e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      startX = clientX;
-      startVal = layer[prop] || (prop === 'fontSize' ? 24 : 200);
-
-      const onMove = (cx) => {
-        const delta = cx - startX;
-        layer[prop] = Math.max(10, Math.min(800, Math.round(startVal + delta)));
-        renderLayers();
-        syncSlidersToLayer();
-      };
-
-      const onUp = () => {
-        window.removeEventListener('mousemove', mm);
-        window.removeEventListener('mouseup', onUp);
-        window.removeEventListener('touchmove', tm);
-        window.removeEventListener('touchend', onUp);
-      };
-
-      const mm = (e) => onMove(e.clientX);
-      const tm = (e) => { e.preventDefault(); onMove(e.touches[0].clientX); };
-
-      window.addEventListener('mousemove', mm);
-      window.addEventListener('mouseup', onUp);
-      window.addEventListener('touchmove', tm, { passive: false });
-      window.addEventListener('touchend', onUp);
+  /* ── Resize handle drag ── */
+  function bindResizeHandle(handle, layer, prop) {
+    const down = (cx, e) => {
+      e.stopPropagation(); e.preventDefault();
+      const startX = cx;
+      const startVal = layer[prop] || (prop === 'fontSize' ? 24 : 200);
+      const mv = ncx => { layer[prop] = Math.max(10, Math.min(800, Math.round(startVal + (ncx - startX)))); renderLayers(); syncSliders(); };
+      const mm = e2 => mv(e2.clientX);
+      const tm = e2 => { e2.preventDefault(); mv(e2.touches[0].clientX); };
+      const up = () => { window.removeEventListener('mousemove',mm); window.removeEventListener('mouseup',up); window.removeEventListener('touchmove',tm); window.removeEventListener('touchend',up); };
+      window.addEventListener('mousemove',mm);
+      window.addEventListener('mouseup',up);
+      window.addEventListener('touchmove',tm,{passive:false});
+      window.addEventListener('touchend',up);
     };
-
-    handle.addEventListener('mousedown', (e) => onDown(e.clientX, e));
-    handle.addEventListener('touchstart', (e) => onDown(e.touches[0].clientX, e), { passive: false });
+    handle.addEventListener('mousedown', e => down(e.clientX, e));
+    handle.addEventListener('touchstart', e => down(e.touches[0].clientX, e), {passive:false});
   }
 
-  /* ─── Deselect on stage click ─── */
-  function bindDeselect() {
-    document.addEventListener('pointerdown', (e) => {
-      if (e.target.classList.contains('canvas-stage') || e.target.classList.contains('canvas-fixed-bottom')) {
-        selectedId = null;
-        renderLayers();
-        updateButtonStates();
-      }
-    });
-  }
-
-  /* ─── Tab switch helper ─── */
-  function switchToTab(idx) {
-    document.querySelectorAll('#canvas-toolbar .ctab').forEach((t, i) => t.classList.toggle('active', i === idx));
-    document.querySelectorAll('#canvas-toolbar .canvas-section').forEach((s, i) => s.classList.toggle('active', i === idx));
-    activeTab = idx;
-  }
-
-  /* ─── Public API ─── */
+  /* ── Public API ── */
   function switchSide(side) {
     activeSide = side;
     selectedId = null;
-    renderLayers();
-    updateButtonStates();
-  }
-
-  function getLayers() {
-    return JSON.parse(JSON.stringify(layers));
-  }
-
-  function setLayersFromData(data) {
-    if (data && data.front) layers.front = data.front;
-    if (data && data.back) layers.back = data.back;
-    renderLayers();
-  }
-
-  // Delayed init: call after DOM ready
-  function boot() {
-    init();
-    bindDeselect();
+    renderLayers(); updateBtns();
   }
 
   return {
-    init: boot,
+    init,
     switchSide,
-    getLayers,
-    setLayersFromData
+    getLayers: () => JSON.parse(JSON.stringify(layers)),
+    setLayersFromData(data) { if(data?.front) layers.front=data.front; if(data?.back) layers.back=data.back; renderLayers(); },
+    applyTemplateToLayers,
+    updateSenderReceiver,
+    resetDefaultLayers() { resetDefaultLayers(); renderLayers(); }
   };
 })();
 

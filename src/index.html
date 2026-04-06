@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>CHARIEL — Sender Studio</title>
   <meta name="title" content="CHARIEL — Sender Studio" />
   <link rel="stylesheet" href="./css/shared.css" />
@@ -21,7 +21,7 @@
   </header>
 
   <main class="sender-shell">
-    <!-- ===== STEP 1: Names + Templates ===== -->
+    <!-- STEP 1 -->
     <section class="hero card-panel page-view" data-step="1">
       <span class="eyebrow">CHARIEL STANDARD</span>
       <h1>Build the card directly in the preview.</h1>
@@ -50,7 +50,7 @@
         <div id="template-list" class="template-list"></div>
       </div>
 
-      <!-- ===== STEP 2: Card Preview + Canvas Editor + Media ===== -->
+      <!-- STEP 2 -->
       <div class="card-panel right-col page-view page-hidden" data-step="2">
         <div class="section-head">
           <span class="step">2</span>
@@ -60,26 +60,65 @@
           </div>
         </div>
 
-        <div id="live-preview" class="live-preview">
-          <article id="preview-card" class="chariel-card is-front" aria-live="polite">
+        <!-- Toggle row: Default/Custom + Front/Back -->
+        <div class="canvas-toggle-row">
+          <div class="toggle-group" id="mode-toggle">
+            <button type="button" class="toggle-pill active" data-value="default">Default</button>
+            <button type="button" class="toggle-pill" data-value="custom">Custom</button>
+          </div>
+          <div class="toggle-group" id="side-toggle">
+            <button type="button" class="toggle-pill active" data-value="front">Front</button>
+            <button type="button" class="toggle-pill" data-value="back">Back</button>
+          </div>
+        </div>
+
+        <!-- Default mode preview -->
+        <div id="default-preview" class="live-preview">
+          <article id="preview-card-default" class="chariel-card is-front" aria-live="polite">
             <div class="chariel-card__glow"></div>
-            <div id="canvas-stage-front" class="chariel-card__face chariel-card__face--front canvas-stage">
-              <div class="canvas-fixed-bottom row-between">
-                <span id="video-badge" class="video-badge hidden">Video attached</span>
-                <button id="flip-card" class="btn btn-secondary card-flip-btn" type="button">Flip to Back</button>
+            <div class="chariel-card__face chariel-card__face--front">
+              <div class="chariel-card__topline">
+                <span id="preview-receiver" class="card-mini-name">Receiver</span>
+                <span id="video-badge-default" class="video-badge hidden">Video</span>
+              </div>
+              <div>
+                <div id="preview-title" class="card-title" contenteditable="true" spellcheck="false">Happy Birthday</div>
+                <div id="preview-subtitle" class="card-subtitle" contenteditable="true" spellcheck="false">A bright surprise for your special day.</div>
+              </div>
+              <div id="preview-message" class="card-message" contenteditable="true" spellcheck="false">Happy Birthday! Wishing you joy, laughter, and a beautiful year ahead.</div>
+              <div class="card-footer-row">
+                <div id="preview-sender" class="card-footer-name">From Sender</div>
+                <button id="flip-default" class="btn btn-secondary card-flip-btn" type="button">Flip</button>
               </div>
             </div>
-            <div id="canvas-stage-back" class="chariel-card__face chariel-card__face--back canvas-stage">
-              <div class="canvas-fixed-bottom row-center">
-                <button id="flip-card-back" class="btn btn-secondary card-flip-btn" type="button">Flip to Front</button>
+            <div class="chariel-card__face chariel-card__face--back">
+              <div class="chariel-card__back-label">Back side</div>
+              <div id="preview-back-message" class="card-back-message" contenteditable="true" spellcheck="false">Thank you for being such a special part of my life.</div>
+              <div class="card-footer-row">
+                <div class="card-side-hint">Edit text directly in the card.</div>
+                <button id="flip-default-back" class="btn btn-secondary card-flip-btn" type="button">Front</button>
               </div>
             </div>
           </article>
         </div>
 
-        <!-- Canvas Toolbar — full editor -->
-        <div id="canvas-toolbar" class="canvas-toolbar">
-          <!-- Action buttons -->
+        <!-- Custom mode preview (canvas) -->
+        <div id="custom-preview" class="live-preview hidden">
+          <article id="preview-card" class="chariel-card is-front" aria-live="polite">
+            <div class="chariel-card__glow"></div>
+            <div id="canvas-stage-front" class="chariel-card__face chariel-card__face--front canvas-stage">
+              <div class="canvas-fixed-bottom row-between">
+                <span id="video-badge" class="video-badge hidden">Video attached</span>
+              </div>
+            </div>
+            <div id="canvas-stage-back" class="chariel-card__face chariel-card__face--back canvas-stage">
+              <div class="canvas-fixed-bottom row-center"></div>
+            </div>
+          </article>
+        </div>
+
+        <!-- Canvas Toolbar (only visible in custom mode) -->
+        <div id="canvas-toolbar" class="canvas-toolbar hidden">
           <div class="toolbar-actions">
             <button type="button" id="btn-add-text" class="btn btn-secondary btn-sm">+ Text</button>
             <button type="button" id="btn-add-bg" class="btn btn-secondary btn-sm">BG Image</button>
@@ -87,28 +126,20 @@
             <button type="button" id="btn-duplicate-layer" class="btn btn-secondary btn-sm" disabled>Duplicate</button>
             <button type="button" id="btn-delete-layer" class="btn btn-secondary btn-sm" disabled>Delete</button>
           </div>
-
-          <!-- Object mode selector (Fill / Stroke / Background) -->
           <div class="obj-selector">
             <div class="obj-btn active" data-mode="fill">FILL</div>
             <div class="obj-btn" data-mode="stroke">STROKE</div>
             <div class="obj-btn" data-mode="bg">BACKGROUND</div>
           </div>
-
-          <!-- Tab bar -->
           <div class="canvas-tabs">
             <div class="ctab active" data-tab="0">SOLID</div>
             <div class="ctab" data-tab="1">GRADIENT</div>
             <div class="ctab" data-tab="2">HARMONY</div>
             <div class="ctab" data-tab="3">PROPERTIES</div>
           </div>
-
-          <!-- Tab 0: Solid swatches -->
           <div id="csec0" class="canvas-section active">
             <div class="cgrid" id="solidGrid"></div>
           </div>
-
-          <!-- Tab 1: Gradient engine -->
           <div id="csec1" class="canvas-section">
             <div class="ce-label">Tap track to add stop, drag to reposition</div>
             <div id="gradTrack" class="grad-track"></div>
@@ -122,16 +153,12 @@
               <input type="range" id="angRange" min="0" max="360" value="135" />
             </div>
           </div>
-
-          <!-- Tab 2: Harmony -->
           <div id="csec2" class="canvas-section">
             <div class="ce-label">Pick a base color</div>
             <div class="cgrid" id="palGrid"></div>
             <div class="ce-label" style="margin-top:12px">Calculated harmony</div>
             <div class="harmony-row" id="harmonyArea"></div>
           </div>
-
-          <!-- Tab 3: Properties (opacity, scale, font-size, image-width) -->
           <div id="csec3" class="canvas-section">
             <div class="prop-grid">
               <label class="glass-field compact-field">
@@ -139,7 +166,7 @@
                 <input type="range" id="opacity-slider" min="0" max="1" step="0.05" value="1" />
               </label>
               <label class="glass-field compact-field">
-                <span>Size</span>
+                <span id="scale-label">Size</span>
                 <input type="range" id="scale-slider" min="10" max="800" step="1" value="24" />
               </label>
             </div>
@@ -152,7 +179,7 @@
           </div>
         </div>
 
-        <!-- YouTube media section -->
+        <!-- YouTube -->
         <div class="stack-form aux-form">
           <label class="glass-field">
             <span>YouTube URL</span>
@@ -188,13 +215,13 @@
         </div>
       </div>
 
-      <!-- ===== STEP 3: Delivery rules (CTA ~ Forward Distance moved here) ===== -->
+      <!-- STEP 3 -->
       <div class="card-panel right-col page-view page-hidden" data-step="3">
         <div class="section-head">
           <span class="step">3</span>
           <div>
             <h2>Delivery rules</h2>
-            <p>Set CTA, unlock conditions, timing, and AR placement options for your Celebration Card.</p>
+            <p>Set CTA, unlock conditions, timing, and AR placement options.</p>
           </div>
         </div>
         <div class="stack-form aux-form">
@@ -229,13 +256,13 @@
         </div>
       </div>
 
-      <!-- ===== STEP 4: Map placement ===== -->
+      <!-- STEP 4 -->
       <div class="card-panel right-col page-view page-hidden" data-step="4">
         <div class="section-head">
           <span class="step">4</span>
           <div>
             <h2>Map placement</h2>
-            <p>Use a fixed center pin. Pan the map below the pin and keep the radius visible as a transparent outline only.</p>
+            <p>Pan the map under the fixed center pin.</p>
           </div>
         </div>
         <form id="gift-form" class="stack-form aux-form" novalidate>
@@ -271,14 +298,14 @@
       </div>
     </section>
 
-    <!-- ===== STEP 5: Share ===== -->
+    <!-- STEP 5 -->
     <section class="preview-grid page-view page-hidden" data-step="5">
       <div class="card-panel success-panel">
         <div class="section-head">
           <span class="step">5</span>
           <div>
             <h2>Share</h2>
-            <p>Create the recipient URL, copy it, or open live / preview QA screens side-by-side.</p>
+            <p>Copy the link or open live / preview screens.</p>
           </div>
         </div>
         <div class="share-stack">
@@ -299,16 +326,11 @@
   <nav class="bottom-nav" id="bottom-nav">
     <button id="nav-prev" class="btn btn-secondary nav-btn" type="button" disabled>◀ Previous</button>
     <div class="nav-dots" id="nav-dots">
-      <div class="dot active"></div>
-      <div class="dot"></div>
-      <div class="dot"></div>
-      <div class="dot"></div>
-      <div class="dot"></div>
+      <div class="dot active"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
     </div>
     <button id="nav-next" class="btn btn-primary nav-btn" type="button">Next ▶</button>
   </nav>
 
-  <!-- hidden file inputs for canvas editor -->
   <input type="file" id="bg-file-input" accept="image/*" class="hidden" />
   <input type="file" id="img-file-input" accept="image/*" class="hidden" />
 

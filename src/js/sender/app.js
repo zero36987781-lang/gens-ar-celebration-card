@@ -8,8 +8,8 @@ import { applyPageLanguage } from '../core/i18n.js';
 const state = {
   templateId: TEMPLATES[0].id,
   page: 1,
-  photoData: '',
-  backPhotoData: '',
+  editorMode: 'default', // 'default' | 'custom'
+  activeSide: 'front',
   lastCreatedSlug: '',
   mapPicker: null
 };
@@ -22,8 +22,23 @@ const els = {
   previewLink: qs('#preview-link'),
   statusBox: qs('#status-box'),
   copyLink: qs('#copy-link'),
+  // Default mode card
+  previewCardDefault: qs('#preview-card-default'),
+  previewReceiver: qs('#preview-receiver'),
+  previewSender: qs('#preview-sender'),
+  previewTitle: qs('#preview-title'),
+  previewSubtitle: qs('#preview-subtitle'),
+  previewMessage: qs('#preview-message'),
+  previewBackMessage: qs('#preview-back-message'),
+  videoBadgeDefault: qs('#video-badge-default'),
+  // Custom mode card
   previewCard: qs('#preview-card'),
   videoBadge: qs('#video-badge'),
+  // Containers
+  defaultPreview: qs('#default-preview'),
+  customPreview: qs('#custom-preview'),
+  canvasToolbar: qs('#canvas-toolbar'),
+  // Video
   videoPreviewStatus: qs('#video-preview-status'),
   videoPreviewArea: qs('#video-preview-area'),
   builderGrid: qs('#builder-grid'),
@@ -34,10 +49,27 @@ const els = {
 
 const MAX_PAGES = 5;
 
-/* ─── Page navigation ─── */
+/* ── Pinch-to-zoom prevention on page level ── */
+function preventPagePinchZoom() {
+  document.addEventListener('touchmove', e => {
+    if (e.touches.length >= 2) {
+      // Allow pinch only inside canvas-layer (handled by canvas editor)
+      const t = e.target;
+      if (!t.closest('.canvas-layer')) {
+        e.preventDefault();
+      }
+    }
+  }, { passive: false });
+
+  // Also prevent gesturestart (Safari)
+  document.addEventListener('gesturestart', e => e.preventDefault(), { passive: false });
+  document.addEventListener('gesturechange', e => e.preventDefault(), { passive: false });
+}
+
+/* ── Page navigation ── */
 function updatePage() {
-  document.querySelectorAll('.page-view').forEach((el) => el.classList.add('page-hidden'));
-  document.querySelectorAll(`.page-view[data-step="${state.page}"]`).forEach((el) => el.classList.remove('page-hidden'));
+  document.querySelectorAll('.page-view').forEach(el => el.classList.add('page-hidden'));
+  document.querySelectorAll(`.page-view[data-step="${state.page}"]`).forEach(el => el.classList.remove('page-hidden'));
 
   if (state.page >= 1 && state.page <= 4) {
     els.builderGrid?.classList.add('single-column-override');
@@ -45,10 +77,7 @@ function updatePage() {
     els.builderGrid?.classList.remove('single-column-override');
   }
 
-  els.navDots.forEach((dot, index) => {
-    dot.classList.toggle('active', index === state.page - 1);
-  });
-
+  els.navDots.forEach((dot, i) => dot.classList.toggle('active', i === state.page - 1));
   if (els.navPrev) els.navPrev.disabled = state.page === 1;
   if (els.navNext) {
     els.navNext.textContent = state.page === MAX_PAGES ? 'Finish' : 'Next ▶';
@@ -56,14 +85,60 @@ function updatePage() {
   }
 }
 
-function handleNextPage() {
-  if (state.page < MAX_PAGES) { state.page++; updatePage(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
-}
-function handlePrevPage() {
-  if (state.page > 1) { state.page--; updatePage(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+function nextPage() { if (state.page < MAX_PAGES) { state.page++; updatePage(); window.scrollTo({top:0,behavior:'smooth'}); } }
+function prevPage() { if (state.page > 1) { state.page--; updatePage(); window.scrollTo({top:0,behavior:'smooth'}); } }
+
+/* ── Mode & Side toggles ── */
+function syncEditorMode() {
+  const isCustom = state.editorMode === 'custom';
+  els.defaultPreview.classList.toggle('hidden', isCustom);
+  els.customPreview.classList.toggle('hidden', !isCustom);
+  els.canvasToolbar.classList.toggle('hidden', !isCustom);
+
+  // Sync toggle pills
+  document.querySelectorAll('#mode-toggle .toggle-pill').forEach(p => {
+    p.classList.toggle('active', p.dataset.value === state.editorMode);
+  });
 }
 
-/* ─── Form fields ─── */
+function syncSideToggle() {
+  document.querySelectorAll('#side-toggle .toggle-pill').forEach(p => {
+    p.classList.toggle('active', p.dataset.value === state.activeSide);
+  });
+
+  const showBack = state.activeSide === 'back';
+
+  // Default card flip
+  els.previewCardDefault.classList.toggle('is-back', showBack);
+  els.previewCardDefault.classList.toggle('is-front', !showBack);
+
+  // Custom card flip
+  els.previewCard.classList.toggle('is-back', showBack);
+  els.previewCard.classList.toggle('is-front', !showBack);
+
+  if (window.CanvasEditor) window.CanvasEditor.switchSide(state.activeSide);
+}
+
+function bindToggles() {
+  document.querySelectorAll('#mode-toggle .toggle-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.editorMode = btn.dataset.value;
+      syncEditorMode();
+    });
+  });
+  document.querySelectorAll('#side-toggle .toggle-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.activeSide = btn.dataset.value;
+      syncSideToggle();
+    });
+  });
+
+  // Legacy flip buttons inside default card
+  qs('#flip-default')?.addEventListener('click', () => { state.activeSide = 'back'; syncSideToggle(); });
+  qs('#flip-default-back')?.addEventListener('click', () => { state.activeSide = 'front'; syncSideToggle(); });
+}
+
+/* ── Fields ── */
 function fields() {
   return {
     recipientName: qs('#recipient-name'),
@@ -84,173 +159,190 @@ function fields() {
   };
 }
 
-/* ─── Date helpers ─── */
-function formatLocalDateInput(date) {
-  const pad = (v) => String(v).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+/* ── Date ── */
+function fmtDate(d) {
+  const p = v => String(v).padStart(2,'0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
-function setDefaultDateWindow() {
-  const { startAt, expiresAt } = fields();
-  const now = new Date(); now.setSeconds(0, 0);
-  const end = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-  startAt.value = formatLocalDateInput(now);
-  expiresAt.value = formatLocalDateInput(end);
-  syncExpiryBounds();
+function setDefaultDates() {
+  const {startAt, expiresAt} = fields();
+  const now = new Date(); now.setSeconds(0,0);
+  const end = new Date(now.getTime() + 86400000);
+  startAt.value = fmtDate(now);
+  expiresAt.value = fmtDate(end);
+  syncExpiry();
 }
 
-function syncExpiryBounds() {
-  const { startAt, expiresAt } = fields();
+function syncExpiry() {
+  const {startAt, expiresAt} = fields();
   if (!startAt.value) return;
-  const start = new Date(startAt.value);
-  const max = new Date(start.getTime() + 24 * 60 * 60 * 1000);
-  expiresAt.min = formatLocalDateInput(start);
-  expiresAt.max = formatLocalDateInput(max);
+  const s = new Date(startAt.value);
+  const mx = new Date(s.getTime() + 86400000);
+  expiresAt.min = fmtDate(s);
+  expiresAt.max = fmtDate(mx);
   if (!expiresAt.value) { expiresAt.value = expiresAt.max; return; }
-  const current = new Date(expiresAt.value);
-  if (current < start) expiresAt.value = expiresAt.min;
-  else if (current > max) expiresAt.value = expiresAt.max;
+  const c = new Date(expiresAt.value);
+  if (c < s) expiresAt.value = expiresAt.min;
+  else if (c > mx) expiresAt.value = expiresAt.max;
 }
 
-/* ─── YouTube helpers ─── */
-function parseYouTubeId(url) {
+/* ── YouTube ── */
+function parseYtId(url) {
   try {
-    const parsed = new URL(url);
-    if (parsed.hostname.includes('youtu.be')) return parsed.pathname.replace('/', '').trim();
-    if (parsed.hostname.includes('youtube.com')) {
-      if (parsed.pathname === '/watch') return parsed.searchParams.get('v') || '';
-      if (parsed.pathname.startsWith('/embed/')) return parsed.pathname.split('/embed/')[1] || '';
-      if (parsed.pathname.startsWith('/shorts/')) return parsed.pathname.split('/shorts/')[1] || '';
+    const p = new URL(url);
+    if (p.hostname.includes('youtu.be')) return p.pathname.replace('/','').trim();
+    if (p.hostname.includes('youtube.com')) {
+      if (p.pathname==='/watch') return p.searchParams.get('v')||'';
+      if (p.pathname.startsWith('/embed/')) return p.pathname.split('/embed/')[1]||'';
+      if (p.pathname.startsWith('/shorts/')) return p.pathname.split('/shorts/')[1]||'';
     }
     return '';
   } catch { return ''; }
 }
 
-function secondsToHms(totalSeconds = 0) {
-  const safe = Math.max(0, Math.floor(Number(totalSeconds) || 0));
-  return [Math.floor(safe / 3600), Math.floor((safe % 3600) / 60), safe % 60].map(v => String(v).padStart(2, '0')).join(':');
+function hmsToSec(prefix) {
+  const h=Number(qs(`#${prefix}-h`)?.value||0), m=Number(qs(`#${prefix}-m`)?.value||0), s=Number(qs(`#${prefix}-s`)?.value||0);
+  return h*3600+m*60+s;
 }
 
-function getHmsSeconds(prefix) {
-  const h = Number(qs(`#${prefix}-h`)?.value || 0);
-  const m = Number(qs(`#${prefix}-m`)?.value || 0);
-  const s = Number(qs(`#${prefix}-s`)?.value || 0);
-  return (h * 3600) + (m * 60) + s;
+function secToHms(t) {
+  const s = Math.max(0,Math.floor(Number(t)||0));
+  return [Math.floor(s/3600),Math.floor((s%3600)/60),s%60].map(v=>String(v).padStart(2,'0')).join(':');
 }
 
-/* ─── Templates ─── */
+/* ── Templates ── */
 function renderTemplates() {
   els.templateList.innerHTML = TEMPLATES.map(t => `
-    <button type="button" class="template-item ${t.id === state.templateId ? 'active' : ''}" data-template-id="${t.id}">
+    <button type="button" class="template-item ${t.id===state.templateId?'active':''}" data-template-id="${t.id}">
       <h3>${t.name}</h3><p>${t.subtitle}</p>
       <div class="template-swatches"><span style="background:${t.frontColor}"></span><span style="background:${t.accentColor}"></span></div>
-    </button>
-  `).join('');
+    </button>`).join('');
 }
 
-function applyTemplate(templateId) {
-  state.templateId = templateId;
+function applyTemplate(id) {
+  state.templateId = id;
+  const tpl = getTemplateById(id);
+
+  // Default mode
+  els.previewTitle.textContent = tpl.title;
+  els.previewSubtitle.textContent = tpl.subtitle;
+  els.previewMessage.textContent = tpl.message;
+  els.previewBackMessage.textContent = tpl.backText;
+
+  // Custom mode
+  if (window.CanvasEditor) window.CanvasEditor.applyTemplateToLayers(tpl);
+
   renderTemplates();
   renderPreviewCard();
 }
 
+function sanitizeEditable(el) {
+  return (el?.innerText || '').replace(/\u00a0/g,' ').replace(/\r/g,'').trim();
+}
+
 function renderPreviewCard() {
   const f = fields();
-  const template = getTemplateById(state.templateId);
-  const card = els.previewCard;
-  card.style.setProperty('--card-front', template.frontColor);
-  card.style.setProperty('--card-accent', template.accentColor);
-  const hasVideo = Boolean(parseYouTubeId(f.videoUrl.value.trim()));
-  els.videoBadge.classList.toggle('hidden', !hasVideo);
+  const tpl = getTemplateById(state.templateId);
+
+  // Colors on both cards
+  [els.previewCardDefault, els.previewCard].forEach(card => {
+    if (card) {
+      card.style.setProperty('--card-front', tpl.frontColor);
+      card.style.setProperty('--card-accent', tpl.accentColor);
+    }
+  });
+
+  // Default mode texts
+  els.previewReceiver.textContent = f.recipientName.value.trim() || 'Receiver';
+  els.previewSender.textContent = `From ${f.senderName.value.trim() || 'Sender'}`;
+
+  // Update canvas editor sender name
+  if (window.CanvasEditor) {
+    window.CanvasEditor.updateSenderReceiver(f.senderName.value.trim(), f.recipientName.value.trim());
+  }
+
+  const hasVid = Boolean(parseYtId(f.videoUrl.value.trim()));
+  els.videoBadgeDefault?.classList.toggle('hidden', !hasVid);
+  els.videoBadge?.classList.toggle('hidden', !hasVid);
 }
 
 function renderVideoPreview() {
-  const { videoUrl } = fields();
+  const {videoUrl} = fields();
   const url = videoUrl.value.trim();
-  const youtubeId = parseYouTubeId(url);
+  const ytId = parseYtId(url);
   if (!url) {
-    els.videoPreviewArea.innerHTML = '<div class="video-preview-empty">Paste a YouTube URL to preview the selected time segment.</div>';
+    els.videoPreviewArea.innerHTML = '<div class="video-preview-empty">Paste a YouTube URL to preview.</div>';
     els.videoPreviewStatus.textContent = 'YouTube links only.';
     renderPreviewCard(); return;
   }
-  if (!youtubeId) {
-    els.videoPreviewArea.innerHTML = '<div class="video-preview-empty">This version accepts YouTube URLs only.</div>';
-    els.videoPreviewStatus.textContent = 'Non-YouTube links are blocked.';
+  if (!ytId) {
+    els.videoPreviewArea.innerHTML = '<div class="video-preview-empty">Only YouTube URLs accepted.</div>';
+    els.videoPreviewStatus.textContent = 'Non-YouTube links blocked.';
     renderPreviewCard(); return;
   }
-  const start = getHmsSeconds('vs');
-  const end = getHmsSeconds('ve');
-  const safeStart = Number.isFinite(start) ? start : 0;
-  const safeEnd = Number.isFinite(end) ? end : safeStart + 12;
-  const embed = new URL(`https://www.youtube.com/embed/${youtubeId}`);
-  embed.searchParams.set('start', String(safeStart));
-  embed.searchParams.set('end', String(Math.max(safeStart + 1, safeEnd)));
-  embed.searchParams.set('rel', '0');
-  embed.searchParams.set('playsinline', '1');
-  els.videoPreviewArea.innerHTML = `<iframe src="${embed.href}" title="YouTube segment preview" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
-  els.videoPreviewStatus.textContent = `Previewing ${secondsToHms(safeStart)} → ${secondsToHms(Math.max(safeStart + 1, safeEnd))}.`;
+  const vs = hmsToSec('vs'), ve = hmsToSec('ve');
+  const ss = Number.isFinite(vs)?vs:0, se = Number.isFinite(ve)?ve:ss+12;
+  const emb = new URL(`https://www.youtube.com/embed/${ytId}`);
+  emb.searchParams.set('start',String(ss));
+  emb.searchParams.set('end',String(Math.max(ss+1,se)));
+  emb.searchParams.set('rel','0');
+  emb.searchParams.set('playsinline','1');
+  els.videoPreviewArea.innerHTML = `<iframe src="${emb.href}" title="Preview" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture;web-share" allowfullscreen></iframe>`;
+  els.videoPreviewStatus.textContent = `Previewing ${secToHms(ss)} → ${secToHms(Math.max(ss+1,se))}.`;
   renderPreviewCard();
 }
 
-/* ─── Location ─── */
-async function handleUseCurrentLocation() {
+/* ── Location ── */
+async function useCurrentLocation() {
   try {
-    const position = await getCurrentPosition();
-    const lat = position.coords.latitude;
-    const lng = position.coords.longitude;
-    fields().latitude.value = lat.toFixed(6);
-    fields().longitude.value = lng.toFixed(6);
-    state.mapPicker?.setPosition(lat, lng, true);
+    const pos = await getCurrentPosition();
+    fields().latitude.value = pos.coords.latitude.toFixed(6);
+    fields().longitude.value = pos.coords.longitude.toFixed(6);
+    state.mapPicker?.setPosition(pos.coords.latitude, pos.coords.longitude, true);
     setStatus(fields().mapStatus, 'Current location pinned.', 'success');
-  } catch (error) {
-    setStatus(fields().mapStatus, error.message || 'Location request failed.', 'error');
+  } catch (err) {
+    setStatus(fields().mapStatus, err.message || 'Location failed.', 'error');
   }
 }
 
-/* ─── Card flip ─── */
-function toggleCardFlip(forceBack = null) {
-  const back = typeof forceBack === 'boolean' ? forceBack : !els.previewCard.classList.contains('is-back');
-  els.previewCard.classList.toggle('is-back', back);
-  els.previewCard.classList.toggle('is-front', !back);
-  if (window.CanvasEditor) window.CanvasEditor.switchSide(back ? 'back' : 'front');
-}
-
-/* ─── Form data ─── */
+/* ── Form ── */
 function getFormData() {
   const f = fields();
-  const template = getTemplateById(state.templateId);
-  const startSeconds = getHmsSeconds('vs');
-  const endSeconds = getHmsSeconds('ve');
+  const tpl = getTemplateById(state.templateId);
+  const vs = hmsToSec('vs'), ve = hmsToSec('ve');
+
+  // Collect default-mode text if in default mode
+  const frontMsg = state.editorMode === 'default' ? sanitizeEditable(els.previewMessage) : tpl.message;
+  const backMsg = state.editorMode === 'default' ? sanitizeEditable(els.previewBackMessage) : tpl.backText;
+
   return {
     slug: state.lastCreatedSlug || generateSlug('gift'),
     templateId: state.templateId,
-    templateName: template.title,
+    templateName: tpl.title,
     recipientName: f.recipientName.value.trim(),
     senderName: f.senderName.value.trim(),
-    message: template.message,
-    frontSubtitle: template.subtitle,
-    frontText: template.message,
-    backText: template.backText,
+    editorMode: state.editorMode,
+    message: frontMsg,
+    frontSubtitle: state.editorMode === 'default' ? sanitizeEditable(els.previewSubtitle) : tpl.subtitle,
+    frontTitle: state.editorMode === 'default' ? sanitizeEditable(els.previewTitle) : tpl.title,
+    frontText: frontMsg,
+    backText: backMsg,
     canvasData: window.CanvasEditor ? window.CanvasEditor.getLayers() : null,
-    frontColor: template.frontColor,
-    accentColor: template.accentColor,
-    photoData: state.photoData,
-    backPhotoData: state.backPhotoData,
+    frontColor: tpl.frontColor,
+    accentColor: tpl.accentColor,
     videoUrl: safeUrl(f.videoUrl.value.trim()),
-    videoStart: Number.isFinite(startSeconds) ? startSeconds : 0,
-    videoEnd: Number.isFinite(endSeconds) ? endSeconds : 12,
+    videoStart: Number.isFinite(vs) ? vs : 0,
+    videoEnd: Number.isFinite(ve) ? ve : 12,
     mediaSequence: 'card-first',
     ctaLink: f.ctaLink.value.trim(),
     latitude: Number(f.latitude.value),
     longitude: Number(f.longitude.value),
     unlockRadiusM: Number(f.unlockRadius.value || 50),
     startAt: f.startAt.value ? new Date(f.startAt.value).toISOString() : new Date().toISOString(),
-    expiresAt: f.expiresAt.value ? new Date(f.expiresAt.value).toISOString() : new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-    bannerFinaleEnabled: false,
-    bannerText: '',
+    expiresAt: f.expiresAt.value ? new Date(f.expiresAt.value).toISOString() : new Date(Date.now()+86400000).toISOString(),
     spawnHeight: Number(f.spawnHeight.value || 3),
     forwardDistance: Number(f.forwardDistance.value || 2),
-    visibilityMode: 'visibility-first',
     status: 'active',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
@@ -258,115 +350,97 @@ function getFormData() {
 }
 
 function validate(data) {
+  if (!data.recipientName) return 'Receiver name required.';
+  if (!data.senderName) return 'Sender name required.';
+  if (!Number.isFinite(data.latitude)||!Number.isFinite(data.longitude)) return 'Lat/lng required.';
+  if (data.spawnHeight<0.5||data.spawnHeight>5.5) return 'Card height 0.5–5.5m.';
+  if (data.forwardDistance<0.5||data.forwardDistance>5.5) return 'Forward distance 0.5–5.5m.';
+  if (data.unlockRadiusM<10||data.unlockRadiusM>150) return 'Unlock radius 10–150m.';
   const f = fields();
-  if (!data.recipientName) return 'Receiver name is required.';
-  if (!data.senderName) return 'Sender name is required.';
-  if (!Number.isFinite(data.latitude) || !Number.isFinite(data.longitude)) return 'Latitude and longitude are required.';
-  if (!Number.isFinite(data.spawnHeight) || data.spawnHeight < 0.5 || data.spawnHeight > 5.5) return 'Card height must be between 0.5m and 5.5m.';
-  if (!Number.isFinite(data.forwardDistance) || data.forwardDistance < 0.5 || data.forwardDistance > 5.5) return 'Forward distance must be between 0.5m and 5.5m.';
-  if (!Number.isFinite(data.unlockRadiusM) || data.unlockRadiusM < 10 || data.unlockRadiusM > 150) return 'Unlock radius must be between 10m and 150m.';
-  const youtubeId = parseYouTubeId(f.videoUrl.value.trim());
-  if (f.videoUrl.value.trim() && !youtubeId) return 'Only YouTube URLs are accepted.';
-  if (!Number.isFinite(data.videoStart) || !Number.isFinite(data.videoEnd)) return 'Video time must be valid.';
-  if (data.videoEnd <= data.videoStart) return 'Video end must be greater than start.';
-  const start = new Date(f.startAt.value);
-  const end = new Date(f.expiresAt.value);
-  if (Number.isNaN(start.getTime())) return 'Start date/time is required.';
-  if (Number.isNaN(end.getTime())) return 'Expiry date/time is required.';
-  if (end < start) return 'Expiry must be after the start time.';
-  if (end.getTime() - start.getTime() > 24 * 60 * 60 * 1000) return 'Expiry must stay within 24 hours of start.';
+  if (f.videoUrl.value.trim() && !parseYtId(f.videoUrl.value.trim())) return 'Only YouTube URLs accepted.';
+  if (data.videoEnd<=data.videoStart) return 'Video end must be after start.';
+  const s=new Date(f.startAt.value), e=new Date(f.expiresAt.value);
+  if (isNaN(s.getTime())) return 'Start date required.';
+  if (isNaN(e.getTime())) return 'Expiry date required.';
+  if (e<s) return 'Expiry must be after start.';
+  if (e-s>86400000) return 'Expiry within 24h of start.';
   return '';
 }
 
-async function handleSubmit(event) {
-  event.preventDefault();
+async function handleSubmit(ev) {
+  ev.preventDefault();
   const data = getFormData();
-  const error = validate(data);
-  if (error) { setStatus(els.statusBox, error, 'error'); return; }
+  const err = validate(data);
+  if (err) { setStatus(els.statusBox, err, 'error'); return; }
   try {
     const saved = await saveGift(data);
     state.lastCreatedSlug = saved.slug;
-    const shareUrl = createRecipientUrl(saved.slug);
-    const previewUrl = createRecipientPreviewUrl(saved.slug);
-    els.shareLink.value = shareUrl;
-    els.openLink.href = shareUrl;
-    els.previewLink.href = previewUrl;
+    const sUrl = createRecipientUrl(saved.slug);
+    const pUrl = createRecipientPreviewUrl(saved.slug);
+    els.shareLink.value = sUrl;
+    els.openLink.href = sUrl;
+    els.previewLink.href = pUrl;
     els.openLink.classList.remove('disabled-link');
     els.previewLink.classList.remove('disabled-link');
-    setStatus(els.statusBox, `Saved. Expires at ${new Date(saved.expiresAt).toLocaleString()}.`, 'success');
-  } catch (saveError) {
-    setStatus(els.statusBox, saveError.message || 'Failed to save.', 'error');
+    setStatus(els.statusBox, `Saved. Expires ${new Date(saved.expiresAt).toLocaleString()}.`, 'success');
+  } catch (e) {
+    setStatus(els.statusBox, e.message || 'Save failed.', 'error');
   }
 }
 
 async function copyLink() {
   if (!els.shareLink.value) return;
   await navigator.clipboard.writeText(els.shareLink.value);
-  setStatus(els.statusBox, 'Link copied.', 'success');
+  setStatus(els.statusBox, 'Copied.', 'success');
 }
 
 async function initMap() {
   const f = fields();
   try {
     state.mapPicker = new MapPicker({
-      mapEl: f.mapEl, latInput: f.latitude, lngInput: f.longitude,
-      radiusInput: f.unlockRadius, searchInput: f.mapSearch,
-      searchButton: f.mapSearchButton, statusEl: f.mapStatus
+      mapEl:f.mapEl, latInput:f.latitude, lngInput:f.longitude,
+      radiusInput:f.unlockRadius, searchInput:f.mapSearch,
+      searchButton:f.mapSearchButton, statusEl:f.mapStatus
     });
     await state.mapPicker.init();
-  } catch (error) {
-    setStatus(f.mapStatus, error.message || 'Map failed to load.', 'warn');
+  } catch (e) {
+    setStatus(f.mapStatus, e.message||'Map load failed.', 'warn');
   }
 }
 
 async function setRuntimeStatus() {
-  const { url, anonKey } = await getSupabaseConfig();
-  if (!url || !anonKey) setStatus(els.statusBox, 'Running in local/demo mode.', 'muted');
+  const {url,anonKey} = await getSupabaseConfig();
+  if (!url||!anonKey) setStatus(els.statusBox, 'Running in local/demo mode.', 'muted');
 }
 
-/* ─── HMS input behavior fix ─── */
+/* ── HMS inputs ── */
 function bindHmsInputs() {
-  const hmsInputs = ['vs-h', 'vs-m', 'vs-s', 've-h', 've-m', 've-s'].map(id => qs(`#${id}`)).filter(Boolean);
-
-  hmsInputs.forEach((input, index) => {
-    // Focus: clear to let user type fresh
-    input.addEventListener('focus', () => {
-      input.select(); // select all instead of clearing — better UX
-    });
-
-    // Input: digits only, max 2 chars, auto-advance
-    input.addEventListener('input', (e) => {
-      input.value = input.value.replace(/[^\d]/g, '').slice(0, 2);
-      if (input.value.length === 2 && e.inputType !== 'deleteContentBackward') {
-        const next = hmsInputs[index + 1];
-        // Only auto-advance within same group (vs or ve)
-        if (next && input.id.split('-')[0] === next.id.split('-')[0]) {
-          next.focus();
-        }
+  const inputs = ['vs-h','vs-m','vs-s','ve-h','ve-m','ve-s'].map(id=>qs(`#${id}`)).filter(Boolean);
+  inputs.forEach((inp, idx) => {
+    inp.addEventListener('focus', () => inp.select());
+    inp.addEventListener('input', e => {
+      inp.value = inp.value.replace(/[^\d]/g,'').slice(0,2);
+      if (inp.value.length===2 && e.inputType!=='deleteContentBackward') {
+        const next = inputs[idx+1];
+        if (next && inp.id.split('-')[0]===next.id.split('-')[0]) next.focus();
       }
       renderVideoPreview();
     });
-
-    // Blur: restore "00" if empty, pad single digit
-    input.addEventListener('blur', () => {
-      const val = input.value.replace(/[^\d]/g, '').trim();
-      if (!val || val === '') {
-        input.value = '00';
-      } else if (val.length === 1) {
-        input.value = val.padStart(2, '0');
-      } else {
-        input.value = val.slice(0, 2);
-      }
+    inp.addEventListener('blur', () => {
+      const v = inp.value.replace(/[^\d]/g,'').trim();
+      if (!v) inp.value = '00';
+      else if (v.length===1) inp.value = v.padStart(2,'0');
+      else inp.value = v.slice(0,2);
       renderVideoPreview();
     });
   });
 }
 
-/* ─── Bind all events ─── */
+/* ── Bind events ── */
 function bindEvents() {
   const f = fields();
 
-  els.templateList.addEventListener('click', (e) => {
+  els.templateList.addEventListener('click', e => {
     const btn = e.target.closest('[data-template-id]');
     if (btn) applyTemplate(btn.dataset.templateId);
   });
@@ -375,30 +449,36 @@ function bindEvents() {
   f.senderName.addEventListener('input', renderPreviewCard);
   f.videoUrl.addEventListener('input', renderVideoPreview);
 
-  // HMS inputs with proper blur behavior
-  bindHmsInputs();
+  // Default mode contenteditable sync
+  [els.previewTitle, els.previewSubtitle, els.previewMessage, els.previewBackMessage].forEach(el => {
+    el?.addEventListener('input', () => renderPreviewCard());
+  });
 
-  f.startAt.addEventListener('change', syncExpiryBounds);
-  f.expiresAt.addEventListener('change', syncExpiryBounds);
+  bindHmsInputs();
+  bindToggles();
+
+  f.startAt.addEventListener('change', syncExpiry);
+  f.expiresAt.addEventListener('change', syncExpiry);
   f.unlockRadius.addEventListener('input', () => state.mapPicker?.updateRadius());
-  qs('#use-current-location').addEventListener('click', handleUseCurrentLocation);
+  qs('#use-current-location').addEventListener('click', useCurrentLocation);
   els.form.addEventListener('submit', handleSubmit);
   els.copyLink.addEventListener('click', copyLink);
-  qs('#flip-card').addEventListener('click', () => toggleCardFlip(true));
-  qs('#flip-card-back').addEventListener('click', () => toggleCardFlip(false));
-  if (els.navPrev) els.navPrev.addEventListener('click', handlePrevPage);
-  if (els.navNext) els.navNext.addEventListener('click', handleNextPage);
+  if (els.navPrev) els.navPrev.addEventListener('click', prevPage);
+  if (els.navNext) els.navNext.addEventListener('click', nextPage);
 }
 
-/* ─── Init ─── */
+/* ── Init ── */
 async function init() {
   applyPageLanguage();
+  preventPagePinchZoom();
   renderTemplates();
-  setDefaultDateWindow();
+  setDefaultDates();
   bindEvents();
   applyTemplate(state.templateId);
   renderVideoPreview();
   renderPreviewCard();
+  syncEditorMode();
+  syncSideToggle();
   updatePage();
   if (window.CanvasEditor) window.CanvasEditor.init();
   await setRuntimeStatus();
