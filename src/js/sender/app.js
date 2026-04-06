@@ -22,16 +22,19 @@ const state = {
 };
 
 /* ---- Carousel ---- */
+let carouselGoTo = null; // expose for re-trigger
+
 function initCarousel() {
   const viewport = qs('#carousel-viewport');
   const track = qs('#carousel-track');
   const dotsContainer = qs('#carousel-dots');
   if (!track || !viewport) return;
 
-  // Build slides: clone first and last for infinite loop
-  const slides = TEMPLATES.map((t, i) => buildTemplateSlide(t, i));
-  const lastClone = buildTemplateSlide(TEMPLATES[TEMPLATES.length - 1], -1);
-  const firstClone = buildTemplateSlide(TEMPLATES[0], TEMPLATES.length);
+  const slides = TEMPLATES.map((t) => buildTemplateSlide(t));
+  const lastClone = buildTemplateSlide(TEMPLATES[TEMPLATES.length - 1]);
+  lastClone.dataset.cloneOf = TEMPLATES[TEMPLATES.length - 1].id;
+  const firstClone = buildTemplateSlide(TEMPLATES[0]);
+  firstClone.dataset.cloneOf = TEMPLATES[0].id;
 
   track.innerHTML = '';
   track.appendChild(lastClone);
@@ -42,7 +45,9 @@ function initCarousel() {
   const totalReal = TEMPLATES.length;
   const slideWidth = () => {
     const s = track.children[1];
-    return s ? s.offsetWidth + parseFloat(getComputedStyle(s).marginLeft) * 2 : viewport.offsetWidth;
+    if (!s) return viewport.offsetWidth;
+    const style = getComputedStyle(s);
+    return s.offsetWidth + parseFloat(style.marginLeft || 0) + parseFloat(style.marginRight || 0);
   };
 
   function setTrackPosition(idx, animate = true) {
@@ -55,8 +60,12 @@ function initCarousel() {
     currentIndex = idx;
     setTrackPosition(idx, animate);
     updateDots();
-    selectTemplate(TEMPLATES[((idx % totalReal) + totalReal) % totalReal].id);
+    const realIdx = ((idx % totalReal) + totalReal) % totalReal;
+    selectTemplate(TEMPLATES[realIdx].id);
   }
+
+  // Expose globally for re-trigger after editor init
+  carouselGoTo = goTo;
 
   track.addEventListener('transitionend', () => {
     if (currentIndex < 0) { goTo(totalReal - 1, false); }
@@ -108,7 +117,17 @@ function initCarousel() {
   }
 
   renderDots();
-  requestAnimationFrame(() => goTo(0, false));
+
+  // Initial position — no animation, just set position visually
+  // Do NOT call selectTemplate here; editors aren't ready yet
+  requestAnimationFrame(() => {
+    setTrackPosition(0, false);
+    updateDots();
+    // Highlight first template slide
+    qsa('.template-item').forEach(el => {
+      el.classList.toggle('active', el.closest('[data-template-id]')?.dataset.templateId === TEMPLATES[0].id);
+    });
+  });
 
   // Click on slide
   track.addEventListener('click', (e) => {
@@ -122,7 +141,7 @@ function initCarousel() {
   });
 }
 
-function buildTemplateSlide(template, idx) {
+function buildTemplateSlide(template) {
   const div = document.createElement('div');
   div.className = 'carousel-slide';
   div.dataset.templateId = template.id;
@@ -143,7 +162,6 @@ function selectTemplate(templateId) {
   state.templateId = templateId;
   const template = getTemplateById(templateId);
 
-  // Update editors if initialized
   if (state.frontEditor) {
     state.frontEditor.state.bg.fill.color = template.frontColor;
     state.frontEditor.gradientStops = [
@@ -157,6 +175,7 @@ function selectTemplate(templateId) {
       bgFill: { type: 'solid', color: template.frontColor }
     });
   }
+
   if (state.backEditor) {
     state.backEditor.importState({
       titleText: 'Back side',
@@ -216,8 +235,11 @@ async function initMap() {
 function setDefaultDateWindow() {
   const now = new Date(); now.setSeconds(0, 0);
   const end = new Date(now.getTime() + (24 * 60 * 60 * 1000));
-  qs('#start-at').value = formatLocalDateInput(now);
-  qs('#expires-at').value = formatLocalDateInput(end);
+  const startEl = qs('#start-at');
+  const expiresEl = qs('#expires-at');
+  if (startEl) startEl.value = formatLocalDateInput(now);
+  if (expiresEl) expiresEl.value = formatLocalDateInput(end);
+  syncExpiryBounds();
 }
 
 function syncExpiryBounds() {
@@ -317,16 +339,15 @@ function initPageManager() {
     dotContainerSelector: '#nav-dots',
     prevBtnSelector: '#nav-prev',
     nextBtnSelector: '#nav-next',
-    onBeforeEnter: async (nextIndex, currentIndex) => {
+    onBeforeEnter: async (nextIndex) => {
       // Lazy init map only when entering page 4
       if (nextIndex === 4 && !mapInitialized) {
         mapInitialized = true;
-        // Wait a frame so the page is in DOM
         await new Promise(r => requestAnimationFrame(r));
         await initMap();
       }
     },
-    onAfterEnter: (index) => {
+    onAfterEnter: () => {
       // Sync receiver/sender name to editor previews
       const rName = qs('#recipient-name')?.value?.trim() || 'Receiver';
       const sName = qs('#sender-name')?.value?.trim() || 'Sender';
@@ -375,7 +396,7 @@ function bindEvents() {
     }
   });
 
-  // Name syncing
+  // Name syncing to front editor preview
   qs('#recipient-name')?.addEventListener('input', () => {
     const val = qs('#recipient-name').value.trim() || 'Receiver';
     const fpR = qs('#fp-receiver');
@@ -391,14 +412,22 @@ function bindEvents() {
 /* ---- Init ---- */
 async function init() {
   applyPageLanguage();
-  initCarousel();
+
+  // 1. Editors first (so selectTemplate can use them)
   initEditors();
+
+  // 2. Carousel second (calls selectTemplate which now has editors ready)
+  initCarousel();
+
+  // 3. Apply first template explicitly after both are ready
+  selectTemplate(state.templateId);
+
+  // 4. Rest of init
   initHmsFields();
   initYouTubePreview();
   setDefaultDateWindow();
   initPageManager();
   bindEvents();
-  selectTemplate(state.templateId);
 
   const { url, anonKey } = await getSupabaseConfig();
   if (!url || !anonKey) {
