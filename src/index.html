@@ -87,7 +87,7 @@
           </article>
         </div>
 
-        <form id="gift-form" class="stack-form aux-form" novalidate>
+        <div class="stack-form aux-form">
           <div class="field-grid two-up">
             <label class="glass-field">
               <span>Front image</span>
@@ -132,17 +132,19 @@
             <div id="video-preview-status" class="field-hint">Paste a YouTube link to preview the selected segment.</div>
             <div id="video-preview-area" class="video-preview-area"></div>
           </div>
+        </div>
+      </div>
 
-          <div class="field-grid two-up native-color-grid">
-            <label class="glass-field compact-field">
-              <span>Card color</span>
-              <input id="front-color" type="color" value="#7c3aed" />
-            </label>
-            <label class="glass-field compact-field">
-              <span>Accent color</span>
-              <input id="accent-color" type="color" value="#f59e0b" />
-            </label>
+      <div class="card-panel right-col page-view page-hidden" data-step="3">
+        <div class="section-head">
+          <span class="step">3</span>
+          <div>
+            <h2>Delivery rules & Map placement</h2>
+            <p>Set unlock rules and location for your Celebration Card.</p>
           </div>
+        </div>
+        </div>
+        <div class="stack-form aux-form">
 
           <div class="field-grid two-up">
             <label class="glass-field">
@@ -177,13 +179,20 @@
             </label>
           </div>
 
-          <div class="section-head nested-head">
-            <span class="step">3</span>
-            <div>
-              <h2>Map placement</h2>
-              <p>Use a fixed center pin. Pan the map below the pin and keep the radius visible as a transparent outline only.</p>
-            </div>
           </div>
+        </div>
+      </div>
+
+      <div class="card-panel right-col page-view page-hidden" data-step="4">
+        <div class="section-head">
+          <span class="step">4</span>
+          <div>
+            <h2>Map placement</h2>
+            <p>Use a fixed center pin. Pan the map below the pin and keep the radius visible as a transparent outline only.</p>
+          </div>
+        </div>
+
+        <form id="gift-form" class="stack-form aux-form" novalidate>
 
           <div class="field-grid map-search-grid">
             <label class="glass-field">
@@ -219,10 +228,10 @@
       </div>
     </section>
 
-    <section class="preview-grid page-view page-hidden" data-step="3">
+    <section class="preview-grid page-view page-hidden" data-step="5">
       <div class="card-panel success-panel">
         <div class="section-head">
-          <span class="step">4</span>
+          <span class="step">5</span>
           <div>
             <h2>Share</h2>
             <p>Create the recipient URL, copy it, or open live / preview QA screens side-by-side.</p>
@@ -248,6 +257,8 @@
     <button id="nav-prev" class="btn btn-secondary nav-btn" type="button" disabled>◀ Previous</button>
     <div class="nav-dots" id="nav-dots">
       <div class="dot active"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
       <div class="dot"></div>
       <div class="dot"></div>
     </div>

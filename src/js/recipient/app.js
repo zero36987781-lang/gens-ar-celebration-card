@@ -27,8 +27,13 @@ const els = {
   senderLine: qs('#sender-line'),
   messageLine: qs('#message-line'),
   begin: qs('#begin-recipient'),
-  permissionPanel: qs('#permission-panel'),
-  supportStatus: qs('#support-status'),
+  envPanel: qs('#env-panel'),
+  envGpsStatus: qs('#env-gps-status'),
+  envMotionStatus: qs('#env-motion-status'),
+  envCameraStatus: qs('#env-camera-status'),
+  envWarning: qs('#env-warning'),
+  btnEnvCheck: qs('#btn-env-check'),
+  btnEnvContinue: qs('#btn-env-continue'),
   distancePanel: qs('#distance-panel'),
   distanceState: qs('#distance-state'),
   distanceCopy: qs('#distance-copy'),
@@ -62,31 +67,71 @@ function showPanel(panel) {
 }
 
 function showUnavailable(message) {
-  [qs('#recipient-card'), els.permissionPanel, els.distancePanel, els.arPanel, els.thanksPanel].forEach((el) => el?.classList.add('hidden'));
+  [qs('#recipient-card'), els.envPanel, els.distancePanel, els.arPanel, els.thanksPanel].forEach((el) => el?.classList.add('hidden'));
   els.expiredPanel.classList.remove('hidden');
   setStatus(els.expiredCopy, message, 'warn');
 }
 
 async function detectSupport() {
-  if (previewMode) {
-    setStatus(els.supportStatus, 'Buyer preview mode is active. The location gate is simulated and the stage sequence will auto-play.', 'success');
-    return Boolean(navigator.xr);
-  }
-  if (!window.isSecureContext) {
-    setStatus(els.supportStatus, 'Full AR needs HTTPS. A touch-ready 3D card will still open in preview mode.', 'warn');
-    return false;
-  }
-  if (!navigator.xr) {
-    setStatus(els.supportStatus, 'WebXR is not available here. The card will open in interactive 3D preview mode.', 'warn');
-    return false;
-  }
+  if (previewMode) return Boolean(navigator.xr);
+  if (!window.isSecureContext) return false;
+  if (!navigator.xr) return false;
   const supported = await navigator.xr.isSessionSupported('immersive-ar');
-  if (!supported) {
-    setStatus(els.supportStatus, 'Immersive AR is not supported on this device. Interactive 3D preview will open instead.', 'warn');
-    return false;
+  return supported;
+}
+
+async function runEnvironmentCheck() {
+  els.btnEnvCheck.disabled = true;
+  els.btnEnvCheck.textContent = 'Checking...';
+  
+  let gpsOk = false;
+  let motionOk = true;
+
+  els.envCameraStatus.className = 'env-item__status pending';
+  els.envCameraStatus.textContent = 'Checking';
+  const cameraOk = await detectSupport();
+  els.envCameraStatus.className = cameraOk ? 'env-item__status success' : 'env-item__status warn';
+  els.envCameraStatus.textContent = cameraOk ? 'Active' : 'Missing (3D Only)';
+
+  if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+    els.envMotionStatus.className = 'env-item__status pending';
+    els.envMotionStatus.textContent = 'Requesting';
+    try {
+      const permissionState = await DeviceOrientationEvent.requestPermission();
+      motionOk = permissionState === 'granted';
+    } catch {
+      motionOk = false;
+    }
   }
-  setStatus(els.supportStatus, 'AR is supported. After you open the card, camera mode will start automatically.', 'success');
-  return true;
+  els.envMotionStatus.className = motionOk ? 'env-item__status success' : 'env-item__status warn';
+  els.envMotionStatus.textContent = motionOk ? 'Active' : 'Locked';
+
+  els.envGpsStatus.className = 'env-item__status pending';
+  els.envGpsStatus.textContent = 'Requesting';
+  try {
+    if (previewMode) {
+      gpsOk = true;
+    } else {
+      await getCurrentPosition();
+      gpsOk = true;
+    }
+  } catch {
+    gpsOk = false;
+  }
+  els.envGpsStatus.className = gpsOk ? 'env-item__status success' : 'env-item__status error';
+  els.envGpsStatus.textContent = gpsOk ? 'Active' : 'Denied';
+
+  els.btnEnvCheck.textContent = 'Check Again';
+  els.btnEnvCheck.disabled = false;
+  
+  if (gpsOk) {
+    els.envWarning.classList.add('hidden');
+    els.btnEnvCheck.classList.add('hidden');
+    els.btnEnvContinue.classList.remove('hidden');
+  } else {
+    els.envWarning.classList.remove('hidden');
+    els.btnEnvContinue.classList.add('hidden');
+  }
 }
 
 function renderGift() {
@@ -178,9 +223,8 @@ function setUnlockedState(copy, tone = 'success', label = 'Ready') {
 }
 
 async function handleBegin() {
-  showPanel(els.permissionPanel);
-  await detectSupport();
-  els.permissionPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  showPanel(els.envPanel);
+  els.envPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 async function checkDistance() {
@@ -257,7 +301,7 @@ async function startPreviewAutomation() {
   if (!previewMode || previewAutomationStarted) return;
   previewAutomationStarted = true;
   document.body.classList.add('preview-direct-ar');
-  [qs('#recipient-card'), els.permissionPanel, els.distancePanel].forEach((el) => el?.classList.add('hidden'));
+  [qs('#recipient-card'), els.envPanel, els.distancePanel].forEach((el) => el?.classList.add('hidden'));
   showPanel(els.arPanel);
   setStatus(els.arStatus, 'Buyer preview opens directly in the AR / 3D stage.', 'success');
   await launchCardStage();
@@ -291,7 +335,8 @@ async function init() {
   renderGift();
   els.begin.addEventListener('click', handleBegin);
   els.refreshDistance.addEventListener('click', checkDistance);
-  qs('#check-distance').addEventListener('click', checkDistance);
+  els.btnEnvCheck?.addEventListener('click', runEnvironmentCheck);
+  els.btnEnvContinue?.addEventListener('click', checkDistance);
   els.launchAr.addEventListener('click', launchCardStage);
   els.replaySequence.addEventListener('click', async () => {
     if (!engine) {

@@ -38,13 +38,13 @@ const els = {
   navDots: document.querySelectorAll('.nav-dots .dot')
 };
 
-const MAX_PAGES = 3;
+const MAX_PAGES = 5;
 
 function updatePage() {
   document.querySelectorAll('.page-view').forEach((el) => el.classList.add('page-hidden'));
   document.querySelectorAll(`.page-view[data-step="${state.page}"]`).forEach((el) => el.classList.remove('page-hidden'));
   
-  if (state.page === 1 || state.page === 2) {
+  if (state.page >= 1 && state.page <= 4) {
     els.builderGrid?.classList.add('single-column-override');
   } else {
     els.builderGrid?.classList.remove('single-column-override');
@@ -81,8 +81,6 @@ function fields() {
   return {
     recipientName: qs('#recipient-name'),
     senderName: qs('#sender-name'),
-    frontColor: qs('#front-color'),
-    accentColor: qs('#accent-color'),
     photoFile: qs('#photo-file'),
     backPhotoFile: qs('#back-photo-file'),
     videoUrl: qs('#video-url'),
@@ -189,9 +187,6 @@ function renderTemplates() {
 function applyTemplate(templateId) {
   state.templateId = templateId;
   const template = getTemplateById(templateId);
-  const f = fields();
-  f.frontColor.value = template.frontColor;
-  f.accentColor.value = template.accentColor;
   els.previewTitle.textContent = template.title;
   els.previewSubtitle.textContent = template.subtitle;
   els.previewMessage.textContent = template.message;
@@ -202,8 +197,9 @@ function applyTemplate(templateId) {
 
 function renderPreviewCard() {
   const f = fields();
-  els.previewCard.style.setProperty('--card-front', f.frontColor.value);
-  els.previewCard.style.setProperty('--card-accent', f.accentColor.value);
+  const template = getTemplateById(state.templateId);
+  els.previewCard.style.setProperty('--card-front', template.frontColor);
+  els.previewCard.style.setProperty('--card-accent', template.accentColor);
   els.previewReceiver.textContent = f.recipientName.value.trim() || 'Receiver';
   els.previewSender.textContent = `From ${f.senderName.value.trim() || 'Sender'}`;
   const hasVideo = Boolean(parseYouTubeId(f.videoUrl.value.trim()));
@@ -283,8 +279,8 @@ function getFormData() {
     frontSubtitle: getEditableLines(els.previewSubtitle) || template.subtitle,
     frontText: getEditableLines(els.previewMessage) || template.message,
     backText: getEditableLines(els.previewBackMessage) || template.backText,
-    frontColor: f.frontColor.value,
-    accentColor: f.accentColor.value,
+    frontColor: template.frontColor,
+    accentColor: template.accentColor,
     photoData: state.photoData,
     backPhotoData: state.backPhotoData,
     videoUrl: safeUrl(f.videoUrl.value.trim()),
@@ -401,14 +397,15 @@ function bindEvents() {
   });
   f.recipientName.addEventListener('input', renderPreviewCard);
   f.senderName.addEventListener('input', renderPreviewCard);
-  f.frontColor.addEventListener('input', renderPreviewCard);
-  f.accentColor.addEventListener('input', renderPreviewCard);
   f.photoFile.addEventListener('change', (event) => handlePhotoChange(event, 'front'));
   f.backPhotoFile.addEventListener('change', (event) => handlePhotoChange(event, 'back'));
   f.videoUrl.addEventListener('input', renderVideoPreview);
   
   const hmsInputs = ['vs-h', 'vs-m', 'vs-s', 've-h', 've-m', 've-s'].map(id => qs(`#${id}`)).filter(Boolean);
   hmsInputs.forEach((input, index) => {
+    input.addEventListener('focus', () => {
+      input.value = '';
+    });
     input.addEventListener('input', (e) => {
       input.value = input.value.replace(/[^\d]/g, '').slice(0, 2);
       if (input.value.length === 2 && e.inputType !== 'deleteContentBackward') {

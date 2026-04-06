@@ -44,17 +44,44 @@
       <button id="begin-recipient" class="btn btn-primary">Start</button>
     </section>
 
-    <section id="permission-panel" class="card-panel hidden">
-      <h2>Check location access</h2>
-      <ul class="plain-list">
-        <li>Allow location to verify the card spot.</li>
-        <li>If AR is supported, camera entry will start automatically after you open the card.</li>
-        <li>If AR is not supported, an interactive 3D preview still appears.</li>
-      </ul>
-      <div class="inline-actions">
-        <button id="check-distance" class="btn btn-primary">Check location</button>
+    <section id="env-panel" class="card-panel hidden">
+      <h2>Device Setup</h2>
+      <p>To experience the AR Celebration Card, please allow the following hardware features.</p>
+      
+      <div class="env-list">
+        <div class="env-item">
+          <div class="env-item__info">
+            <div class="env-item__name">📍 GPS Location</div>
+            <div class="env-item__desc">To verify the card spot.</div>
+          </div>
+          <div id="env-gps-status" class="env-item__status pending">Pending</div>
+        </div>
+        
+        <div class="env-item">
+          <div class="env-item__info">
+            <div class="env-item__name">🧭 Motion & Compass</div>
+            <div class="env-item__desc">For 3D orientation.</div>
+          </div>
+          <div id="env-motion-status" class="env-item__status pending">Pending</div>
+        </div>
+
+        <div class="env-item">
+          <div class="env-item__info">
+            <div class="env-item__name">📷 Camera (AR)</div>
+            <div class="env-item__desc">To place the card in the real world.</div>
+          </div>
+          <div id="env-camera-status" class="env-item__status pending">Pending</div>
+        </div>
       </div>
-      <div id="support-status" class="status-box muted">Waiting for device capability check.</div>
+      
+      <div id="env-warning" class="status-box error hidden">
+        If a permission is blocked, please open your phone's <strong>Settings > Safari (or Chrome)</strong> to allow access, then refresh this page.
+      </div>
+      
+      <div class="inline-actions">
+        <button id="btn-env-check" class="btn btn-primary">Grant & Check</button>
+        <button id="btn-env-continue" class="btn btn-secondary hidden">Continue to Distance Check</button>
+      </div>
     </section>
 
     <section id="distance-panel" class="card-panel hidden">
