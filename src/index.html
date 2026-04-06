@@ -57,7 +57,7 @@
 
     <main class="sender-shell" id="sender-shell">
 
-      <!-- Step 1 -->
+      <!-- Step 1: Template (unchanged) -->
       <section class="card-panel page-view" data-step="1">
         <span class="eyebrow">CHARIEL STANDARD</span>
         <h1>Build the card directly in the preview.</h1>
@@ -79,55 +79,14 @@
         <div id="template-list" class="template-list"></div>
       </section>
 
-      <!-- Step 2: Media Management (New) -->
-      <section class="card-panel page-view page-hidden" data-step="2">
-        <div class="section-head">
-          <span class="step">2</span>
-          <div><h2>Media Management</h2><p>Add a YouTube video to your AR card.</p></div>
-        </div>
-        <div class="stack-form aux-form">
-          <label class="glass-field">
-            <span>YouTube URL</span>
-            <input id="video-url" type="url" placeholder="https://www.youtube.com/watch?v=..." />
-          </label>
-          <div class="field-grid two-up" style="margin-top:10px">
-            <div class="glass-field">
-              <span>Start</span>
-              <div class="hms-group">
-                <input class="hms-input" id="vs-h" type="text" inputmode="numeric" maxlength="2" value="00" />
-                <span class="hms-sep">:</span>
-                <input class="hms-input" id="vs-m" type="text" inputmode="numeric" maxlength="2" value="00" />
-                <span class="hms-sep">:</span>
-                <input class="hms-input" id="vs-s" type="text" inputmode="numeric" maxlength="2" value="00" />
-              </div>
-            </div>
-            <div class="glass-field">
-              <span>End</span>
-              <div class="hms-group">
-                <input class="hms-input" id="ve-h" type="text" inputmode="numeric" maxlength="2" value="00" />
-                <span class="hms-sep">:</span>
-                <input class="hms-input" id="ve-m" type="text" inputmode="numeric" maxlength="2" value="00" />
-                <span class="hms-sep">:</span>
-                <input class="hms-input" id="ve-s" type="text" inputmode="numeric" maxlength="2" value="12" />
-              </div>
-            </div>
-          </div>
-          <div class="glass-field video-preview-block" style="margin-top:10px">
-            <span>Preview</span>
-            <div id="video-preview-status" class="field-hint">Paste a YouTube link.</div>
-            <div id="video-preview-area" class="video-preview-area"></div>
-          </div>
-        </div>
-      </section>
+      <!-- ★ Step 2: Design Studio (was Step 3) — TikTok-style split layout -->
+      <section class="page-view page-hidden studio-page" data-step="2">
 
-      <!-- Step 3: TikTok-style split layout (Studio) -->
-      <section class="page-view page-hidden studio-page" data-step="3">
-
-        <!-- Toggle row -->
+        <!-- Toggle row — "Default" renamed to "Basic" + Custom gets gradient text -->
         <div class="canvas-toggle-row">
           <div class="toggle-group" id="mode-toggle">
-            <button type="button" class="toggle-pill active" data-value="default">Default</button>
-            <button type="button" class="toggle-pill" data-value="custom">Custom</button>
+            <button type="button" class="toggle-pill active" data-value="basic">Basic</button>
+            <button type="button" class="toggle-pill custom-toggle-pill" data-value="custom">Custom</button>
           </div>
           <div class="toggle-group" id="side-toggle">
             <button type="button" class="toggle-pill active" data-value="front">Front</button>
@@ -138,8 +97,8 @@
         <!-- Resizable top area: card preview -->
         <div id="studio-canvas-area" class="studio-canvas-area">
 
-          <!-- Default mode -->
-          <div id="default-preview" class="studio-card-wrap">
+          <!-- Basic mode (was "Default") -->
+          <div id="basic-preview" class="studio-card-wrap">
             <article id="preview-card-default" class="chariel-card is-front" aria-live="polite">
               <div class="chariel-card__glow"></div>
               <div class="chariel-card__face chariel-card__face--front">
@@ -191,7 +150,7 @@
         <!-- Bottom panel area (scrollable) -->
         <div id="studio-panel-area" class="studio-panel-area">
 
-          <!-- Icon toolbar (Now Text-based) -->
+          <!-- Icon toolbar -->
           <div class="icon-toolbar" id="icon-toolbar">
             <button type="button" class="icon-tb-btn" data-panel="text">Text</button>
             <button type="button" class="icon-tb-btn" data-panel="image">Image</button>
@@ -269,7 +228,48 @@
         </div>
       </section>
 
-      <!-- Step 4 -->
+      <!-- ★ Step 3: Media Management (was Step 2) -->
+      <section class="card-panel page-view page-hidden" data-step="3">
+        <div class="section-head">
+          <span class="step">3</span>
+          <div><h2>Media Management</h2><p>Add a YouTube video to your AR card.</p></div>
+        </div>
+        <div class="stack-form aux-form">
+          <label class="glass-field">
+            <span>YouTube URL</span>
+            <input id="video-url" type="url" placeholder="https://www.youtube.com/watch?v=..." />
+          </label>
+          <div class="field-grid two-up" style="margin-top:10px">
+            <div class="glass-field">
+              <span>Start</span>
+              <div class="hms-group">
+                <input class="hms-input" id="vs-h" type="text" inputmode="numeric" maxlength="2" value="00" />
+                <span class="hms-sep">:</span>
+                <input class="hms-input" id="vs-m" type="text" inputmode="numeric" maxlength="2" value="00" />
+                <span class="hms-sep">:</span>
+                <input class="hms-input" id="vs-s" type="text" inputmode="numeric" maxlength="2" value="00" />
+              </div>
+            </div>
+            <div class="glass-field">
+              <span>End</span>
+              <div class="hms-group">
+                <input class="hms-input" id="ve-h" type="text" inputmode="numeric" maxlength="2" value="00" />
+                <span class="hms-sep">:</span>
+                <input class="hms-input" id="ve-m" type="text" inputmode="numeric" maxlength="2" value="00" />
+                <span class="hms-sep">:</span>
+                <input class="hms-input" id="ve-s" type="text" inputmode="numeric" maxlength="2" value="00" />
+              </div>
+            </div>
+          </div>
+          <div class="glass-field video-preview-block" style="margin-top:10px">
+            <span>Preview</span>
+            <div id="video-preview-status" class="field-hint">Paste a YouTube link.</div>
+            <div id="video-preview-area" class="video-preview-area"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Step 4: Delivery rules (unchanged) -->
       <section class="card-panel page-view page-hidden" data-step="4">
         <div class="section-head">
           <span class="step">4</span>
@@ -289,7 +289,7 @@
         </div>
       </section>
 
-      <!-- Step 5 -->
+      <!-- Step 5: Map (unchanged) -->
       <section class="card-panel page-view page-hidden" data-step="5">
         <div class="section-head">
           <span class="step">5</span>
@@ -316,7 +316,7 @@
         </form>
       </section>
 
-      <!-- Step 6 -->
+      <!-- Step 6: Share (unchanged) -->
       <section class="card-panel page-view page-hidden" data-step="6">
         <div class="section-head">
           <span class="step">6</span>

@@ -8,7 +8,7 @@ import { applyPageLanguage } from '../core/i18n.js';
 const state = {
   templateId: TEMPLATES[0].id,
   page: 0, // 0 = permission gate
-  editorMode: 'default',
+  editorMode: 'basic',        // ★ changed from 'default' to 'basic'
   activeSide: 'front',
   lastCreatedSlug: '',
   mapPicker: null,
@@ -45,7 +45,7 @@ function cacheDom() {
   els.videoBadgeDefault = qs('#video-badge-default');
   els.previewCard = qs('#preview-card');
   els.videoBadge = qs('#video-badge');
-  els.defaultPreview = qs('#default-preview');
+  els.basicPreview = qs('#basic-preview');       // ★ renamed
   els.customPreview = qs('#custom-preview');
   els.videoPreviewStatus = qs('#video-preview-status');
   els.videoPreviewArea = qs('#video-preview-area');
@@ -75,8 +75,6 @@ function preventPagePinchZoom() {
 /* ══ Permission gate ══ */
 async function requestPermissions() {
   let gpsOk = false, motionOk = false;
-
-  // GPS
   try {
     await new Promise((res, rej) => {
       navigator.geolocation.getCurrentPosition(
@@ -90,14 +88,13 @@ async function requestPermissions() {
   els.permGps.textContent = gpsOk ? 'Granted' : 'Denied';
   els.permGps.className = `perm-status ${gpsOk ? 'granted' : 'denied'}`;
 
-  // Motion (iOS 13+ requires explicit permission)
   if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
     try {
       const result = await DeviceOrientationEvent.requestPermission();
       motionOk = result === 'granted';
     } catch { /* denied */ }
   } else {
-    motionOk = true; // non-iOS or older — assume available
+    motionOk = true;
   }
 
   els.permMotion.textContent = motionOk ? 'Granted' : 'Denied';
@@ -135,13 +132,12 @@ function updatePage() {
   document.querySelectorAll('.page-view').forEach(el => el.classList.add('page-hidden'));
   document.querySelectorAll(`.page-view[data-step="${state.page}"]`).forEach(el => el.classList.remove('page-hidden'));
 
-  // Disable main shell scroll on studio page to allow independent pane scrolling
+  // ★ Studio page is now step 2 (was step 3)
   const shell = qs('.sender-shell');
   if (shell) {
-    shell.style.overflowY = state.page === 3 ? 'hidden' : 'auto';
+    shell.style.overflowY = state.page === 2 ? 'hidden' : 'auto';
   }
 
-  // Always show bottom-nav now as per user request
   if (els.bottomNav) els.bottomNav.style.display = '';
 
   els.navDots.forEach((d, i) => d.classList.toggle('active', i === state.page - 1));
@@ -185,24 +181,37 @@ function bindStudioResizer() {
     window.addEventListener('touchmove', tm, { passive: false });
     window.addEventListener('touchend', te);
   }, { passive: false });
+}
 
-  // Set initial height
+/* ★ Set initial split height based on editor mode */
+function applySplitHeight() {
+  const canvas = els.studioCanvasArea;
+  if (!canvas) return;
   requestAnimationFrame(() => {
     const parentH = canvas.parentElement?.offsetHeight || 600;
-    canvas.style.height = Math.round(parentH * 0.55) + 'px';
+    if (state.editorMode === 'basic') {
+      // Basic: card fully visible, divider at bottom (~85%)
+      canvas.style.height = Math.round(parentH * 0.85) + 'px';
+    } else {
+      // Custom: 50:50 split
+      canvas.style.height = Math.round(parentH * 0.50) + 'px';
+    }
+    if (window.CanvasEditor) window.CanvasEditor.resizeStages();
   });
 }
 
 /* ── Mode & Side toggle ── */
 function syncEditorMode() {
   const isCustom = state.editorMode === 'custom';
-  els.defaultPreview?.classList.toggle('hidden', isCustom);
+  els.basicPreview?.classList.toggle('hidden', isCustom);       // ★ renamed
   els.customPreview?.classList.toggle('hidden', !isCustom);
   document.querySelectorAll('#mode-toggle .toggle-pill').forEach(p => p.classList.toggle('active', p.dataset.value === state.editorMode));
   // Hide/show icon toolbar based on mode
   if (els.iconToolbar) els.iconToolbar.style.display = isCustom ? '' : 'none';
-  // Close all panels if switching to default
+  // Close all panels if switching to basic
   if (!isCustom) closeAllPanels();
+  // ★ Apply different split heights based on mode
+  applySplitHeight();
 }
 
 function syncSideToggle() {
@@ -223,7 +232,6 @@ function closeAllPanels() {
 }
 
 function bindPanels() {
-  // Icon toolbar buttons
   els.iconToolbar?.addEventListener('click', e => {
     const btn = e.target.closest('.icon-tb-btn');
     if (!btn) return;
@@ -237,7 +245,6 @@ function bindPanels() {
     }
   });
 
-  // Close buttons inside panels
   document.querySelectorAll('.panel-close').forEach(btn => {
     btn.addEventListener('click', () => closeAllPanels());
   });
@@ -375,17 +382,17 @@ async function useCurrentLocation() {
 function getFormData() {
   const f = fields(), tpl = getTemplateById(state.templateId);
   const vs = hmsToSec('vs'), ve = hmsToSec('ve');
-  const isDefault = state.editorMode === 'default';
+  const isBasic = state.editorMode === 'basic';    // ★ changed from 'default'
   return {
     slug: state.lastCreatedSlug || generateSlug('gift'),
     templateId: state.templateId, templateName: tpl.title,
     recipientName: f.recipientName.value.trim(), senderName: f.senderName.value.trim(),
     editorMode: state.editorMode,
-    message: isDefault ? sanitize(els.previewMessage) : tpl.message,
-    frontTitle: isDefault ? sanitize(els.previewTitle) : tpl.title,
-    frontSubtitle: isDefault ? sanitize(els.previewSubtitle) : tpl.subtitle,
-    frontText: isDefault ? sanitize(els.previewMessage) : tpl.message,
-    backText: isDefault ? sanitize(els.previewBackMessage) : tpl.backText,
+    message: isBasic ? sanitize(els.previewMessage) : tpl.message,
+    frontTitle: isBasic ? sanitize(els.previewTitle) : tpl.title,
+    frontSubtitle: isBasic ? sanitize(els.previewSubtitle) : tpl.subtitle,
+    frontText: isBasic ? sanitize(els.previewMessage) : tpl.message,
+    backText: isBasic ? sanitize(els.previewBackMessage) : tpl.backText,
     canvasData: window.CanvasEditor ? window.CanvasEditor.getLayers() : null,
     frontColor: tpl.frontColor, accentColor: tpl.accentColor,
     videoUrl: safeUrl(f.videoUrl.value.trim()),
@@ -503,7 +510,6 @@ async function init() {
   preventPagePinchZoom();
   cacheDom();
 
-  // Permission gate
   if (sessionStorage.getItem(PERM_KEY)) {
     finishPermissions();
   } else {

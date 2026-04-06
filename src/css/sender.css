@@ -267,3 +267,38 @@
   .toggle-pill{padding:7px 11px;font-size:11px;}
   .ctx-opacity input[type="range"]{width:60px;}
 }
+
+/* ★ Custom toggle pill — gradient text on Basic state */
+.toggle-pill.custom-toggle-pill:not(.active) {
+  background: transparent;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  color: var(--muted);
+  position: relative;
+}
+.toggle-pill.custom-toggle-pill:not(.active)::before {
+  content: 'Custom';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #ff6b9d, #c084fc, #60a5fa, #34d399);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+  font-size: inherit;
+  letter-spacing: inherit;
+}
+/* Hide the actual text when pseudo-element is showing */
+.toggle-pill.custom-toggle-pill:not(.active) {
+  color: transparent;
+}
+
+/* When active, use standard white-on-black */
+.toggle-pill.custom-toggle-pill.active {
+  background: #fff;
+  color: #000;
+  -webkit-text-fill-color: #000;
+}
