@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>CHARIEL — Admin Studio</title>
+  <meta name="title" content="CHARIEL — Admin Studio" />
+  <link rel="stylesheet" href="./css/shared.css" />
+  <link rel="stylesheet" href="./css/admin.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand-wrap">
+      <div class="brand-mark">C</div>
+      <div class="brand-block">
+        <div class="brand">CHARIEL</div>
+        <div class="brand-sub">Admin Studio</div>
+      </div>
+    </div>
+    <span class="ghost-link">Private editor</span>
+  </header>
+
+  <main class="admin-shell">
+    <section class="card-panel admin-auth">
+      <span class="eyebrow">CHARIEL STANDARD</span>
+      <h1>Admin access & live edit</h1>
+      <p>Sign in for live data or use demo mode. The editor matches the sender style: names on top, message editing inside the card preview, and auxiliary controls for media, map, and delivery only.</p>
+      <form id="admin-login" class="stack-form compact-auth">
+        <div class="field-grid two-up">
+          <label class="glass-field">
+            <span>Email</span>
+            <input id="admin-email" type="email" placeholder="admin@example.com" />
+          </label>
+          <label class="glass-field">
+            <span>Password</span>
+            <input id="admin-password" type="password" placeholder="••••••••" />
+          </label>
+        </div>
+        <div class="inline-actions">
+          <button class="btn btn-primary" type="submit">Sign in</button>
+          <button id="demo-admin" class="btn btn-secondary" type="button">Demo mode</button>
+        </div>
+      </form>
+      <div id="admin-auth-status" class="status-box muted">Waiting for runtime config.</div>
+    </section>
+
+    <section id="admin-editor" class="card-panel hidden">
+      <div class="field-grid two-up hero-names">
+        <label class="glass-field">
+          <span>Receiver</span>
+          <input id="admin-recipient-name" type="text" maxlength="40" placeholder="Emma" />
+        </label>
+        <label class="glass-field">
+          <span>Sender</span>
+          <input id="admin-sender-name" type="text" maxlength="30" placeholder="Minji" />
+        </label>
+      </div>
+
+      <div class="section-head top-gap">
+        <span class="step">1</span>
+        <div>
+          <h2>Load a gift</h2>
+          <p>Open an existing slug, then edit the content directly inside the preview card.</p>
+        </div>
+      </div>
+      <div class="field-grid two-up">
+        <label class="glass-field">
+          <span>Gift slug</span>
+          <input id="admin-slug" type="text" placeholder="gift-abc123" />
+        </label>
+        <label class="glass-field">
+          <span>Template</span>
+          <select id="admin-template"></select>
+        </label>
+      </div>
+      <div class="inline-actions admin-actions-row">
+        <button id="admin-load" class="btn btn-secondary" type="button">Load</button>
+        <button id="admin-save" class="btn btn-primary" type="button">Save</button>
+      </div>
+
+      <div class="admin-preview-shell">
+        <article id="admin-preview-card" class="chariel-card is-front" aria-live="polite">
+          <div class="chariel-card__glow"></div>
+          <div class="chariel-card__face chariel-card__face--front">
+            <div class="chariel-card__topline">
+              <span id="admin-preview-receiver" class="card-mini-name">Receiver</span>
+              <span id="admin-video-badge" class="video-badge hidden">Video</span>
+            </div>
+            <div>
+              <div id="admin-preview-title" class="card-title" contenteditable="true" spellcheck="false">Happy Birthday</div>
+              <div id="admin-preview-subtitle" class="card-subtitle" contenteditable="true" spellcheck="false">A bright surprise for your special day.</div>
+            </div>
+            <div id="admin-preview-message" class="card-message" contenteditable="true" spellcheck="false">Happy Birthday! Wishing you joy, laughter, and a beautiful year ahead.</div>
+            <div class="card-footer-row">
+              <div id="admin-preview-sender" class="card-footer-name">From Minji</div>
+              <button id="admin-flip-card" class="btn btn-secondary card-flip-btn" type="button">Flip</button>
+            </div>
+          </div>
+          <div class="chariel-card__face chariel-card__face--back">
+            <div class="chariel-card__back-label">Back side</div>
+            <div id="admin-preview-back-message" class="card-back-message" contenteditable="true" spellcheck="false">Thank you for being such a special part of my life.</div>
+            <div class="card-footer-row">
+              <div class="card-side-hint">Admin edits save exactly as shown here.</div>
+              <button id="admin-flip-card-back" class="btn btn-secondary card-flip-btn" type="button">Front</button>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <div class="field-grid two-up top-gap">
+        <label class="glass-field">
+          <span>Status</span>
+          <select id="admin-status">
+            <option value="active">Active</option>
+            <option value="disabled">Disabled</option>
+            <option value="expired">Expired</option>
+          </select>
+        </label>
+        <label class="glass-field">
+          <span>Unlock radius (m)</span>
+          <input id="admin-radius" type="number" min="10" max="150" step="5" value="50" />
+        </label>
+      </div>
+
+      <div class="field-grid two-up">
+        <label class="glass-field">
+          <span>Front image</span>
+          <input id="admin-front-photo" type="file" accept="image/*" />
+        </label>
+        <label class="glass-field">
+          <span>Back image</span>
+          <input id="admin-back-photo" type="file" accept="image/*" />
+        </label>
+      </div>
+
+      <label class="glass-field">
+        <span>YouTube URL</span>
+        <input id="admin-video-url" type="url" placeholder="https://www.youtube.com/watch?v=..." />
+      </label>
+
+      <div class="field-grid two-up compact-grid">
+        <label class="glass-field">
+          <span>Start time</span>
+          <input id="admin-video-start" type="text" inputmode="numeric" value="00:00:00" placeholder="00:00:00" />
+        </label>
+        <label class="glass-field">
+          <span>End time</span>
+          <input id="admin-video-end" type="text" inputmode="numeric" value="00:00:12" placeholder="00:00:12" />
+        </label>
+      </div>
+
+      <div class="glass-field video-preview-block">
+        <span>Segment preview</span>
+        <div id="admin-video-preview-status" class="field-hint">Paste a YouTube link to preview the selected segment.</div>
+        <div id="admin-video-preview-area" class="video-preview-area"></div>
+      </div>
+
+      <div class="field-grid two-up">
+        <label class="glass-field compact-field">
+          <span>Card color</span>
+          <input id="admin-front-color" type="color" value="#7c3aed" />
+        </label>
+        <label class="glass-field compact-field">
+          <span>Accent color</span>
+          <input id="admin-accent-color" type="color" value="#f59e0b" />
+        </label>
+      </div>
+
+      <div class="field-grid two-up">
+        <label class="glass-field">
+          <span>CTA link</span>
+          <input id="admin-cta-link" type="url" placeholder="https://..." />
+        </label>
+        <label class="glass-field">
+          <span>Start date & time</span>
+          <input id="admin-start-at" type="datetime-local" />
+        </label>
+      </div>
+
+      <div class="field-grid two-up compact-grid">
+        <label class="glass-field">
+          <span>Expires at (within 24h)</span>
+          <input id="admin-expires-at" type="datetime-local" />
+        </label>
+        <label class="glass-field">
+          <span>Card height / forward distance</span>
+          <div class="field-grid two-up nested-inline-grid">
+            <input id="admin-spawn-height" type="number" min="0.5" max="5.5" step="0.1" value="3.0" />
+            <input id="admin-forward-distance" type="number" min="0.5" max="5.5" step="0.1" value="2.0" />
+          </div>
+        </label>
+      </div>
+
+      <div class="section-head nested-head top-gap">
+        <span class="step">2</span>
+        <div>
+          <h2>Placement map</h2>
+          <p>Pan the map under the fixed center pin. The circle stays as a transparent outline only.</p>
+        </div>
+      </div>
+      <div class="field-grid map-search-grid">
+        <label class="glass-field">
+          <span>Place search</span>
+          <input id="admin-map-search" type="text" placeholder="Search address or place" />
+        </label>
+        <div class="inline-actions end-align"><button id="admin-map-search-btn" class="btn btn-secondary" type="button">Search</button></div>
+      </div>
+      <div id="admin-map" class="map-box"></div>
+      <div id="admin-map-status" class="status-box muted">Map status will appear here.</div>
+      <div class="field-grid two-up compact-grid">
+        <label class="glass-field"><span>Latitude</span><input id="admin-lat" type="number" step="0.000001" /></label>
+        <label class="glass-field"><span>Longitude</span><input id="admin-lng" type="number" step="0.000001" /></label>
+      </div>
+      <div id="admin-save-status" class="status-box muted">Signed in editors can update gifts here.</div>
+    </section>
+
+    <section id="recent-gifts" class="card-panel hidden">
+      <div class="section-head">
+        <span class="step">3</span>
+        <div>
+          <h2>Recent gifts</h2>
+          <p>Load a saved slug with one tap.</p>
+        </div>
+      </div>
+      <div id="gift-list" class="gift-list"></div>
+    </section>
+  </main>
+
+  <script type="module" src="./js/admin/app.js"></script>
+</body>
+</html>
