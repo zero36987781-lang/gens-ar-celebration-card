@@ -21,6 +21,7 @@
   </header>
 
   <main class="sender-shell">
+    <!-- ===== STEP 1: Names + Templates ===== -->
     <section class="hero card-panel page-view" data-step="1">
       <span class="eyebrow">CHARIEL STANDARD</span>
       <h1>Build the card directly in the preview.</h1>
@@ -49,27 +50,25 @@
         <div id="template-list" class="template-list"></div>
       </div>
 
+      <!-- ===== STEP 2: Card Preview + Canvas Editor + Media ===== -->
       <div class="card-panel right-col page-view page-hidden" data-step="2">
         <div class="section-head">
           <span class="step">2</span>
           <div>
-            <h2>Primary card input</h2>
-            <p>Edit front and back text directly in the preview. The auxiliary form below only handles media, map, and delivery settings.</p>
+            <h2>Card editor</h2>
+            <p>Tap a layer to select, drag to move, pinch to resize. Use the toolbar below for text, images, colors, and effects.</p>
           </div>
         </div>
 
         <div id="live-preview" class="live-preview">
           <article id="preview-card" class="chariel-card is-front" aria-live="polite">
             <div class="chariel-card__glow"></div>
-            
             <div id="canvas-stage-front" class="chariel-card__face chariel-card__face--front canvas-stage">
-              <!-- JS mounts draggable layout here -->
               <div class="canvas-fixed-bottom row-between">
                 <span id="video-badge" class="video-badge hidden">Video attached</span>
                 <button id="flip-card" class="btn btn-secondary card-flip-btn" type="button">Flip to Back</button>
               </div>
             </div>
-
             <div id="canvas-stage-back" class="chariel-card__face chariel-card__face--back canvas-stage">
               <div class="canvas-fixed-bottom row-center">
                 <button id="flip-card-back" class="btn btn-secondary card-flip-btn" type="button">Flip to Front</button>
@@ -78,59 +77,87 @@
           </article>
         </div>
 
-        <div id="canvas-toolbar" class="stack-form aux-form canvas-toolbar">
+        <!-- Canvas Toolbar — full editor -->
+        <div id="canvas-toolbar" class="canvas-toolbar">
+          <!-- Action buttons -->
           <div class="toolbar-actions">
-            <button type="button" id="btn-add-text" class="btn btn-secondary btn-sm">Add Text</button>
-            <button type="button" id="btn-add-bg" class="btn btn-secondary btn-sm">Background Image</button>
+            <button type="button" id="btn-add-text" class="btn btn-secondary btn-sm">+ Text</button>
+            <button type="button" id="btn-add-bg" class="btn btn-secondary btn-sm">BG Image</button>
             <button type="button" id="btn-add-img" class="btn btn-secondary btn-sm">Insert Image</button>
+            <button type="button" id="btn-duplicate-layer" class="btn btn-secondary btn-sm" disabled>Duplicate</button>
             <button type="button" id="btn-delete-layer" class="btn btn-secondary btn-sm" disabled>Delete</button>
           </div>
 
+          <!-- Object mode selector (Fill / Stroke / Background) -->
           <div class="obj-selector">
-              <div class="obj-btn active" data-mode="fill">FILL</div>
-              <div class="obj-btn" data-mode="stroke">STROKE</div>
+            <div class="obj-btn active" data-mode="fill">FILL</div>
+            <div class="obj-btn" data-mode="stroke">STROKE</div>
+            <div class="obj-btn" data-mode="bg">BACKGROUND</div>
           </div>
 
+          <!-- Tab bar -->
           <div class="canvas-tabs">
-              <div class="ctab active" data-tab="0">COLORS</div>
-              <div class="ctab" data-tab="1">PROPERTIES</div>
+            <div class="ctab active" data-tab="0">SOLID</div>
+            <div class="ctab" data-tab="1">GRADIENT</div>
+            <div class="ctab" data-tab="2">HARMONY</div>
+            <div class="ctab" data-tab="3">PROPERTIES</div>
           </div>
 
+          <!-- Tab 0: Solid swatches -->
           <div id="csec0" class="canvas-section active">
-              <div class="cgrid" id="solidGrid"></div>
+            <div class="cgrid" id="solidGrid"></div>
           </div>
 
+          <!-- Tab 1: Gradient engine -->
           <div id="csec1" class="canvas-section">
-              <div class="field-grid two-up compact-grid">
-                <label class="glass-field">
-                  <span>Opacity</span>
-                  <input type="range" id="opacity-slider" min="0" max="1" step="0.05" value="1">
-                </label>
-                <label class="glass-field">
-                  <span>Font Size / Width</span>
-                  <input type="range" id="scale-slider" min="10" max="800" step="1" value="24">
-                </label>
+            <div class="ce-label">Tap track to add stop, drag to reposition</div>
+            <div id="gradTrack" class="grad-track"></div>
+            <div id="stopContainer" class="stop-container"></div>
+            <div id="stopSettings" class="stop-settings hidden">
+              <div class="stop-settings-row">
+                <input type="color" id="stopColorInput" />
+                <button type="button" id="btn-remove-stop" class="btn btn-sm btn-danger">Remove</button>
+                <span class="ce-label" style="margin-left:auto">Angle: <span id="angVal">135</span>°</span>
               </div>
+              <input type="range" id="angRange" min="0" max="360" value="135" />
+            </div>
+          </div>
+
+          <!-- Tab 2: Harmony -->
+          <div id="csec2" class="canvas-section">
+            <div class="ce-label">Pick a base color</div>
+            <div class="cgrid" id="palGrid"></div>
+            <div class="ce-label" style="margin-top:12px">Calculated harmony</div>
+            <div class="harmony-row" id="harmonyArea"></div>
+          </div>
+
+          <!-- Tab 3: Properties (opacity, scale, font-size, image-width) -->
+          <div id="csec3" class="canvas-section">
+            <div class="prop-grid">
+              <label class="glass-field compact-field">
+                <span>Opacity</span>
+                <input type="range" id="opacity-slider" min="0" max="1" step="0.05" value="1" />
+              </label>
+              <label class="glass-field compact-field">
+                <span>Size</span>
+                <input type="range" id="scale-slider" min="10" max="800" step="1" value="24" />
+              </label>
+            </div>
+            <div id="image-props" class="prop-grid hidden">
+              <label class="glass-field compact-field">
+                <span>Image width (px)</span>
+                <input type="range" id="img-width-slider" min="30" max="600" step="1" value="200" />
+              </label>
+            </div>
           </div>
         </div>
 
+        <!-- YouTube media section -->
         <div class="stack-form aux-form">
-          <div class="field-grid two-up">
-            <label class="glass-field">
-              <span>Front image</span>
-              <input id="photo-file" type="file" accept="image/*" />
-            </label>
-            <label class="glass-field">
-              <span>Back image</span>
-              <input id="back-photo-file" type="file" accept="image/*" />
-            </label>
-          </div>
-
           <label class="glass-field">
             <span>YouTube URL</span>
             <input id="video-url" type="url" placeholder="https://www.youtube.com/watch?v=..." />
           </label>
-
           <div class="field-grid two-up">
             <div class="glass-field">
               <span>Start time</span>
@@ -153,7 +180,6 @@
               </div>
             </div>
           </div>
-
           <div class="glass-field video-preview-block">
             <span>Segment preview</span>
             <div id="video-preview-status" class="field-hint">Paste a YouTube link to preview the selected segment.</div>
@@ -162,26 +188,24 @@
         </div>
       </div>
 
+      <!-- ===== STEP 3: Delivery rules (CTA ~ Forward Distance moved here) ===== -->
       <div class="card-panel right-col page-view page-hidden" data-step="3">
         <div class="section-head">
           <span class="step">3</span>
           <div>
-            <h2>Delivery rules & Map placement</h2>
-            <p>Set unlock rules and location for your Celebration Card.</p>
+            <h2>Delivery rules</h2>
+            <p>Set CTA, unlock conditions, timing, and AR placement options for your Celebration Card.</p>
           </div>
         </div>
         <div class="stack-form aux-form">
-          <div class="field-grid two-up">
-            <label class="glass-field">
-              <span>CTA link</span>
-              <input id="cta-link" type="url" placeholder="https://..." />
-            </label>
-            <label class="glass-field">
-              <span>Unlock radius (m)</span>
-              <input id="unlock-radius" type="number" min="10" max="150" step="5" value="50" inputmode="numeric" />
-            </label>
-          </div>
-
+          <label class="glass-field">
+            <span>CTA link</span>
+            <input id="cta-link" type="url" placeholder="https://..." />
+          </label>
+          <label class="glass-field">
+            <span>Unlock radius (m)</span>
+            <input id="unlock-radius" type="number" min="10" max="150" step="5" value="50" inputmode="numeric" />
+          </label>
           <div class="field-grid two-up">
             <label class="glass-field">
               <span>Start date & time</span>
@@ -192,8 +216,7 @@
               <input id="expires-at" type="datetime-local" />
             </label>
           </div>
-
-          <div class="field-grid two-up compact-grid">
+          <div class="field-grid two-up">
             <label class="glass-field">
               <span>Card height (m)</span>
               <input id="spawn-height" type="number" min="0.5" max="5.5" step="0.1" value="3.0" inputmode="decimal" />
@@ -203,10 +226,10 @@
               <input id="forward-distance" type="number" min="0.5" max="5.5" step="0.1" value="2.0" inputmode="decimal" />
             </label>
           </div>
-
         </div>
       </div>
 
+      <!-- ===== STEP 4: Map placement ===== -->
       <div class="card-panel right-col page-view page-hidden" data-step="4">
         <div class="section-head">
           <span class="step">4</span>
@@ -215,9 +238,7 @@
             <p>Use a fixed center pin. Pan the map below the pin and keep the radius visible as a transparent outline only.</p>
           </div>
         </div>
-
         <form id="gift-form" class="stack-form aux-form" novalidate>
-
           <div class="field-grid map-search-grid">
             <label class="glass-field">
               <span>Place search</span>
@@ -229,7 +250,6 @@
           </div>
           <div id="sender-map" class="map-box"></div>
           <div id="map-status" class="status-box muted">Map status will appear here.</div>
-
           <div class="field-grid two-up compact-grid">
             <label class="glass-field">
               <span>Latitude</span>
@@ -243,7 +263,6 @@
           <div class="inline-actions">
             <button id="use-current-location" type="button" class="btn btn-secondary">Use my location</button>
           </div>
-
           <div class="form-actions">
             <button type="submit" class="btn btn-primary">Create link</button>
             <button id="copy-link" type="button" class="btn btn-secondary">Copy</button>
@@ -252,6 +271,7 @@
       </div>
     </section>
 
+    <!-- ===== STEP 5: Share ===== -->
     <section class="preview-grid page-view page-hidden" data-step="5">
       <div class="card-panel success-panel">
         <div class="section-head">
@@ -276,7 +296,6 @@
     </section>
   </main>
 
-  <!-- Bottom nav -->
   <nav class="bottom-nav" id="bottom-nav">
     <button id="nav-prev" class="btn btn-secondary nav-btn" type="button" disabled>◀ Previous</button>
     <div class="nav-dots" id="nav-dots">
@@ -288,6 +307,10 @@
     </div>
     <button id="nav-next" class="btn btn-primary nav-btn" type="button">Next ▶</button>
   </nav>
+
+  <!-- hidden file inputs for canvas editor -->
+  <input type="file" id="bg-file-input" accept="image/*" class="hidden" />
+  <input type="file" id="img-file-input" accept="image/*" class="hidden" />
 
   <script src="./js/sender/canvas-editor.js"></script>
   <script type="module" src="./js/sender/app.js"></script>
