@@ -47,7 +47,7 @@
     <section id="env-panel" class="card-panel hidden">
       <h2>Device Setup</h2>
       <p>To experience the AR Celebration Card, please allow the following hardware features.</p>
-      
+
       <div class="env-list">
         <div class="env-item">
           <div class="env-item__info">
@@ -56,7 +56,7 @@
           </div>
           <div id="env-gps-status" class="env-item__status pending">Pending</div>
         </div>
-        
+
         <div class="env-item">
           <div class="env-item__info">
             <div class="env-item__name">🧭 Motion & Compass</div>
@@ -73,11 +73,11 @@
           <div id="env-camera-status" class="env-item__status pending">Pending</div>
         </div>
       </div>
-      
+
       <div id="env-warning" class="status-box error hidden">
         If a permission is blocked, please open your phone's <strong>Settings > Safari (or Chrome)</strong> to allow access, then refresh this page.
       </div>
-      
+
       <div class="inline-actions">
         <button id="btn-env-check" class="btn btn-primary">Grant & Check</button>
         <button id="btn-env-continue" class="btn btn-secondary hidden">Continue to Distance Check</button>
@@ -101,11 +101,16 @@
           <h2 class="ar-head__title">Touch to reveal the card</h2>
         </div>
         <div class="inline-actions ar-head__actions">
+          <!-- ★ Camera AR toggle button for buyer preview -->
+          <button id="toggle-camera-ar" class="btn btn-secondary hidden" type="button">📷 Camera AR</button>
           <a id="cta-button" class="btn btn-secondary hidden" href="#" target="_blank" rel="noreferrer">Open link</a>
           <button id="replay-sequence" class="btn btn-secondary" type="button">Replay</button>
         </div>
       </div>
-      <div id="ar-stage" class="ar-stage"></div>
+      <!-- ★ AR stage with camera feed video element -->
+      <div id="ar-stage" class="ar-stage">
+        <video id="camera-feed" class="camera-feed hidden" autoplay playsinline muted></video>
+      </div>
       <div id="xr-overlay" class="xr-overlay hidden">
         <div id="gesture-hint" class="gesture-hint">
           Long-press on the card to move it. Drag outside the card to rotate and tilt the view. Pinch to zoom. Double-tap the card to flip it.

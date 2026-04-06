@@ -54,13 +54,20 @@ const els = {
   expiredPanel: qs('#expired-panel'),
   expiredCopy: qs('#expired-copy'),
   ctaButton: qs('#cta-button'),
-  giftVideo: qs('#gift-video')
+  giftVideo: qs('#gift-video'),
+  // ★ Camera AR elements
+  toggleCameraAr: qs('#toggle-camera-ar'),
+  cameraFeed: qs('#camera-feed')
 };
 
 let gift = null;
 let engine = null;
 let thanksReady = false;
 let previewAutomationStarted = false;
+
+// ★ Camera AR state
+let cameraStream = null;
+let cameraArActive = false;
 
 function showPanel(panel) {
   panel?.classList.remove('hidden');
@@ -83,7 +90,7 @@ async function detectSupport() {
 async function runEnvironmentCheck() {
   els.btnEnvCheck.disabled = true;
   els.btnEnvCheck.textContent = 'Checking...';
-  
+
   let gpsOk = false;
   let motionOk = true;
 
@@ -123,7 +130,7 @@ async function runEnvironmentCheck() {
 
   els.btnEnvCheck.textContent = 'Check Again';
   els.btnEnvCheck.disabled = false;
-  
+
   if (gpsOk) {
     els.envWarning.classList.add('hidden');
     els.btnEnvCheck.classList.add('hidden');
@@ -297,13 +304,68 @@ async function launchCardStage() {
   }
 }
 
+/* ══════════════════════════════════════════
+   ★ Camera AR — buyer preview can toggle
+     the rear camera as a background behind
+     the 3D card to simulate what the
+     real recipient would see.
+   ══════════════════════════════════════════ */
+async function toggleCameraAr() {
+  if (cameraArActive) {
+    // ── Stop camera ──
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      cameraStream = null;
+    }
+    if (els.cameraFeed) {
+      els.cameraFeed.srcObject = null;
+      els.cameraFeed.classList.add('hidden');
+    }
+    els.arStage?.classList.remove('camera-ar-mode');
+    if (els.toggleCameraAr) els.toggleCameraAr.textContent = '📷 Camera AR';
+    cameraArActive = false;
+    setStatus(els.arStatus, 'Camera AR stopped. 3D preview continues.', 'muted');
+    return;
+  }
+
+  // ── Start camera ──
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: 'environment',
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
+      },
+      audio: false
+    });
+    if (els.cameraFeed) {
+      els.cameraFeed.srcObject = cameraStream;
+      els.cameraFeed.classList.remove('hidden');
+      // Make sure the video plays (some browsers need this)
+      try { await els.cameraFeed.play(); } catch { /* autoplay attr handles it */ }
+    }
+    els.arStage?.classList.add('camera-ar-mode');
+    if (els.toggleCameraAr) els.toggleCameraAr.textContent = '🚫 Stop Camera';
+    cameraArActive = true;
+    setStatus(els.arStatus, 'Camera AR active — you can see the 3D card overlaid on your camera feed, just like a real recipient.', 'success');
+  } catch (err) {
+    setStatus(els.arStatus, 'Camera access denied: ' + (err.message || 'Unknown error. Please allow camera access in your browser settings.'), 'error');
+  }
+}
+
 async function startPreviewAutomation() {
   if (!previewMode || previewAutomationStarted) return;
   previewAutomationStarted = true;
   document.body.classList.add('preview-direct-ar');
   [qs('#recipient-card'), els.envPanel, els.distancePanel].forEach((el) => el?.classList.add('hidden'));
   showPanel(els.arPanel);
-  setStatus(els.arStatus, 'Buyer preview opens directly in the AR / 3D stage.', 'success');
+
+  // ★ Show the Camera AR toggle button in preview mode
+  if (els.toggleCameraAr) {
+    els.toggleCameraAr.classList.remove('hidden');
+  }
+
+  setStatus(els.arStatus, 'Buyer preview — 3D stage ready. Tap "📷 Camera AR" to overlay the card on your camera feed.', 'success');
   await launchCardStage();
 }
 
@@ -347,6 +409,10 @@ async function init() {
   });
   els.copyThanks.addEventListener('click', copyThanksMessage);
   els.shareThanks.addEventListener('click', shareThanksMessage);
+
+  // ★ Camera AR toggle event
+  els.toggleCameraAr?.addEventListener('click', toggleCameraAr);
+
   window.addEventListener('ar-session-started', () => setArLiveMode(true));
   window.addEventListener('ar-session-ended', () => setArLiveMode(false));
   window.addEventListener('ar-sequence-complete', revealThanksPanel);
@@ -356,4 +422,12 @@ async function init() {
 }
 
 init();
-window.addEventListener('beforeunload', () => engine?.dispose());
+
+window.addEventListener('beforeunload', () => {
+  engine?.dispose();
+  // ★ Clean up camera stream on page unload
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(track => track.stop());
+    cameraStream = null;
+  }
+});
