@@ -135,9 +135,21 @@ function bindPermissions() {
 }
 
 /* ── Page navigation ── */
+const PAGE_TITLES = {
+  1: 'Template',
+  2: 'Design Studio',
+  3: 'Media Management',
+  4: 'Delivery Rules',
+  5: 'Map Placement',
+  6: 'Share',
+};
+
 function updatePage() {
   document.querySelectorAll('.page-view').forEach(el => el.classList.add('page-hidden'));
   document.querySelectorAll(`.page-view[data-step="${state.page}"]`).forEach(el => el.classList.remove('page-hidden'));
+
+  const titleEl = qs('#topbar-page-title');
+  if (titleEl) titleEl.textContent = PAGE_TITLES[state.page] || '';
 
   const shell = qs('.sender-shell');
   if (shell) {
