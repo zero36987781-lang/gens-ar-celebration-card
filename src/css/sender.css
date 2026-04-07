@@ -1093,3 +1093,112 @@
       pointer-events:none;
     }
   
+    /* ★ Step 2 studio-inner — 레퍼런스 DOM 구조에 맞는 레이아웃 */
+.studio-page .studio-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.studio-page .studio-header {
+  flex: 0 0 auto;
+  padding: 14px 16px 10px;
+  background: rgba(255,255,255,.9);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(229,231,235,.8);
+  z-index: 5;
+}
+
+/* segment 컨트롤 — 레퍼런스와 동일 */
+.studio-page .segment {
+  flex: 1;
+  background: #eef2f7;
+  border: 1px solid #dde3ec;
+  border-radius: 16px;
+  padding: 4px;
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+}
+
+.studio-page .segment button {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: #475467;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 0 10px;
+  white-space: nowrap;
+}
+
+.studio-page .segment button.active {
+  background: #fff;
+  color: #111827;
+  box-shadow: 0 1px 2px rgba(16,24,40,.08), inset 0 0 0 1px #e5e7eb;
+}
+
+.studio-page .segment button.locked { color: #6b7280; }
+
+.studio-page .seg-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+/* overlay/sheet/toast — studio-page 내부 위치 고정 */
+.studio-page .overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15,23,42,.36);
+  display: none;
+  z-index: 20;
+}
+.studio-page .overlay.show { display: block; }
+
+.studio-page .sheet {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  background: #fff;
+  border-radius: 24px 24px 0 0;
+  box-shadow: 0 -12px 40px rgba(15,23,42,.2);
+  z-index: 21;
+  display: none;
+  max-height: 72%;
+  overflow: auto;
+  padding: 14px 14px 18px;
+}
+.studio-page .sheet.show { display: block; }
+
+.studio-page .toast {
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%) translateY(20px);
+  background: #111827;
+  color: #fff;
+  border-radius: 16px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  opacity: 0;
+  pointer-events: none;
+  transition: .24s ease;
+  z-index: 30;
+}
+.studio-page .toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}

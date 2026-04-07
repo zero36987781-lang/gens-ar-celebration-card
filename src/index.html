@@ -83,169 +83,182 @@
         <div id="template-list" class="template-list"></div>
       </section>
 
-      <!-- ★ Step 2: Design Studio (was Step 3) — TikTok-style split layout -->
-      <section class="page-view page-hidden studio-page" data-step="2">
+     <!-- ★ Step 2: Design Studio — 레퍼런스와 동일한 DOM 구조로 완전 교체 -->
+<section class="page-view page-hidden studio-page" data-step="2">
 
-        <div class="section-head" id="studio-head" style="margin: 0; padding: 20px 20px 10px 20px;">
-          <span class="step">2</span>
-          <div><h2>디자인스튜디오</h2><p>Design your custom 3D card layout.</p></div>
+  <div id="app" class="studio-inner">
+
+    <div class="header studio-header">
+      <div class="top-row">
+        <div class="top-left">
+          <!-- 뒤로가기 버튼 자리 (Step 1로) -->
+          <button class="icon-btn" type="button" id="studio-back-btn" title="Back">
+            <i data-lucide="arrow-left"></i>
+          </button>
         </div>
 
-        <!-- Toggle row — "Default" renamed to "Basic" + Custom gets gradient text -->
-        <div class="canvas-toggle-row" style="padding: 0 20px;">
-          <div class="toggle-group" id="mode-toggle">
-            <button type="button" class="toggle-pill active" data-value="basic">Basic</button>
-            <button type="button" class="toggle-pill custom-toggle-pill" data-value="custom">Custom</button>
-          </div>
-          <div class="toggle-group" id="side-toggle">
-            <button type="button" class="toggle-pill active" data-value="front">Front</button>
-            <button type="button" class="toggle-pill" data-value="back">Back</button>
-          </div>
-          <div class="history-group" style="display:flex;gap:4px;margin-left:auto">
-            <button class="icon-btn" id="undoBtn" type="button" title="Undo" style="width:32px;height:32px;padding:0;border-radius:8px">
-              <i data-lucide="undo-2" style="width:16px;height:16px"></i>
-            </button>
-            <button class="icon-btn" id="redoBtn" type="button" title="Redo" style="width:32px;height:32px;padding:0;border-radius:8px">
-              <i data-lucide="redo-2" style="width:16px;height:16px"></i>
-            </button>
-          </div>
+        <div class="title-wrap">
+          <div class="title">디자인스튜디오</div>
+          <div class="subtitle">Design your custom 3D card layout.</div>
         </div>
 
-        <!-- Resizable top area: card preview -->
-        <div class="main" id="main">
-          <div class="top-pane" id="topPane">
-            <div class="preview-header">
-              <div class="preview-status">
-                <span class="badge primary" id="modeBadge">
-                  <i data-lucide="sparkles"></i>
-                  <span>Basic Trial</span>
-                </span>
-                <span class="badge" id="sideBadge">Editing Front</span>
-              </div>
-              <span class="badge warning" id="selectionBadge">
-                <i data-lucide="type"></i>
-                <span>No selection</span>
-              </span>
-            </div>
+        <div class="top-right">
+          <button class="icon-btn" id="undoBtn" type="button" title="Undo">
+            <i data-lucide="undo-2"></i>
+          </button>
+          <button class="icon-btn" id="redoBtn" type="button" title="Redo">
+            <i data-lucide="redo-2"></i>
+          </button>
+        </div>
+      </div>
 
-            <div class="canvas-wrap">
-              <div class="card-stage">
-                <div class="card" id="card">
-                  <div class="card-bg-color" id="cardBgColor"></div>
-                  <div class="card-bg-image" id="cardBgImage"></div>
-                  <div class="card-bg-overlay" id="cardBgOverlay"></div>
-                  <div class="card-inner" id="cardInner"></div>
-
-                  <div class="context-bar" id="contextBar">
-                    <button type="button" id="ctxEdit">
-                      <i data-lucide="pencil-line"></i>
-                      <span>Edit</span>
-                    </button>
-                    <button type="button" id="ctxDuplicate">
-                      <i data-lucide="copy"></i>
-                      <span>Duplicate</span>
-                    </button>
-                    <button type="button" id="ctxBringFront">
-                      <i data-lucide="move-up"></i>
-                      <span>Front</span>
-                    </button>
-                    <button type="button" class="danger" id="ctxDelete">
-                      <i data-lucide="trash-2"></i>
-                      <span>Delete</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="basic-hint" id="basicHint">
-              <div style="flex:0 0 auto;color:#7c3aed">
-                <i data-lucide="lock-keyhole"></i>
-              </div>
-              <div class="txt">
-                <strong>Basic lets you edit wording only.</strong><br>
-                Fonts, colors, gradients, image editing, background changes, movement, resize, and layer tools are available in <strong>Custom</strong>.
-              </div>
-            </div>
-          </div>
-
-          <div class="divider" id="divider">
-            <div class="grab"></div>
-          </div>
-
-          <div class="bottom-pane" id="bottomPane">
-            <div class="tool-tabs" id="toolTabs"></div>
-            <div id="panelHost"></div>
-          </div>
+      <div class="seg-row">
+        <!-- ★ 레퍼런스와 동일한 id="modeSegment" + data-mode 속성 -->
+        <div class="segment" id="modeSegment">
+          <button type="button" class="active" data-mode="basic">Basic</button>
+          <button type="button" class="locked" data-mode="custom">
+            <i data-lucide="lock"></i>
+            <span>Custom</span>
+          </button>
         </div>
 
-        <div class="overlay" id="overlay"></div>
-
-        <div class="sheet" id="textSheet">
-          <div class="sheet-handle"></div>
-          <div class="sheet-head">
-            <div class="sheet-title" id="textSheetTitle">Edit Text</div>
-            <button class="icon-btn" type="button" id="closeTextSheet">
-              <i data-lucide="x" style="width:20px;height:20px"></i>
-            </button>
-          </div>
-
-          <div class="field">
-            <label for="textContentInput">Text Content</label>
-            <textarea id="textContentInput" placeholder="Type your message..."></textarea>
-          </div>
-
-          <div style="height:10px"></div>
-
-          <div class="button-row">
-            <button class="btn" type="button" id="cancelTextEdit">Cancel</button>
-            <button class="btn primary" type="button" id="saveTextEdit">Apply</button>
-          </div>
-
-          <div style="height:8px"></div>
-          <div class="helper" id="textSheetHelper">
-            In Basic, you can edit wording only.
-          </div>
+        <!-- ★ 레퍼런스와 동일한 id="sideSegment" + data-side 속성 -->
+        <div class="segment" id="sideSegment">
+          <button type="button" class="active" data-side="front">Front</button>
+          <button type="button" data-side="back">Back</button>
         </div>
+      </div>
+    </div>
 
-        <div class="sheet" id="upgradeSheet">
-          <div class="sheet-handle"></div>
-          <div class="sheet-head">
-            <div class="sheet-title">Unlock Custom</div>
-            <button class="icon-btn" type="button" id="closeUpgradeSheet">
-              <i data-lucide="x" style="width:20px;height:20px"></i>
-            </button>
-          </div>
-
-          <div class="upgrade-card">
-            <div class="upgrade-title">
+    <div class="main" id="main">
+      <div class="top-pane" id="topPane">
+        <div class="preview-header">
+          <div class="preview-status">
+            <span class="badge primary" id="modeBadge">
               <i data-lucide="sparkles"></i>
-              <span>Customize the full card</span>
-            </div>
+              <span>Basic Trial</span>
+            </span>
+            <span class="badge" id="sideBadge">Editing Front</span>
+          </div>
+          <span class="badge warning" id="selectionBadge">
+            <i data-lucide="type"></i>
+            <span>No selection</span>
+          </span>
+        </div>
 
-            <div class="upgrade-list">
-              <div class="upgrade-item"><i data-lucide="check"></i><span>20 Korean fonts</span></div>
-              <div class="upgrade-item"><i data-lucide="check"></i><span>Fill / Stroke / Background styling</span></div>
-              <div class="upgrade-item"><i data-lucide="check"></i><span>Solid + gradient editing with stop controls</span></div>
-              <div class="upgrade-item"><i data-lucide="check"></i><span>Move, resize, rotate, duplicate, reorder</span></div>
-              <div class="upgrade-item"><i data-lucide="check"></i><span>Background image and image element editing</span></div>
-            </div>
+        <div class="canvas-wrap">
+          <div class="card-stage">
+            <div class="card" id="card">
+              <div class="card-bg-color" id="cardBgColor"></div>
+              <div class="card-bg-image" id="cardBgImage"></div>
+              <div class="card-bg-overlay" id="cardBgOverlay"></div>
+              <div class="card-inner" id="cardInner"></div>
 
-            <div class="button-row">
-              <button class="btn" type="button" id="upgradeLaterBtn">Maybe later</button>
-              <button class="btn primary" type="button" id="fakeUpgradeBtn">
-                <i data-lucide="lock-keyhole"></i>
-                <span>Switch to Custom</span>
-              </button>
+              <div class="context-bar" id="contextBar">
+                <button type="button" id="ctxEdit">
+                  <i data-lucide="pencil-line"></i>
+                  <span>Edit</span>
+                </button>
+                <button type="button" id="ctxDuplicate">
+                  <i data-lucide="copy"></i>
+                  <span>Duplicate</span>
+                </button>
+                <button type="button" id="ctxBringFront">
+                  <i data-lucide="move-up"></i>
+                  <span>Front</span>
+                </button>
+                <button type="button" class="danger" id="ctxDelete">
+                  <i data-lucide="trash-2"></i>
+                  <span>Delete</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="toast" id="toast">
-          <span id="toastText">Saved</span>
-          <button type="button" id="toastUndo">Undo</button>
+        <div class="basic-hint" id="basicHint">
+          <div style="flex:0 0 auto;color:#7c3aed">
+            <i data-lucide="lock-keyhole"></i>
+          </div>
+          <div class="txt">
+            <strong>Basic lets you edit wording only.</strong><br>
+            Fonts, colors, gradients, image editing, background changes, movement, resize, and layer tools are available in <strong>Custom</strong>.
+          </div>
         </div>
-      </section>
+      </div>
+
+      <div class="divider" id="divider">
+        <div class="grab"></div>
+      </div>
+
+      <div class="bottom-pane" id="bottomPane">
+        <div class="tool-tabs" id="toolTabs"></div>
+        <div id="panelHost"></div>
+      </div>
+    </div>
+
+    <!-- overlay / sheets / toast — 레퍼런스와 동일 구조 -->
+    <div class="overlay" id="overlay"></div>
+
+    <div class="sheet" id="textSheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <div class="sheet-title" id="textSheetTitle">Edit Text</div>
+        <button class="icon-btn" type="button" id="closeTextSheet">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="field">
+        <label for="textContentInput">Text Content</label>
+        <textarea id="textContentInput" placeholder="Type your message..."></textarea>
+      </div>
+      <div style="height:10px"></div>
+      <div class="button-row">
+        <button class="btn" type="button" id="cancelTextEdit">Cancel</button>
+        <button class="btn primary" type="button" id="saveTextEdit">Apply</button>
+      </div>
+      <div style="height:8px"></div>
+      <div class="helper" id="textSheetHelper">In Basic, you can edit wording only.</div>
+    </div>
+
+    <div class="sheet" id="upgradeSheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <div class="sheet-title">Unlock Custom</div>
+        <button class="icon-btn" type="button" id="closeUpgradeSheet">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="upgrade-card">
+        <div class="upgrade-title">
+          <i data-lucide="sparkles"></i>
+          <span>Customize the full card</span>
+        </div>
+        <div class="upgrade-list">
+          <div class="upgrade-item"><i data-lucide="check"></i><span>20 Korean fonts</span></div>
+          <div class="upgrade-item"><i data-lucide="check"></i><span>Fill / Stroke / Background styling</span></div>
+          <div class="upgrade-item"><i data-lucide="check"></i><span>Solid + gradient editing with stop controls</span></div>
+          <div class="upgrade-item"><i data-lucide="check"></i><span>Move, resize, rotate, duplicate, reorder</span></div>
+          <div class="upgrade-item"><i data-lucide="check"></i><span>Background image and image element editing</span></div>
+        </div>
+        <div class="button-row">
+          <button class="btn" type="button" id="upgradeLaterBtn">Maybe later</button>
+          <button class="btn primary" type="button" id="fakeUpgradeBtn">
+            <i data-lucide="lock-keyhole"></i>
+            <span>Switch to Custom</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast">
+      <span id="toastText">Saved</span>
+      <button type="button" id="toastUndo">Undo</button>
+    </div>
+
+  </div><!-- /#app -->
+</section>
+
 
       <!-- ★ Step 3: Media Management (was Step 2) -->
       <section class="card-panel page-view page-hidden" data-step="3">
