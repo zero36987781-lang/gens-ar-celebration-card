@@ -278,11 +278,8 @@ window.CanvasEditor = (() => {
       };
     }
 
-    function defaultState(side, tpl){
+   function defaultState(side, tpl){
   const isFront = side === 'front';
-  const gradient = isFront
-    ? (tpl?.frontGradient || 'linear-gradient(160deg,#fdf2f8,#fff7ed)')
-    : (tpl?.backGradient || 'linear-gradient(160deg,#fff7ed,#fdf2f8)');
   const main = tpl?.frontColor || '#f472b6';
   const accent = tpl?.accentColor || '#fb923c';
   const bgImg = tpl?.bgImage || '';
@@ -301,92 +298,65 @@ window.CanvasEditor = (() => {
         angle: isFront ? 160 : 180,
         stops: isFront
           ? [
-              {id:uid(), pos:0,  color: main + '99'},
-              {id:uid(), pos:50, color: accent + '55'},
-              {id:uid(), pos:100, color: '#ffffff22'}
+              {id:uid(), pos:0,   color: main+'99'},
+              {id:uid(), pos:50,  color: accent+'55'},
+              {id:uid(), pos:100, color:'#ffffff22'}
             ]
           : [
-              {id:uid(), pos:0,  color: accent + '66'},
-              {id:uid(), pos:100, color: '#ffffff11'}
+              {id:uid(), pos:0,   color: accent+'66'},
+              {id:uid(), pos:100, color:'#ffffff11'}
             ]
       }
     },
     elements: isFront
       ? [
-          // 헤더 — 크고 굵게
-              Object.assign(createDefaultText(uid(), tpl?.title || 'Title', 20, 32, 'clean'), {
-      w: 260,
-      h: 90,
-      fontSize: 38,
-      fontFamily: '"Black Han Sans", sans-serif',
-      lineHeight: 1.1,
-      letterSpacing: -0.5,
-      fill: {mode:'solid', color:'#ffffff', gradient:null},
-            strokeEnabled: true, strokeWidth: 1,
-            stroke: {mode:'solid', color:'rgba(0,0,0,0.15)', gradient:null},
-            bgEnabled: false,
-            background: {mode:'solid', color:'transparent', opacity:0, radius:0, paddingX:0, paddingY:0, gradient:null}
+          Object.assign(createDefaultText(uid(), tpl?.title || 'Title', 20, 32, 'clean'), {
+            w:260, h:90, fontSize:38,
+            fontFamily:'"Black Han Sans", sans-serif',
+            lineHeight:1.1, letterSpacing:-0.5,
+            fill:{mode:'solid', color:'#ffffff', gradient:null},
+            strokeEnabled:false, strokeWidth:0,
+            stroke:{mode:'solid', color:'#000000', gradient:null},
+            bgEnabled:false,
+            background:{mode:'solid', color:'transparent', opacity:0, radius:0, paddingX:0, paddingY:0, gradient:null}
           }),
-          // 서브헤더 — 중간 크기, 가볍게
           Object.assign(createDefaultText(uid(), tpl?.subtitle || '', 20, 148, 'clean'), {
-            w: 260, h: 52,
-            fontSize: 14,
-            fontFamily: '"Gowun Dodum", sans-serif',
-            lineHeight: 1.45,
-            letterSpacing: 0.3,
-            fill: {mode:'solid', color:'rgba(255,255,255,0.82)', gradient:null},
-            strokeEnabled: false, strokeWidth: 0,
-            bgEnabled: false,
-            background: {mode:'solid', color:'transparent', opacity:0, radius:0, paddingX:0, paddingY:0, gradient:null}
+            w:260, h:52, fontSize:14,
+            fontFamily:'"Gowun Dodum", sans-serif',
+            lineHeight:1.45, letterSpacing:0.3,
+            fill:{mode:'solid', color:'rgba(255,255,255,0.82)', gradient:null},
+            strokeEnabled:false, strokeWidth:0,
+            stroke:{mode:'solid', color:'#000000', gradient:null},
+            bgEnabled:false,
+            background:{mode:'solid', color:'transparent', opacity:0, radius:0, paddingX:0, paddingY:0, gradient:null}
           }),
-          // 본문 — 중간, 읽기 편하게
-          Object.assign(createDefaultText(uid(), tpl?.message || '', 20, 248, 'clean'), {
-            w: 260, h: 120,
-            fontSize: 18,
-            fontFamily: '"Noto Sans KR", sans-serif',
-            lineHeight: 1.65,
-            letterSpacing: 0,
-            fill: {mode:'solid', color:'rgba(255,255,255,0.96)', gradient:null},
-            strokeEnabled: false, strokeWidth: 0,
-            bgEnabled: false,
-            background: {mode:'solid', color:'transparent', opacity:0, radius:0, paddingX:0, paddingY:0, gradient:null}
-          })
-        ]
-            fill: {mode:'solid', color:'#ffffff', gradient:null},
-            strokeEnabled: false, strokeWidth: 0,
-            bgEnabled: false,
-            background: {mode:'solid', color:'transparent', opacity:0, radius:0, paddingX:0, paddingY:0, gradient:null}
-          }),
-          // 서브헤더
-          Object.assign(createDefaultText(uid(), tpl?.subtitle || '', 24, 140, 'clean'), {
-            w: 252, h: 60, fontSize: 15,
-            fill: {mode:'solid', color:'rgba(255,255,255,0.88)', gradient:null},
-            strokeEnabled: false, strokeWidth: 0,
-            bgEnabled: false,
-            background: {mode:'solid', color:'transparent', opacity:0, radius:0, paddingX:0, paddingY:0, gradient:null}
-          }),
-          // 본문
-          Object.assign(createDefaultText(uid(), tpl?.message || '', 24, 240, 'clean'), {
-            w: 252, h: 110, fontSize: 17,
-            fill: {mode:'solid', color:'rgba(255,255,255,0.95)', gradient:null},
-            strokeEnabled: false, strokeWidth: 0,
-            bgEnabled: false,
-            background: {mode:'solid', color:'transparent', opacity:0, radius:0, paddingX:0, paddingY:0, gradient:null}
+          Object.assign(createDefaultText(uid(), tpl?.message || '', 20, 220, 'clean'), {
+            w:260, h:120, fontSize:18,
+            fontFamily:'"Noto Sans KR", sans-serif',
+            lineHeight:1.65, letterSpacing:0,
+            fill:{mode:'solid', color:'rgba(255,255,255,0.96)', gradient:null},
+            strokeEnabled:false, strokeWidth:0,
+            stroke:{mode:'solid', color:'#000000', gradient:null},
+            bgEnabled:false,
+            background:{mode:'solid', color:'transparent', opacity:0, radius:0, paddingX:0, paddingY:0, gradient:null}
           })
         ]
       : [
-          // 뒷면 본문 — 수직 중앙
-          Object.assign(createDefaultText(uid(), tpl?.backText || '', 24, 140, 'clean'), {
-            w: 252, h: 140, fontSize: 17,
-            align: 'center',
-            fill: {mode:'solid', color:'rgba(255,255,255,0.95)', gradient:null},
-            strokeEnabled: false, strokeWidth: 0,
-            bgEnabled: false,
-            background: {mode:'solid', color:'transparent', opacity:0, radius:0, paddingX:0, paddingY:0, gradient:null}
+          Object.assign(createDefaultText(uid(), tpl?.backText || '', 20, 140, 'clean'), {
+            w:260, h:140, fontSize:17,
+            fontFamily:'"Noto Sans KR", sans-serif',
+            lineHeight:1.65, letterSpacing:0,
+            align:'center',
+            fill:{mode:'solid', color:'rgba(255,255,255,0.95)', gradient:null},
+            strokeEnabled:false, strokeWidth:0,
+            stroke:{mode:'solid', color:'#000000', gradient:null},
+            bgEnabled:false,
+            background:{mode:'solid', color:'transparent', opacity:0, radius:0, paddingX:0, paddingY:0, gradient:null}
           })
         ]
   };
 }
+
 
 
 
