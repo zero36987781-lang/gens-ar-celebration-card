@@ -7,7 +7,7 @@ import { applyPageLanguage } from '../core/i18n.js';
 
 const state = {
   templateId: TEMPLATES[0].id,
-  page: 0, // 0 = permission gate
+  page: 0,
   editorMode: 'basic',
   activeSide: 'front',
   lastCreatedSlug: '',
@@ -35,30 +35,12 @@ function cacheDom() {
   els.previewLink = qs('#preview-link');
   els.statusBox = qs('#status-box');
   els.copyLink = qs('#copy-link');
-  els.previewCardDefault = qs('#preview-card-default');
-  els.previewReceiver = qs('#preview-receiver');
-  els.previewSender = qs('#preview-sender');
-  els.previewTitle = qs('#preview-title');
-  els.previewSubtitle = qs('#preview-subtitle');
-  els.previewMessage = qs('#preview-message');
-  els.previewBackMessage = qs('#preview-back-message');
-  els.videoBadgeDefault = qs('#video-badge-default');
-  els.previewCard = qs('#preview-card');
-  els.videoBadge = qs('#video-badge');
-  els.basicPreview = qs('#basic-preview');
-  els.customPreview = qs('#custom-preview');
   els.videoPreviewStatus = qs('#video-preview-status');
   els.videoPreviewArea = qs('#video-preview-area');
   els.navPrev = qs('#nav-prev');
   els.navNext = qs('#nav-next');
   els.navDots = document.querySelectorAll('.nav-dots .dot');
-  els.studioCanvasArea = qs('#studio-canvas-area');
-  els.studioDivider = qs('#studio-divider');
-  els.studioPanelArea = qs('#studio-panel-area');
-  els.iconToolbar = qs('#icon-toolbar');
   els.bottomNav = qs('#bottom-nav');
-  els.ctxOpacitySlider = qs('#ctx-opacity-slider');
-  els.ctxOpacityPct = qs('#ctx-opacity-pct');
 }
 
 /* ── Pinch zoom prevention ── */
@@ -134,7 +116,7 @@ function updatePage() {
 
   const shell = qs('.sender-shell');
   if (shell) {
-    shell.style.overflowY = 'auto'; // Always allow scroll to secure workspace
+    shell.style.overflowY = 'auto';
   }
 
   if (els.bottomNav) els.bottomNav.style.display = '';
@@ -162,22 +144,27 @@ function prevPage() { if (state.page > 1) { state.page--; updatePage(); if (stat
 
 /* ── Studio split resizer ── */
 function bindStudioResizer() {
-  // Handled by CanvasEditor internally now
+  // Handled by CanvasEditor internally
 }
 
-/* ★ Set initial split height based on editor mode */
 function applySplitHeight() {
-  // Handled by CanvasEditor internally now
+  // Handled by CanvasEditor internally
 }
 
 /* ── Mode & Side toggle ── */
+// ★ 수정: #modeSegment button + data-mode
 function syncEditorMode() {
-  document.querySelectorAll('#mode-toggle .toggle-pill').forEach(p => p.classList.toggle('active', p.dataset.value === state.editorMode));
+  document.querySelectorAll('#modeSegment button').forEach(p => {
+    p.classList.toggle('active', p.dataset.mode === state.editorMode);
+  });
   if (window.CanvasEditor) window.CanvasEditor.setMode(state.editorMode);
 }
 
+// ★ 수정: #sideSegment button + data-side
 function syncSideToggle() {
-  document.querySelectorAll('#side-toggle .toggle-pill').forEach(p => p.classList.toggle('active', p.dataset.value === state.activeSide));
+  document.querySelectorAll('#sideSegment button').forEach(p => {
+    p.classList.toggle('active', p.dataset.side === state.activeSide);
+  });
   if (window.CanvasEditor) window.CanvasEditor.switchSide(state.activeSide);
 }
 
@@ -190,12 +177,19 @@ function bindPanels() {
   // Handled inherently by CanvasEditor
 }
 
+// ★ 수정: #modeSegment/#sideSegment + data-mode/data-side
 function bindToggles() {
-  document.querySelectorAll('#mode-toggle .toggle-pill').forEach(btn => {
-    btn.addEventListener('click', () => { state.editorMode = btn.dataset.value; syncEditorMode(); });
+  document.querySelectorAll('#modeSegment button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.editorMode = btn.dataset.mode;
+      syncEditorMode();
+    });
   });
-  document.querySelectorAll('#side-toggle .toggle-pill').forEach(btn => {
-    btn.addEventListener('click', () => { state.activeSide = btn.dataset.value; syncSideToggle(); });
+  document.querySelectorAll('#sideSegment button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.activeSide = btn.dataset.side;
+      syncSideToggle();
+    });
   });
 }
 
@@ -257,7 +251,7 @@ function secToHms(t) {
   return [Math.floor(s / 3600), Math.floor((s % 3600) / 60), s % 60].map(v => String(v).padStart(2, '0')).join(':');
 }
 
-/* ★ YouTube Player API — enforce start/end times */
+/* ★ YouTube Player API */
 let ytPlayer = null;
 let ytPlayerReady = false;
 let ytEndSec = 0;
@@ -267,7 +261,6 @@ function ensureYouTubeApi() {
   if (window.YT && window.YT.Player) return Promise.resolve();
   return new Promise((resolve) => {
     if (document.querySelector('script[src*="youtube.com/iframe_api"]')) {
-      // script already loading, wait for callback
       const prev = window.onYouTubeIframeAPIReady;
       window.onYouTubeIframeAPIReady = () => { if (prev) prev(); resolve(); };
       return;
@@ -288,8 +281,6 @@ function destroyYtPlayer() {
 function createYtPlayer(ytId, startSec, endSec) {
   destroyYtPlayer();
   ytEndSec = endSec;
-
-  // clear container and create a fresh div
   els.videoPreviewArea.innerHTML = '';
   const holder = document.createElement('div');
   holder.id = 'yt-player-holder';
@@ -299,22 +290,13 @@ function createYtPlayer(ytId, startSec, endSec) {
     width: '100%',
     height: '100%',
     videoId: ytId,
-    playerVars: {
-      start: startSec,
-      end: endSec,
-      rel: 0,
-      playsinline: 1,
-      modestbranding: 1,
-      controls: 1
-    },
+    playerVars: { start: startSec, end: endSec, rel: 0, playsinline: 1, modestbranding: 1, controls: 1 },
     events: {
       onReady: () => {
         ytPlayerReady = true;
-        // seek to start when ready
         ytPlayer.seekTo(startSec, true);
       },
       onStateChange: (event) => {
-        // When playing, enforce end time
         if (event.data === YT.PlayerState.PLAYING) {
           if (ytCheckInterval) clearInterval(ytCheckInterval);
           ytCheckInterval = setInterval(() => {
@@ -345,13 +327,14 @@ function renderTemplates() {
     </button>`).join('');
 }
 
+// ★ 수정: null 체크 추가 (HTML에 preview 요소 없음)
 function applyTemplate(id) {
   state.templateId = id;
   const tpl = getTemplateById(id);
-  els.previewTitle.textContent = tpl.title;
-  els.previewSubtitle.textContent = tpl.subtitle;
-  els.previewMessage.textContent = tpl.message;
-  els.previewBackMessage.textContent = tpl.backText;
+  if (els.previewTitle) els.previewTitle.textContent = tpl.title;
+  if (els.previewSubtitle) els.previewSubtitle.textContent = tpl.subtitle;
+  if (els.previewMessage) els.previewMessage.textContent = tpl.message;
+  if (els.previewBackMessage) els.previewBackMessage.textContent = tpl.backText;
   if (window.CanvasEditor) window.CanvasEditor.applyTemplateToLayers(tpl);
   renderTemplates();
   renderPreviewCard();
@@ -359,35 +342,36 @@ function applyTemplate(id) {
 
 function sanitize(el) { return (el?.innerText || '').replace(/\u00a0/g, ' ').replace(/\r/g, '').trim(); }
 
+// ★ 수정: null 체크 추가
 function renderPreviewCard() {
   const f = fields(), tpl = getTemplateById(state.templateId);
   [els.previewCardDefault, els.previewCard].forEach(c => {
     if (c) { c.style.setProperty('--card-front', tpl.frontColor); c.style.setProperty('--card-accent', tpl.accentColor); }
   });
-  els.previewReceiver.textContent = f.recipientName.value.trim() || 'Receiver';
-  els.previewSender.textContent = `From ${f.senderName.value.trim() || 'Sender'}`;
-  if (window.CanvasEditor) window.CanvasEditor.updateSenderReceiver(f.senderName.value.trim());
-  const hasVid = Boolean(parseYtId(f.videoUrl.value.trim()));
+  if (els.previewReceiver) els.previewReceiver.textContent = f.recipientName?.value.trim() || 'Receiver';
+  if (els.previewSender) els.previewSender.textContent = `From ${f.senderName?.value.trim() || 'Sender'}`;
+  if (window.CanvasEditor) window.CanvasEditor.updateSenderReceiver(f.senderName?.value.trim() || '');
+  const hasVid = Boolean(parseYtId(f.videoUrl?.value?.trim() || ''));
   els.videoBadgeDefault?.classList.toggle('hidden', !hasVid);
   els.videoBadge?.classList.toggle('hidden', !hasVid);
 }
 
-/* ★ renderVideoPreview — uses YouTube Player API for accurate start/end enforcement */
+/* ★ renderVideoPreview */
 async function renderVideoPreview() {
-  const url = fields().videoUrl.value.trim();
+  const url = fields().videoUrl?.value.trim() || '';
   const ytId = parseYtId(url);
 
   if (!url) {
     destroyYtPlayer();
-    els.videoPreviewArea.innerHTML = '<div class="video-preview-empty">Paste a YouTube URL.</div>';
-    els.videoPreviewStatus.textContent = 'YouTube only.';
+    if (els.videoPreviewArea) els.videoPreviewArea.innerHTML = '<div class="video-preview-empty">Paste a YouTube URL.</div>';
+    if (els.videoPreviewStatus) els.videoPreviewStatus.textContent = 'YouTube only.';
     renderPreviewCard();
     return;
   }
   if (!ytId) {
     destroyYtPlayer();
-    els.videoPreviewArea.innerHTML = '<div class="video-preview-empty">Only YouTube URLs.</div>';
-    els.videoPreviewStatus.textContent = '';
+    if (els.videoPreviewArea) els.videoPreviewArea.innerHTML = '<div class="video-preview-empty">Only YouTube URLs.</div>';
+    if (els.videoPreviewStatus) els.videoPreviewStatus.textContent = '';
     renderPreviewCard();
     return;
   }
@@ -396,19 +380,18 @@ async function renderVideoPreview() {
   const ss = Number.isFinite(vs) ? vs : 0;
   const se = Number.isFinite(ve) && ve > ss ? ve : ss + 12;
 
-  els.videoPreviewStatus.textContent = `${secToHms(ss)} → ${secToHms(se)}`;
+  if (els.videoPreviewStatus) els.videoPreviewStatus.textContent = `${secToHms(ss)} → ${secToHms(se)}`;
 
   try {
     await ensureYouTubeApi();
     createYtPlayer(ytId, ss, se);
   } catch {
-    // Fallback to simple iframe if API fails
     const emb = new URL(`https://www.youtube.com/embed/${ytId}`);
     emb.searchParams.set('start', String(ss));
     emb.searchParams.set('end', String(se));
     emb.searchParams.set('rel', '0');
     emb.searchParams.set('playsinline', '1');
-    els.videoPreviewArea.innerHTML = `<iframe src="${emb.href}" title="Preview" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture;web-share" allowfullscreen></iframe>`;
+    if (els.videoPreviewArea) els.videoPreviewArea.innerHTML = `<iframe src="${emb.href}" title="Preview" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture;web-share" allowfullscreen></iframe>`;
   }
 
   renderPreviewCard();
@@ -436,16 +419,16 @@ function getFormData() {
     templateId: state.templateId, templateName: tpl.name,
     recipientName: f.recipientName.value.trim(), senderName: f.senderName.value.trim(),
     editorMode: state.editorMode,
-    message: isBasic ? sanitize(els.previewMessage) : tpl.message,
-    frontTitle: isBasic ? sanitize(els.previewTitle) : (canvasData?.front?.[0]?.text || tpl.title),
-    frontSubtitle: isBasic ? sanitize(els.previewSubtitle) : tpl.subtitle,
-    frontText: isBasic ? sanitize(els.previewMessage) : tpl.message,
-    backText: isBasic ? sanitize(els.previewBackMessage) : tpl.backText,
+    message: tpl.message,
+    frontTitle: canvasData?.front?.[0]?.text || tpl.title,
+    frontSubtitle: tpl.subtitle,
+    frontText: tpl.message,
+    backText: tpl.backText,
     canvasData: canvasData,
     frontColor: tpl.frontColor, accentColor: tpl.accentColor,
-    videoUrl: safeUrl(f.videoUrl.value.trim()),
+    videoUrl: safeUrl(f.videoUrl?.value.trim() || ''),
     videoStart: Number.isFinite(vs) ? vs : 0, videoEnd: Number.isFinite(ve) ? ve : 12,
-    ctaLink: f.ctaLink.value.trim(),
+    ctaLink: f.ctaLink?.value.trim() || '',
     latitude: Number(f.latitude.value), longitude: Number(f.longitude.value),
     unlockRadiusM: Number(f.unlockRadius.value || 50),
     startAt: f.startAt.value ? new Date(f.startAt.value).toISOString() : new Date().toISOString(),
@@ -463,11 +446,13 @@ function validate(data) {
   if (data.forwardDistance < 0.5 || data.forwardDistance > 5.5) return 'Distance 0.5–5.5m.';
   if (data.unlockRadiusM < 10 || data.unlockRadiusM > 150) return 'Radius 10–150m.';
   const f = fields();
-  if (f.videoUrl.value.trim() && !parseYtId(f.videoUrl.value.trim())) return 'YouTube URLs only.';
+  if (f.videoUrl?.value.trim() && !parseYtId(f.videoUrl.value.trim())) return 'YouTube URLs only.';
   if (data.videoEnd <= data.videoStart) return 'Video end > start.';
   const s = new Date(f.startAt.value), e = new Date(f.expiresAt.value);
-  if (isNaN(s)) return 'Start date required.'; if (isNaN(e)) return 'Expiry required.';
-  if (e < s) return 'Expiry after start.'; if (e - s > 86400000) return 'Within 24h.';
+  if (isNaN(s)) return 'Start date required.';
+  if (isNaN(e)) return 'Expiry required.';
+  if (e < s) return 'Expiry after start.';
+  if (e - s > 86400000) return 'Within 24h.';
   return '';
 }
 
@@ -487,14 +472,13 @@ async function handleSubmit(ev) {
   } catch (e) { setStatus(els.statusBox, e.message || 'Save failed.', 'error'); }
 }
 
-/* ★ copyLink with visual gradient feedback on button */
+/* ★ copyLink */
 async function copyLink() {
   const btn = els.copyLink;
   if (!els.shareLink.value) return;
   try {
     await navigator.clipboard.writeText(els.shareLink.value);
   } catch {
-    // Fallback for browsers that block clipboard
     const ta = document.createElement('textarea');
     ta.value = els.shareLink.value;
     ta.style.cssText = 'position:fixed;opacity:0';
@@ -503,7 +487,6 @@ async function copyLink() {
     document.execCommand('copy');
     document.body.removeChild(ta);
   }
-  // Visual feedback on the button itself
   const originalText = btn.textContent;
   btn.textContent = 'Created ✓';
   btn.classList.add('btn-copy-success');
@@ -542,7 +525,6 @@ function bindHmsInputs() {
         const next = inputs[idx + 1];
         if (next && inp.id.split('-')[0] === next.id.split('-')[0]) next.focus();
       }
-      // Debounce video preview rebuild on time change
       clearTimeout(inp._debounce);
       inp._debounce = setTimeout(() => renderVideoPreview(), 600);
     });
@@ -557,21 +539,24 @@ function bindHmsInputs() {
 /* ── Events ── */
 function bindEvents() {
   const f = fields();
-  els.templateList.addEventListener('click', e => { const b = e.target.closest('[data-template-id]'); if (b) applyTemplate(b.dataset.templateId); });
-  f.recipientName.addEventListener('input', renderPreviewCard);
-  f.senderName.addEventListener('input', renderPreviewCard);
+  els.templateList.addEventListener('click', e => {
+    const b = e.target.closest('[data-template-id]');
+    if (b) applyTemplate(b.dataset.templateId);
+  });
+  f.recipientName?.addEventListener('input', renderPreviewCard);
+  f.senderName?.addEventListener('input', renderPreviewCard);
   f.videoUrl?.addEventListener('input', () => {
     clearTimeout(f.videoUrl._debounce);
     f.videoUrl._debounce = setTimeout(() => renderVideoPreview(), 400);
   });
-  [els.previewTitle, els.previewSubtitle, els.previewMessage, els.previewBackMessage].forEach(el => el?.addEventListener('input', renderPreviewCard));
   bindHmsInputs();
   bindToggles();
   bindPanels();
-  f.startAt.addEventListener('change', syncExpiry);
-  f.expiresAt.addEventListener('change', syncExpiry);
-  f.unlockRadius.addEventListener('input', () => state.mapPicker?.updateRadius());
+  f.startAt?.addEventListener('change', syncExpiry);
+  f.expiresAt?.addEventListener('change', syncExpiry);
+  f.unlockRadius?.addEventListener('input', () => state.mapPicker?.updateRadius());
   qs('#use-current-location')?.addEventListener('click', useCurrentLocation);
+  qs('#studio-back-btn')?.addEventListener('click', prevPage);
   els.form?.addEventListener('submit', handleSubmit);
   els.copyLink?.addEventListener('click', copyLink);
   els.navPrev?.addEventListener('click', prevPage);
