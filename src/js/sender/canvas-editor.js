@@ -719,18 +719,25 @@ window.CanvasEditor = (() => {
               align-items:${alignVal};
               justify-content:${justifyVal};
               text-align:${isBackSide ? 'center' : (el.align || 'center')};
-
               font-family:${el.fontFamily || '"Noto Sans KR", sans-serif'};
               font-size:${el.fontSize || 28}px;
               line-height:${el.lineHeight || 1.2};
               letter-spacing:${el.letterSpacing || 0}px;
-              font-weight:800;
+              font-weight:${el.fontFamily && el.fontFamily.includes('Black Han') ? '400' : '800'};
               ${textFillCss(el)}
               ${textStrokeCss(el)}
             ">
-              <div style="${textBgCss(el)}">${escapeHtml(el.text || '')}</div>
+              <div style="
+                ${textBgCss(el)}
+                font-size:${el.fontSize || 28}px;
+                font-family:${el.fontFamily || '"Noto Sans KR", sans-serif'};
+                line-height:${el.lineHeight || 1.2};
+                letter-spacing:${el.letterSpacing || 0}px;
+              ">${escapeHtml(el.text || '')}</div>
             </div>
           `;
+
+        
         } else if(el.type === 'image'){
           node.innerHTML = `<img src="${el.src}" alt="" draggable="false">`;
         }
