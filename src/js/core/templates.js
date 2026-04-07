@@ -8,7 +8,7 @@ export const TEMPLATES = [
     accentColor: '#fb923c',
     frontGradient: 'linear-gradient(160deg, #fdf2f8 0%, #fce7f3 45%, #fff7ed 100%)',
     backGradient: 'linear-gradient(160deg, #fff7ed 0%, #fce7f3 100%)',
-    bgImage: 'https://images.unsplash.com/photo-1490750967868-88df5691cc9a?w=600&auto=format&fit=crop&q=80',
+    bgImage: 'https://images.unsplash.com/photo-1510784722466-f2aa9c52fff6?w=800&auto=format&fit=crop&q=80',
     message: 'Another year of you is the best gift of all. Wishing you pure joy today.',
     backText: 'Every moment with you is one I treasure forever. Happy Birthday, always.',
     bannerText: 'Celebrate!'
@@ -22,7 +22,7 @@ export const TEMPLATES = [
     accentColor: '#60a5fa',
     frontGradient: 'linear-gradient(160deg, #ecfdf5 0%, #d1fae5 45%, #eff6ff 100%)',
     backGradient: 'linear-gradient(160deg, #eff6ff 0%, #d1fae5 100%)',
-    bgImage: 'https://images.unsplash.com/photo-1527529482837-4698179dc6ce?w=600&auto=format&fit=crop&q=80',
+    bgImage: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&auto=format&fit=crop&q=80',
     message: 'All those quiet mornings, late nights, and brave steps — they led right here.',
     backText: 'The world is wider now because you dared to reach. So proud of you.',
     bannerText: 'Congrats!'
@@ -36,7 +36,7 @@ export const TEMPLATES = [
     accentColor: '#c4b5fd',
     frontGradient: 'linear-gradient(160deg, #fdf2f8 0%, #fce7f3 45%, #f5f3ff 100%)',
     backGradient: 'linear-gradient(160deg, #f5f3ff 0%, #fce7f3 100%)',
-    bgImage: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=600&auto=format&fit=crop&q=80',
+    bgImage: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=800&auto=format&fit=crop&q=80',
     message: 'May your love be a shelter, a laughter, and a quiet home you always return to.',
     backText: 'What a privilege it is to witness your love story unfold so beautifully.',
     bannerText: 'Just Married'
@@ -50,7 +50,7 @@ export const TEMPLATES = [
     accentColor: '#a78bfa',
     frontGradient: 'linear-gradient(160deg, #eff6ff 0%, #dbeafe 45%, #f5f3ff 100%)',
     backGradient: 'linear-gradient(160deg, #f5f3ff 0%, #dbeafe 100%)',
-    bgImage: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=600&auto=format&fit=crop&q=80',
+    bgImage: 'https://images.unsplash.com/photo-1606216174052-c74b3f25ae28?w=800&auto=format&fit=crop&q=80',
     message: 'Love that deepens with every season — that is what you have built.',
     backText: 'Here is to the years that made you both even more beautiful together.',
     bannerText: 'With Love'
@@ -64,7 +64,7 @@ export const TEMPLATES = [
     accentColor: '#fbbf24',
     frontGradient: 'linear-gradient(160deg, #fff7ed 0%, #ffedd5 45%, #fefce8 100%)',
     backGradient: 'linear-gradient(160deg, #fefce8 0%, #ffedd5 100%)',
-    bgImage: 'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=600&auto=format&fit=crop&q=80',
+    bgImage: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&auto=format&fit=crop&q=80',
     message: 'May every room hold warm memories in the making, and every window face the light.',
     backText: 'Home is where your story begins. May this one be your most beautiful chapter yet.',
     bannerText: 'New Home!'
@@ -78,10 +78,52 @@ export const TEMPLATES = [
     accentColor: '#34d399',
     frontGradient: 'linear-gradient(160deg, #f7fee7 0%, #ecfccb 45%, #ecfdf5 100%)',
     backGradient: 'linear-gradient(160deg, #ecfdf5 0%, #ecfccb 100%)',
-    bgImage: 'https://images.unsplash.com/photo-1532012197267-da84d127e765?w=600&auto=format&fit=crop&q=80',
+    bgImage: 'https://images.unsplash.com/photo-1525909002519-e21cda53d584?w=800&auto=format&fit=crop&q=80',
     message: 'Your kindness landed exactly when it was needed. Thank you, from the heart.',
     backText: 'Gratitude this deep does not fit neatly into words — but I hope you feel it.',
     bannerText: 'Thank You'
+  },
+  {
+    id: 'praise',
+    name: 'Praise',
+    title: 'You Shine Bright',
+    subtitle: 'Your brilliance is impossible to ignore.',
+    frontColor: '#fbbf24',
+    accentColor: '#f59e0b',
+    frontGradient: 'linear-gradient(160deg, #fffbeb 0%, #fef3c7 45%, #fcd34d 100%)',
+    backGradient: 'linear-gradient(160deg, #fcd34d 0%, #fef3c7 100%)',
+    bgImage: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&auto=format&fit=crop&q=80',
+    message: 'The way you inspire others, create magic, and lead with grace... it is absolutely remarkable. Your excellence is not just noticed—it matters deeply.',
+    backText: 'You are the kind of person who makes the world better simply by being in it. Never underestimate your worth.',
+    bannerText: 'Bravo!'
+  },
+  {
+    id: 'encouragement',
+    name: 'Encouragement',
+    title: 'Keep Going',
+    subtitle: 'Every step forward is a victory.',
+    frontColor: '#818cf8',
+    accentColor: '#6366f1',
+    frontGradient: 'linear-gradient(160deg, #eef2ff 0%, #e0e7ff 45%, #ddd6fe 100%)',
+    backGradient: 'linear-gradient(160deg, #ddd6fe 0%, #e0e7ff 100%)',
+    bgImage: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&auto=format&fit=crop&q=80',
+    message: 'The challenges you face do not define you—your courage to face them does. You are braver than you believe, stronger than you seem, and more capable than you know. Keep pushing forward.',
+    backText: 'Remember: every master was once a beginner. Your efforts today are building the strength you need tomorrow. I believe in you.',
+    bannerText: 'Onward!'
+  },
+  {
+    id: 'comfort',
+    name: 'Comfort',
+    title: 'You Are Not Alone',
+    subtitle: 'Compassion for what you carry.',
+    frontColor: '#f472b6',
+    accentColor: '#ec4899',
+    frontGradient: 'linear-gradient(160deg, #fdf2f8 0%, #fbcfe8 45%, #fce7f3 100%)',
+    backGradient: 'linear-gradient(160deg, #fce7f3 0%, #fbcfe8 100%)',
+    bgImage: 'https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?w=800&auto=format&fit=crop&q=80',
+    message: 'Whatever you are carrying right now—the weight, the questions, the doubts—it is valid and real. You do not have to be strong all the time. I see you, and I am here for you.',
+    backText: 'Hard times do not last. Hard people do. And you are one of the strongest people I know. Better days are coming.',
+    bannerText: 'With You'
   }
 ];
 
