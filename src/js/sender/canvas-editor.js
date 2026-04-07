@@ -1,7 +1,15 @@
-
+// canvas-editor.js 최상단 (window.CanvasEditor = (() => { 바로 위)
 window.CanvasEditor = (() => {
 
-  
+    const TEMPLATES_INLINE = [
+  { id:'birthday', frontColor:'#f472b6', accentColor:'#fb923c', frontGradient:'linear-gradient(135deg,#fdf2f8,#fce7f3 40%,#fff7ed)', backGradient:'linear-gradient(135deg,#fff7ed,#fce7f3)', title:'Happy Birthday', subtitle:'Wishing you a day as bright as you are.', message:'Happy Birthday! Wishing you joy, laughter, and a beautiful year ahead.', backText:'Every moment with you is a gift. Thank you for being you.' },
+  { id:'congrats', frontColor:'#34d399', accentColor:'#60a5fa', frontGradient:'linear-gradient(135deg,#ecfdf5,#d1fae5 40%,#eff6ff)', backGradient:'linear-gradient(135deg,#eff6ff,#d1fae5)', title:'You Did It', subtitle:'A proud moment worth celebrating.', message:'Congratulations! Your hard work and dedication have truly paid off.', backText:'Keep shining. Your next chapter will be even more amazing.' },
+  { id:'wedding', frontColor:'#f9a8d4', accentColor:'#c4b5fd', frontGradient:'linear-gradient(135deg,#fdf2f8,#fce7f3 40%,#f5f3ff)', backGradient:'linear-gradient(135deg,#f5f3ff,#fce7f3)', title:'Forever Starts Now', subtitle:'Elegant, warm, and timeless.', message:'Wishing you a joyful wedding day and a beautiful life together.', backText:'May your love grow deeper and more beautiful with every passing year.' },
+  { id:'anniversary', frontColor:'#60a5fa', accentColor:'#a78bfa', frontGradient:'linear-gradient(135deg,#eff6ff,#dbeafe 40%,#f5f3ff)', backGradient:'linear-gradient(135deg,#f5f3ff,#dbeafe)', title:'Happy Anniversary', subtitle:'A gentle and heartfelt celebration.', message:'Happy Anniversary! Your love story is inspiring and truly beautiful.', backText:'Here is to more laughter, love, and unforgettable days ahead.' },
+  { id:'new-home', frontColor:'#fb923c', accentColor:'#fbbf24', frontGradient:'linear-gradient(135deg,#fff7ed,#ffedd5 40%,#fefce8)', backGradient:'linear-gradient(135deg,#fefce8,#ffedd5)', title:'Welcome Home', subtitle:'A fresh start in a wonderful new place.', message:'Congratulations on your new home! May it be filled with warmth and joy.', backText:'Wishing you comfort, peace, and wonderful memories in your new space.' },
+  { id:'thank-you', frontColor:'#a3e635', accentColor:'#34d399', frontGradient:'linear-gradient(135deg,#f7fee7,#ecfccb 40%,#ecfdf5)', backGradient:'linear-gradient(135deg,#ecfdf5,#ecfccb)', title:'Thank You', subtitle:'Simple, warm, and sincere.', message:'Thank you for your kindness, support, and all that you do.', backText:'I am truly grateful for you, today and always.' }
+];
+
     const FONT_OPTIONS = [
       {name:'Noto Sans KR', css:'"Noto Sans KR", sans-serif'},
       {name:'Noto Serif KR', css:'"Noto Serif KR", serif'},
@@ -197,63 +205,81 @@ window.CanvasEditor = (() => {
       };
     }
 
-    function defaultState(side){
-      const isFront = side==='front';
-      return {
-        bgColor:isFront ? '#efe7ff' : '#fff4e6',
-        bgImage:'',
-        bgImageOpacity:isFront ? .34 : .22,
-        bgImageScale:100,
-        bgImageFit:'cover',
-        bgOverlay:{
-          enabled:true,
-          mode:'gradient',
-          color:'#000000',
-          gradient:{
-            angle:isFront ? 145 : 180,
-            stops:isFront
-              ? [
-                  {id:uid(),pos:0,color:'rgba(124,58,237,0.15)'},
-                  {id:uid(),pos:55,color:'rgba(236,72,153,0.08)'},
-                  {id:uid(),pos:100,color:'rgba(255,255,255,0.0)'}
-                ]
-              : [
-                  {id:uid(),pos:0,color:'rgba(245,158,11,0.10)'},
-                  {id:uid(),pos:100,color:'rgba(255,255,255,0.0)'}
-                ]
-          }
-        },
-        elements:isFront
+    function defaultState(side, tpl){
+  const isFront = side==='front';
+  const gradient = isFront ? (tpl?.frontGradient || 'linear-gradient(135deg,#fdf2f8,#fff7ed)') : (tpl?.backGradient || 'linear-gradient(135deg,#fff7ed,#fdf2f8)');
+  const accent = tpl?.accentColor || '#fb923c';
+  const main = tpl?.frontColor || '#f472b6';
+
+  return {
+    bgColor: '#ffffff',
+    bgImage: '',
+    bgImageOpacity: 0,
+    bgImageScale: 100,
+    bgImageFit: 'cover',
+    bgOverlay: {
+      enabled: true,
+      mode: 'gradient',
+      color: main,
+      gradient: {
+        angle: isFront ? 135 : 160,
+        stops: isFront
           ? [
-              createDefaultText(uid(),'Congratulations!',58,92,'outline'),
-              Object.assign(createDefaultText(uid(),'Wishing you joy, growth, and beautiful moments ahead.',42,170,'editorial'),{
-                w:220,h:110,fontSize:18,align:'center'
-              })
+              {id:uid(), pos:0, color: main + '55'},
+              {id:uid(), pos:55, color: accent + '33'},
+              {id:uid(), pos:100, color: '#ffffff00'}
             ]
           : [
-              Object.assign(createDefaultText(uid(),'With love,',50,118,'softlabel'),{
-                w:140,h:50
-              }),
-              Object.assign(createDefaultText(uid(),'From your team',48,192,'clean'),{
-                w:190,h:60,fontSize:22
-              })
+              {id:uid(), pos:0, color: accent + '44'},
+              {id:uid(), pos:100, color: '#ffffff00'}
             ]
-      };
-    }
+      }
+    },
+    elements: isFront
+      ? [
+          Object.assign(createDefaultText(uid(), tpl?.title || 'Happy Birthday', 36, 60, 'outline'), {
+            w: 228, h: 70, fontSize: 28,
+            fill: {mode:'solid', color: main},
+            stroke: {mode:'solid', color: '#ffffff'},
+            strokeEnabled: true, strokeWidth: 1
+          }),
+          Object.assign(createDefaultText(uid(), tpl?.subtitle || 'A bright surprise for your special day.', 36, 146, 'editorial'), {
+            w: 228, h: 56, fontSize: 15,
+            fill: {mode:'solid', color: '#374151'}
+          }),
+          Object.assign(createDefaultText(uid(), tpl?.message || 'Wishing you joy and happiness.', 36, 218, 'clean'), {
+            w: 228, h: 110, fontSize: 16,
+            fill: {mode:'solid', color: '#111827'}
+          })
+        ]
+      : [
+          Object.assign(createDefaultText(uid(), tpl?.backText || 'Thank you for being such a special part of my life.', 36, 150, 'clean'), {
+            w: 228, h: 140, fontSize: 17,
+            align: 'center',
+            fill: {mode:'solid', color: '#111827'}
+          })
+        ]
+  };
+}
+
 
     const appState = {
-      mode:'basic',
-      side:'front',
-      selectionId:null,
-      activeTab:'text',
-      history:[],
-      historyIndex:-1,
-      sides:{
-        front:defaultState('front'),
-        back:defaultState('back')
-      },
-      lastDeleted:null
-    };
+  mode:'basic',
+  side:'front',
+  selectionId:null,
+  activeTab:'text',
+  history:[],
+  historyIndex:-1,
+  sides:{
+    front:defaultState('front', TEMPLATES_INLINE[0]),
+    back:defaultState('back', TEMPLATES_INLINE[0])
+  },
+
+    lastDeleted:null,
+  currentTemplateId:'birthday'
+};
+
+
 
     const refs = {
       app:document.getElementById('app'),
@@ -464,7 +490,11 @@ window.CanvasEditor = (() => {
 
     function renderCardBackground(){
       const side = currentSideState();
-      refs.cardBgColor.style.background = side.bgColor || '#ffffff';
+      const tplId = appState.currentTemplateId || 'birthday';
+      const matched = TEMPLATES_INLINE.find(t => t.id === tplId) || TEMPLATES_INLINE[0];
+      const grad = appState.side === 'front' ? matched.frontGradient : matched.backGradient;
+      refs.cardBgColor.style.background = grad || side.bgColor || '#ffffff';
+
 
       refs.cardBgImage.style.backgroundImage = side.bgImage ? `url(${side.bgImage})` : 'none';
       refs.cardBgImage.style.opacity = side.bgImage ? String(side.bgImageOpacity ?? 1) : '0';
@@ -529,15 +559,19 @@ window.CanvasEditor = (() => {
         node.style.transform = `rotate(${el.rotation || 0}deg)`;
         node.style.transformOrigin = 'center center';
 
-        if(el.type === 'text'){
+                if(el.type === 'text'){
+          const isBackSide = appState.side === 'back';
+          const justifyVal = isBackSide ? 'center' : (el.align==='left'?'flex-start':el.align==='right'?'flex-end':'center');
+          const alignVal = isBackSide ? 'center' : 'flex-start';
           node.innerHTML = `
             <div style="
               width:100%;
               height:100%;
               display:flex;
-              align-items:center;
-              justify-content:${el.align==='left'?'flex-start':el.align==='right'?'flex-end':'center'};
-              text-align:${el.align || 'center'};
+              align-items:${alignVal};
+              justify-content:${justifyVal};
+              text-align:${isBackSide ? 'center' : (el.align || 'center')};
+
               font-family:${el.fontFamily || '"Noto Sans KR", sans-serif'};
               font-size:${el.fontSize || 28}px;
               line-height:${el.lineHeight || 1.2};
@@ -2112,14 +2146,13 @@ window.CanvasEditor = (() => {
   }
 
   function applyTemplateToLayers(tpl) {
-    const f = appState.sides.front.elements;
-    if (f[0]) f[0].text = tpl.title || 'Title';
-    if (f[1]) f[1].text = tpl.subtitle || '';
-    if (f[2]) f[2].text = tpl.message || '';
-    const b = appState.sides.back.elements;
-    if (b[1]) b[1].text = tpl.backText || '';
+    const matched = TEMPLATES_INLINE.find(t => t.id === tpl.id) || TEMPLATES_INLINE[0];
+    appState.sides.front = defaultState('front', matched);
+    appState.sides.back = defaultState('back', matched);
+    appState.selectionId = null;
     try { commitAndRender(); } catch(e){}
   }
+
 
   function updateSenderReceiver(sender) {
     const f = appState.sides.front.elements;
@@ -2185,7 +2218,11 @@ window.CanvasEditor = (() => {
     setMode: safeSetMode,
     getLayers: getLayers,
     applyTemplateToLayers: applyTemplateToLayers,
-    updateSenderReceiver: updateSenderReceiver
+       updateSenderReceiver: updateSenderReceiver,
+    setCurrentTemplate: function(id) {
+      appState.currentTemplateId = id;
+    }
   };
+
 
 })();

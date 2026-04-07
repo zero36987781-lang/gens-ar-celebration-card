@@ -354,6 +354,7 @@ function renderTemplates() {
 
 function applyTemplate(id) {
   state.templateId = id;
+    if (window.CanvasEditor) window.CanvasEditor.setCurrentTemplate(id);
   const tpl = getTemplateById(id);
   els.previewTitle.textContent = tpl.title;
   els.previewSubtitle.textContent = tpl.subtitle;
