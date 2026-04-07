@@ -1,14 +1,82 @@
 // canvas-editor.js 최상단 (window.CanvasEditor = (() => { 바로 위)
 window.CanvasEditor = (() => {
 
-    const TEMPLATES_INLINE = [
-  { id:'birthday', frontColor:'#f472b6', accentColor:'#fb923c', frontGradient:'linear-gradient(135deg,#fdf2f8,#fce7f3 40%,#fff7ed)', backGradient:'linear-gradient(135deg,#fff7ed,#fce7f3)', title:'Happy Birthday', subtitle:'Wishing you a day as bright as you are.', message:'Happy Birthday! Wishing you joy, laughter, and a beautiful year ahead.', backText:'Every moment with you is a gift. Thank you for being you.' },
-  { id:'congrats', frontColor:'#34d399', accentColor:'#60a5fa', frontGradient:'linear-gradient(135deg,#ecfdf5,#d1fae5 40%,#eff6ff)', backGradient:'linear-gradient(135deg,#eff6ff,#d1fae5)', title:'You Did It', subtitle:'A proud moment worth celebrating.', message:'Congratulations! Your hard work and dedication have truly paid off.', backText:'Keep shining. Your next chapter will be even more amazing.' },
-  { id:'wedding', frontColor:'#f9a8d4', accentColor:'#c4b5fd', frontGradient:'linear-gradient(135deg,#fdf2f8,#fce7f3 40%,#f5f3ff)', backGradient:'linear-gradient(135deg,#f5f3ff,#fce7f3)', title:'Forever Starts Now', subtitle:'Elegant, warm, and timeless.', message:'Wishing you a joyful wedding day and a beautiful life together.', backText:'May your love grow deeper and more beautiful with every passing year.' },
-  { id:'anniversary', frontColor:'#60a5fa', accentColor:'#a78bfa', frontGradient:'linear-gradient(135deg,#eff6ff,#dbeafe 40%,#f5f3ff)', backGradient:'linear-gradient(135deg,#f5f3ff,#dbeafe)', title:'Happy Anniversary', subtitle:'A gentle and heartfelt celebration.', message:'Happy Anniversary! Your love story is inspiring and truly beautiful.', backText:'Here is to more laughter, love, and unforgettable days ahead.' },
-  { id:'new-home', frontColor:'#fb923c', accentColor:'#fbbf24', frontGradient:'linear-gradient(135deg,#fff7ed,#ffedd5 40%,#fefce8)', backGradient:'linear-gradient(135deg,#fefce8,#ffedd5)', title:'Welcome Home', subtitle:'A fresh start in a wonderful new place.', message:'Congratulations on your new home! May it be filled with warmth and joy.', backText:'Wishing you comfort, peace, and wonderful memories in your new space.' },
-  { id:'thank-you', frontColor:'#a3e635', accentColor:'#34d399', frontGradient:'linear-gradient(135deg,#f7fee7,#ecfccb 40%,#ecfdf5)', backGradient:'linear-gradient(135deg,#ecfdf5,#ecfccb)', title:'Thank You', subtitle:'Simple, warm, and sincere.', message:'Thank you for your kindness, support, and all that you do.', backText:'I am truly grateful for you, today and always.' }
+    
+  const TEMPLATES_INLINE = [
+  {
+    id: 'birthday',
+    frontColor: '#f472b6',
+    accentColor: '#fb923c',
+    frontGradient: 'linear-gradient(160deg, #fdf2f8 0%, #fce7f3 45%, #fff7ed 100%)',
+    backGradient: 'linear-gradient(160deg, #fff7ed 0%, #fce7f3 100%)',
+    bgImage: 'https://images.unsplash.com/photo-1490750967868-88df5691cc9a?w=600&auto=format&fit=crop&q=80',
+    title: 'Happy Birthday',
+    subtitle: 'May this day sparkle\nwith everything you love.',
+    message: 'Another year of you\nis the best gift of all.\nWishing you pure joy today.',
+    backText: 'Every moment with you\nis one I treasure forever.\nHappy Birthday, always.'
+  },
+  {
+    id: 'congrats',
+    frontColor: '#34d399',
+    accentColor: '#60a5fa',
+    frontGradient: 'linear-gradient(160deg, #ecfdf5 0%, #d1fae5 45%, #eff6ff 100%)',
+    backGradient: 'linear-gradient(160deg, #eff6ff 0%, #d1fae5 100%)',
+    bgImage: 'https://images.unsplash.com/photo-1527529482837-4698179dc6ce?w=600&auto=format&fit=crop&q=80',
+    title: 'You Did It',
+    subtitle: 'This moment belongs\nentirely to you.',
+    message: 'All those quiet mornings,\nlate nights, and brave steps —\nthey led right here.',
+    backText: 'The world is wider now\nbecause you dared to reach.\nSo proud of you.'
+  },
+  {
+    id: 'wedding',
+    frontColor: '#f9a8d4',
+    accentColor: '#c4b5fd',
+    frontGradient: 'linear-gradient(160deg, #fdf2f8 0%, #fce7f3 45%, #f5f3ff 100%)',
+    backGradient: 'linear-gradient(160deg, #f5f3ff 0%, #fce7f3 100%)',
+    bgImage: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=600&auto=format&fit=crop&q=80',
+    title: 'Forever\nStarts Now',
+    subtitle: 'Two souls, one beautiful\nbeginning.',
+    message: 'May your love be a shelter,\na laughter, and a quiet home\nyou always return to.',
+    backText: 'What a privilege it is\nto witness your love story\nunfold so beautifully.'
+  },
+  {
+    id: 'anniversary',
+    frontColor: '#60a5fa',
+    accentColor: '#a78bfa',
+    frontGradient: 'linear-gradient(160deg, #eff6ff 0%, #dbeafe 45%, #f5f3ff 100%)',
+    backGradient: 'linear-gradient(160deg, #f5f3ff 0%, #dbeafe 100%)',
+    bgImage: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=600&auto=format&fit=crop&q=80',
+    title: 'Happy\nAnniversary',
+    subtitle: 'Still choosing each other,\nevery single day.',
+    message: 'Love that deepens\nwith every season —\nthat is what you have built.',
+    backText: 'Here is to the years\nthat made you both\neven more beautiful together.'
+  },
+  {
+    id: 'new-home',
+    frontColor: '#fb923c',
+    accentColor: '#fbbf24',
+    frontGradient: 'linear-gradient(160deg, #fff7ed 0%, #ffedd5 45%, #fefce8 100%)',
+    backGradient: 'linear-gradient(160deg, #fefce8 0%, #ffedd5 100%)',
+    bgImage: 'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=600&auto=format&fit=crop&q=80',
+    title: 'Welcome\nHome',
+    subtitle: 'A new door opens\nto a whole new life.',
+    message: 'May every room hold\nwarm memories in the making,\nand every window face the light.',
+    backText: 'Home is where your story begins.\nMay this one be\nyour most beautiful chapter yet.'
+  },
+  {
+    id: 'thank-you',
+    frontColor: '#86efac',
+    accentColor: '#34d399',
+    frontGradient: 'linear-gradient(160deg, #f7fee7 0%, #ecfccb 45%, #ecfdf5 100%)',
+    backGradient: 'linear-gradient(160deg, #ecfdf5 0%, #ecfccb 100%)',
+    bgImage: 'https://images.unsplash.com/photo-1532012197267-da84d127e765?w=600&auto=format&fit=crop&q=80',
+    title: 'Thank You',
+    subtitle: 'Some words are\nfelt before they are said.',
+    message: 'Your kindness landed\nexactly when it was needed.\nThank you, from the heart.',
+    backText: 'Gratitude this deep\ndoes not fit neatly into words —\nbut I hope you feel it.'
+  }
 ];
+
 
     const FONT_OPTIONS = [
       {name:'Noto Sans KR', css:'"Noto Sans KR", sans-serif'},
@@ -206,15 +274,18 @@ window.CanvasEditor = (() => {
     }
 
     function defaultState(side, tpl){
-  const isFront = side==='front';
-  const gradient = isFront ? (tpl?.frontGradient || 'linear-gradient(135deg,#fdf2f8,#fff7ed)') : (tpl?.backGradient || 'linear-gradient(135deg,#fff7ed,#fdf2f8)');
-  const accent = tpl?.accentColor || '#fb923c';
+  const isFront = side === 'front';
+  const gradient = isFront
+    ? (tpl?.frontGradient || 'linear-gradient(160deg,#fdf2f8,#fff7ed)')
+    : (tpl?.backGradient || 'linear-gradient(160deg,#fff7ed,#fdf2f8)');
   const main = tpl?.frontColor || '#f472b6';
+  const accent = tpl?.accentColor || '#fb923c';
+  const bgImg = tpl?.bgImage || '';
 
   return {
     bgColor: '#ffffff',
-    bgImage: '',
-    bgImageOpacity: 0,
+    bgImage: bgImg,
+    bgImageOpacity: isFront ? 0.52 : 0.18,
     bgImageScale: 100,
     bgImageFit: 'cover',
     bgOverlay: {
@@ -222,45 +293,60 @@ window.CanvasEditor = (() => {
       mode: 'gradient',
       color: main,
       gradient: {
-        angle: isFront ? 135 : 160,
+        angle: isFront ? 160 : 180,
         stops: isFront
           ? [
-              {id:uid(), pos:0, color: main + '55'},
-              {id:uid(), pos:55, color: accent + '33'},
-              {id:uid(), pos:100, color: '#ffffff00'}
+              {id:uid(), pos:0,  color: main + '99'},
+              {id:uid(), pos:50, color: accent + '55'},
+              {id:uid(), pos:100, color: '#ffffff22'}
             ]
           : [
-              {id:uid(), pos:0, color: accent + '44'},
-              {id:uid(), pos:100, color: '#ffffff00'}
+              {id:uid(), pos:0,  color: accent + '66'},
+              {id:uid(), pos:100, color: '#ffffff11'}
             ]
       }
     },
     elements: isFront
       ? [
-          Object.assign(createDefaultText(uid(), tpl?.title || 'Happy Birthday', 36, 60, 'outline'), {
-            w: 228, h: 70, fontSize: 28,
-            fill: {mode:'solid', color: main},
-            stroke: {mode:'solid', color: '#ffffff'},
-            strokeEnabled: true, strokeWidth: 1
+          // 헤더
+          Object.assign(createDefaultText(uid(), tpl?.title || 'Hello', 24, 48, 'clean'), {
+            w: 252, h: 80, fontSize: 32,
+            fill: {mode:'solid', color:'#ffffff', gradient:null},
+            strokeEnabled: false, strokeWidth: 0,
+            bgEnabled: false,
+            background: {mode:'solid', color:'transparent', opacity:0, radius:0, paddingX:0, paddingY:0, gradient:null}
           }),
-          Object.assign(createDefaultText(uid(), tpl?.subtitle || 'A bright surprise for your special day.', 36, 146, 'editorial'), {
-            w: 228, h: 56, fontSize: 15,
-            fill: {mode:'solid', color: '#374151'}
+          // 서브헤더
+          Object.assign(createDefaultText(uid(), tpl?.subtitle || '', 24, 140, 'clean'), {
+            w: 252, h: 60, fontSize: 15,
+            fill: {mode:'solid', color:'rgba(255,255,255,0.88)', gradient:null},
+            strokeEnabled: false, strokeWidth: 0,
+            bgEnabled: false,
+            background: {mode:'solid', color:'transparent', opacity:0, radius:0, paddingX:0, paddingY:0, gradient:null}
           }),
-          Object.assign(createDefaultText(uid(), tpl?.message || 'Wishing you joy and happiness.', 36, 218, 'clean'), {
-            w: 228, h: 110, fontSize: 16,
-            fill: {mode:'solid', color: '#111827'}
+          // 본문
+          Object.assign(createDefaultText(uid(), tpl?.message || '', 24, 240, 'clean'), {
+            w: 252, h: 110, fontSize: 17,
+            fill: {mode:'solid', color:'rgba(255,255,255,0.95)', gradient:null},
+            strokeEnabled: false, strokeWidth: 0,
+            bgEnabled: false,
+            background: {mode:'solid', color:'transparent', opacity:0, radius:0, paddingX:0, paddingY:0, gradient:null}
           })
         ]
       : [
-          Object.assign(createDefaultText(uid(), tpl?.backText || 'Thank you for being such a special part of my life.', 36, 150, 'clean'), {
-            w: 228, h: 140, fontSize: 17,
+          // 뒷면 본문 — 수직 중앙
+          Object.assign(createDefaultText(uid(), tpl?.backText || '', 24, 140, 'clean'), {
+            w: 252, h: 140, fontSize: 17,
             align: 'center',
-            fill: {mode:'solid', color: '#111827'}
+            fill: {mode:'solid', color:'rgba(255,255,255,0.95)', gradient:null},
+            strokeEnabled: false, strokeWidth: 0,
+            bgEnabled: false,
+            background: {mode:'solid', color:'transparent', opacity:0, radius:0, paddingX:0, paddingY:0, gradient:null}
           })
         ]
   };
 }
+
 
 
     const appState = {
@@ -504,8 +590,16 @@ window.CanvasEditor = (() => {
       refs.cardBgColor.style.zIndex = '0';
 
       // bgImage
-      refs.cardBgImage.style.backgroundImage = side.bgImage ? `url(${side.bgImage})` : 'none';
-      refs.cardBgImage.style.opacity = side.bgImage ? String(side.bgImageOpacity ?? 1) : '0';
+           if(side.bgImage){
+        refs.cardBgImage.style.backgroundImage = `url(${side.bgImage})`;
+        refs.cardBgImage.style.opacity = String(side.bgImageOpacity ?? 0.5);
+        refs.cardBgImage.style.backgroundSize = 'cover';
+        refs.cardBgImage.style.backgroundPosition = 'center';
+      } else {
+        refs.cardBgImage.style.backgroundImage = 'none';
+        refs.cardBgImage.style.opacity = '0';
+      }
+
       refs.cardBgImage.style.position = 'absolute';
       refs.cardBgImage.style.inset = '0';
       refs.cardBgImage.style.zIndex = '1';

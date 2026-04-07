@@ -351,9 +351,14 @@ function createYtPlayer(ytId, startSec, endSec) {
 /* ── Templates ── */
 function renderTemplates() {
   els.templateList.innerHTML = TEMPLATES.map(t => `
-    <button type="button" class="template-item ${t.id === state.templateId ? 'active' : ''}" data-template-id="${t.id}">
-      <h3>${t.name}</h3><p>${t.subtitle}</p>
-      <div class="template-swatches"><span style="background:${t.frontColor}"></span><span style="background:${t.accentColor}"></span></div>
+    <button type="button" class="template-item ${t.id === state.templateId ? 'active' : ''}" data-template-id="${t.id}"
+      style="background:${t.frontGradient};border-color:${t.frontColor}33;">
+      <h3 style="color:#111827">${t.name}</h3>
+      <p style="color:#374151">${t.subtitle}</p>
+      <div class="template-swatches">
+        <span style="background:${t.frontColor}"></span>
+        <span style="background:${t.accentColor}"></span>
+      </div>
     </button>`).join('');
 }
 
