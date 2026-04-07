@@ -85,27 +85,23 @@
       <!-- ★ Step 2: Design Studio (was Step 3) — TikTok-style split layout -->
       <section class="page-view page-hidden studio-page" data-step="2">
 
-        <div class="section-head" id="studio-head" style="margin: 0; padding: 20px 20px 10px 20px;">
-          <div><h2>Design Studio</h2><p>Design your custom 3D card layout.</p></div>
-        </div>
-
-        <!-- Toggle row — "Default" renamed to "Basic" + Custom gets gradient text -->
-        <div class="canvas-toggle-row" style="padding: 0 20px;">
+        <!-- Toggle row -->
+        <div class="canvas-toggle-row">
           <div class="toggle-group" id="mode-toggle">
             <button type="button" class="toggle-pill active" data-value="basic">Basic</button>
             <button type="button" class="toggle-pill custom-toggle-pill" data-value="custom">Custom</button>
           </div>
+          <div class="history-group">
+            <button class="icon-btn" id="undoBtn" type="button" title="Undo">
+              <i data-lucide="undo-2" style="width:15px;height:15px"></i>
+            </button>
+            <button class="icon-btn" id="redoBtn" type="button" title="Redo">
+              <i data-lucide="redo-2" style="width:15px;height:15px"></i>
+            </button>
+          </div>
           <div class="toggle-group" id="side-toggle">
             <button type="button" class="toggle-pill active" data-value="front">Front</button>
             <button type="button" class="toggle-pill" data-value="back">Back</button>
-          </div>
-          <div class="history-group" style="display:flex;gap:4px;margin-left:auto">
-            <button class="icon-btn" id="undoBtn" type="button" title="Undo" style="width:32px;height:32px;padding:0;border-radius:8px">
-              <i data-lucide="undo-2" style="width:16px;height:16px"></i>
-            </button>
-            <button class="icon-btn" id="redoBtn" type="button" title="Redo" style="width:32px;height:32px;padding:0;border-radius:8px">
-              <i data-lucide="redo-2" style="width:16px;height:16px"></i>
-            </button>
           </div>
         </div>
 
