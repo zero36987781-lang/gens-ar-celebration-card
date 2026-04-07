@@ -21,25 +21,27 @@ const PERM_KEY = 'chariel:perm-done';
 const els = {};
 
 function cacheDom() {
-  els.permGate = qs('#permission-gate');
-  els.appShell = qs('#app-shell');
-  els.permAllowBtn = qs('#perm-allow-btn');
-  els.permSkipBtn = qs('#perm-skip-btn');
-  els.permGps = qs('#perm-gps-status');
-  els.permMotion = qs('#perm-motion-status');
-  els.permWarning = qs('#perm-warning');
-  els.templateList = qs('#template-list');
-  els.form = qs('#gift-form');
-  els.shareLink = qs('#share-link');
-  els.openLink = qs('#open-link');
-  els.previewLink = qs('#preview-link');
-  els.statusBox = qs('#status-box');
-  els.copyLink = qs('#copy-link');
+  els.permGate       = qs('#permission-gate');
+  els.appShell       = qs('#app-shell');
+  els.permAllowBtn   = qs('#perm-allow-btn');
+  els.permSkipBtn    = qs('#perm-skip-btn');
+  els.permGps        = qs('#perm-gps-status');
+  els.permMotion     = qs('#perm-motion-status');
+  els.permWarning    = qs('#perm-warning');
+  els.templateList   = qs('#template-list');
+  els.shareLink      = qs('#share-link');
+  els.openLink       = qs('#open-link');
+  els.previewLink    = qs('#preview-link');
+  els.statusBox      = qs('#status-box');
+  els.copyLink       = qs('#copy-link');
+  els.createLinkBtn  = qs('#create-link-btn');
+  els.createLinkText = qs('#create-link-text');
+  els.copyLinkText   = qs('#copy-link-text');
   els.videoPreviewStatus = qs('#video-preview-status');
-  els.videoPreviewArea = qs('#video-preview-area');
-  els.navPrev = qs('#nav-prev');
-  els.navNext = qs('#nav-next');
-  els.navDots = document.querySelectorAll('.nav-dots .dot');
+  els.videoPreviewArea   = qs('#video-preview-area');
+  els.navPrev   = qs('#nav-prev');
+  els.navNext   = qs('#nav-next');
+  els.navDots   = document.querySelectorAll('.nav-dots .dot');
   els.bottomNav = qs('#bottom-nav');
 }
 
@@ -67,8 +69,8 @@ async function requestPermissions() {
     });
   } catch { /* denied or timeout */ }
 
-  els.permGps.textContent = gpsOk ? 'Granted' : 'Denied';
-  els.permGps.className = `perm-status ${gpsOk ? 'granted' : 'denied'}`;
+  els.permGps.textContent  = gpsOk ? 'Granted' : 'Denied';
+  els.permGps.className    = `perm-status ${gpsOk ? 'granted' : 'denied'}`;
 
   if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
     try {
@@ -80,12 +82,9 @@ async function requestPermissions() {
   }
 
   els.permMotion.textContent = motionOk ? 'Granted' : 'Denied';
-  els.permMotion.className = `perm-status ${motionOk ? 'granted' : 'denied'}`;
+  els.permMotion.className   = `perm-status ${motionOk ? 'granted' : 'denied'}`;
 
-  if (!gpsOk || !motionOk) {
-    els.permWarning.classList.remove('hidden');
-  }
-
+  if (!gpsOk || !motionOk) els.permWarning.classList.remove('hidden');
   return { gpsOk, motionOk };
 }
 
@@ -116,7 +115,8 @@ function updatePage() {
 
   const shell = qs('.sender-shell');
   if (shell) {
-    shell.style.overflowY = 'auto';
+    // Step 2는 studio-page가 자체 스크롤 관리, 나머지는 normal scroll
+    shell.style.overflowY = state.page === 2 ? 'hidden' : 'auto';
   }
 
   if (els.bottomNav) els.bottomNav.style.display = '';
@@ -125,34 +125,23 @@ function updatePage() {
   if (els.navPrev) els.navPrev.disabled = state.page <= 1;
   if (els.navNext) {
     els.navNext.textContent = state.page === MAX_PAGES ? 'Finish' : 'Next ▶';
-    els.navNext.disabled = state.page === MAX_PAGES;
+    els.navNext.disabled    = state.page === MAX_PAGES;
   }
 
   if (state.page === 2) {
     setTimeout(() => {
-      const topArea = qs('#main');
-      if (topArea && shell) {
-        shell.scrollTo({ top: topArea.offsetTop - 10, behavior: 'smooth' });
-      }
       if (window.CanvasEditor) window.CanvasEditor.init();
+      if (window.lucide) window.lucide.createIcons();
     }, 50);
+  } else {
+    if (shell) shell.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }
 
-function nextPage() { if (state.page < MAX_PAGES) { state.page++; updatePage(); if (state.page !== 2) qs('.sender-shell')?.scrollTo({ top: 0, behavior: 'smooth' }); } }
-function prevPage() { if (state.page > 1) { state.page--; updatePage(); if (state.page !== 2) qs('.sender-shell')?.scrollTo({ top: 0, behavior: 'smooth' }); } }
-
-/* ── Studio split resizer ── */
-function bindStudioResizer() {
-  // Handled by CanvasEditor internally
-}
-
-function applySplitHeight() {
-  // Handled by CanvasEditor internally
-}
+function nextPage() { if (state.page < MAX_PAGES) { state.page++; updatePage(); } }
+function prevPage() { if (state.page > 1) { state.page--; updatePage(); } }
 
 /* ── Mode & Side toggle ── */
-// ★ 수정: #modeSegment button + data-mode
 function syncEditorMode() {
   document.querySelectorAll('#modeSegment button').forEach(p => {
     p.classList.toggle('active', p.dataset.mode === state.editorMode);
@@ -160,7 +149,6 @@ function syncEditorMode() {
   if (window.CanvasEditor) window.CanvasEditor.setMode(state.editorMode);
 }
 
-// ★ 수정: #sideSegment button + data-side
 function syncSideToggle() {
   document.querySelectorAll('#sideSegment button').forEach(p => {
     p.classList.toggle('active', p.dataset.side === state.activeSide);
@@ -168,16 +156,6 @@ function syncSideToggle() {
   if (window.CanvasEditor) window.CanvasEditor.switchSide(state.activeSide);
 }
 
-/* ── Panel management ── */
-function closeAllPanels() {
-  // Handled inherently by CanvasEditor
-}
-
-function bindPanels() {
-  // Handled inherently by CanvasEditor
-}
-
-// ★ 수정: #modeSegment/#sideSegment + data-mode/data-side
 function bindToggles() {
   document.querySelectorAll('#modeSegment button').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -196,25 +174,33 @@ function bindToggles() {
 /* ── Fields ── */
 function fields() {
   return {
-    recipientName: qs('#recipient-name'), senderName: qs('#sender-name'),
-    videoUrl: qs('#video-url'), ctaLink: qs('#cta-link'),
-    mapSearch: qs('#map-search'), mapSearchButton: qs('#map-search-btn'),
-    mapEl: qs('#sender-map'), mapStatus: qs('#map-status'),
-    latitude: qs('#latitude'), longitude: qs('#longitude'),
-    unlockRadius: qs('#unlock-radius'), startAt: qs('#start-at'), expiresAt: qs('#expires-at'),
-    spawnHeight: qs('#spawn-height'), forwardDistance: qs('#forward-distance')
+    recipientName:   qs('#recipient-name'),
+    senderName:      qs('#sender-name'),
+    videoUrl:        qs('#video-url'),
+    ctaLink:         qs('#cta-link'),
+    mapSearch:       qs('#map-search'),
+    mapSearchButton: qs('#map-search-btn'),
+    mapEl:           qs('#sender-map'),
+    mapStatus:       qs('#map-status'),
+    latitude:        qs('#latitude'),
+    longitude:       qs('#longitude'),
+    unlockRadius:    qs('#unlock-radius'),
+    startAt:         qs('#start-at'),
+    expiresAt:       qs('#expires-at'),
+    spawnHeight:     qs('#spawn-height'),
+    forwardDistance: qs('#forward-distance')
   };
 }
 
 /* ── Date ── */
 function fmtDate(d) {
   const p = v => String(v).padStart(2, '0');
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 function setDefaultDates() {
   const { startAt, expiresAt } = fields();
   const now = new Date(); now.setSeconds(0, 0);
-  startAt.value = fmtDate(now);
+  startAt.value   = fmtDate(now);
   expiresAt.value = fmtDate(new Date(now.getTime() + 86400000));
   syncExpiry();
 }
@@ -243,19 +229,17 @@ function parseYtId(url) {
   } catch { return ''; }
 }
 function hmsToSec(pre) {
-  const h = Number(qs(`#${pre}-h`)?.value || 0), m = Number(qs(`#${pre}-m`)?.value || 0), s = Number(qs(`#${pre}-s`)?.value || 0);
+  const h = Number(qs(`#${pre}-h`)?.value || 0),
+        m = Number(qs(`#${pre}-m`)?.value || 0),
+        s = Number(qs(`#${pre}-s`)?.value || 0);
   return h * 3600 + m * 60 + s;
 }
 function secToHms(t) {
   const s = Math.max(0, Math.floor(Number(t) || 0));
-  return [Math.floor(s / 3600), Math.floor((s % 3600) / 60), s % 60].map(v => String(v).padStart(2, '0')).join(':');
+  return [Math.floor(s/3600), Math.floor((s%3600)/60), s%60].map(v => String(v).padStart(2,'0')).join(':');
 }
 
-/* ★ YouTube Player API */
-let ytPlayer = null;
-let ytPlayerReady = false;
-let ytEndSec = 0;
-let ytCheckInterval = null;
+let ytPlayer = null, ytPlayerReady = false, ytEndSec = 0, ytCheckInterval = null;
 
 function ensureYouTubeApi() {
   if (window.YT && window.YT.Player) return Promise.resolve();
@@ -281,32 +265,24 @@ function destroyYtPlayer() {
 function createYtPlayer(ytId, startSec, endSec) {
   destroyYtPlayer();
   ytEndSec = endSec;
+  if (!els.videoPreviewArea) return;
   els.videoPreviewArea.innerHTML = '';
   const holder = document.createElement('div');
   holder.id = 'yt-player-holder';
   els.videoPreviewArea.appendChild(holder);
-
   ytPlayer = new YT.Player('yt-player-holder', {
-    width: '100%',
-    height: '100%',
-    videoId: ytId,
+    width: '100%', height: '100%', videoId: ytId,
     playerVars: { start: startSec, end: endSec, rel: 0, playsinline: 1, modestbranding: 1, controls: 1 },
     events: {
-      onReady: () => {
-        ytPlayerReady = true;
-        ytPlayer.seekTo(startSec, true);
-      },
+      onReady: () => { ytPlayerReady = true; ytPlayer.seekTo(startSec, true); },
       onStateChange: (event) => {
         if (event.data === YT.PlayerState.PLAYING) {
           if (ytCheckInterval) clearInterval(ytCheckInterval);
           ytCheckInterval = setInterval(() => {
             if (!ytPlayer || !ytPlayerReady) return;
-            const current = ytPlayer.getCurrentTime();
-            if (current >= ytEndSec) {
-              ytPlayer.pauseVideo();
-              ytPlayer.seekTo(startSec, true);
-              clearInterval(ytCheckInterval);
-              ytCheckInterval = null;
+            if (ytPlayer.getCurrentTime() >= ytEndSec) {
+              ytPlayer.pauseVideo(); ytPlayer.seekTo(startSec, true);
+              clearInterval(ytCheckInterval); ytCheckInterval = null;
             }
           }, 250);
         }
@@ -320,6 +296,7 @@ function createYtPlayer(ytId, startSec, endSec) {
 
 /* ── Templates ── */
 function renderTemplates() {
+  if (!els.templateList) return;
   els.templateList.innerHTML = TEMPLATES.map(t => `
     <button type="button" class="template-item ${t.id === state.templateId ? 'active' : ''}" data-template-id="${t.id}">
       <h3>${t.name}</h3><p>${t.subtitle}</p>
@@ -327,59 +304,40 @@ function renderTemplates() {
     </button>`).join('');
 }
 
-// ★ 수정: null 체크 추가 (HTML에 preview 요소 없음)
 function applyTemplate(id) {
   state.templateId = id;
   const tpl = getTemplateById(id);
-  if (els.previewTitle) els.previewTitle.textContent = tpl.title;
-  if (els.previewSubtitle) els.previewSubtitle.textContent = tpl.subtitle;
-  if (els.previewMessage) els.previewMessage.textContent = tpl.message;
-  if (els.previewBackMessage) els.previewBackMessage.textContent = tpl.backText;
   if (window.CanvasEditor) window.CanvasEditor.applyTemplateToLayers(tpl);
   renderTemplates();
-  renderPreviewCard();
 }
 
-function sanitize(el) { return (el?.innerText || '').replace(/\u00a0/g, ' ').replace(/\r/g, '').trim(); }
-
-// ★ 수정: null 체크 추가
 function renderPreviewCard() {
-  const f = fields(), tpl = getTemplateById(state.templateId);
-  [els.previewCardDefault, els.previewCard].forEach(c => {
-    if (c) { c.style.setProperty('--card-front', tpl.frontColor); c.style.setProperty('--card-accent', tpl.accentColor); }
-  });
-  if (els.previewReceiver) els.previewReceiver.textContent = f.recipientName?.value.trim() || 'Receiver';
-  if (els.previewSender) els.previewSender.textContent = `From ${f.senderName?.value.trim() || 'Sender'}`;
-  if (window.CanvasEditor) window.CanvasEditor.updateSenderReceiver(f.senderName?.value.trim() || '');
-  const hasVid = Boolean(parseYtId(f.videoUrl?.value?.trim() || ''));
-  els.videoBadgeDefault?.classList.toggle('hidden', !hasVid);
-  els.videoBadge?.classList.toggle('hidden', !hasVid);
+  const f = fields();
+  if (window.CanvasEditor) {
+    window.CanvasEditor.updateSenderReceiver(f.senderName?.value.trim() || '');
+  }
 }
 
-/* ★ renderVideoPreview */
 async function renderVideoPreview() {
-  const url = fields().videoUrl?.value.trim() || '';
-  const ytId = parseYtId(url);
+  const url    = fields().videoUrl?.value.trim() || '';
+  const ytId   = parseYtId(url);
 
   if (!url) {
     destroyYtPlayer();
-    if (els.videoPreviewArea) els.videoPreviewArea.innerHTML = '<div class="video-preview-empty">Paste a YouTube URL.</div>';
+    if (els.videoPreviewArea)   els.videoPreviewArea.innerHTML = '<div class="video-preview-empty">Paste a YouTube URL.</div>';
     if (els.videoPreviewStatus) els.videoPreviewStatus.textContent = 'YouTube only.';
-    renderPreviewCard();
     return;
   }
   if (!ytId) {
     destroyYtPlayer();
-    if (els.videoPreviewArea) els.videoPreviewArea.innerHTML = '<div class="video-preview-empty">Only YouTube URLs.</div>';
+    if (els.videoPreviewArea)   els.videoPreviewArea.innerHTML = '<div class="video-preview-empty">Only YouTube URLs are supported.</div>';
     if (els.videoPreviewStatus) els.videoPreviewStatus.textContent = '';
-    renderPreviewCard();
     return;
   }
 
   const vs = hmsToSec('vs'), ve = hmsToSec('ve');
   const ss = Number.isFinite(vs) ? vs : 0;
   const se = Number.isFinite(ve) && ve > ss ? ve : ss + 12;
-
   if (els.videoPreviewStatus) els.videoPreviewStatus.textContent = `${secToHms(ss)} → ${secToHms(se)}`;
 
   try {
@@ -391,17 +349,16 @@ async function renderVideoPreview() {
     emb.searchParams.set('end', String(se));
     emb.searchParams.set('rel', '0');
     emb.searchParams.set('playsinline', '1');
-    if (els.videoPreviewArea) els.videoPreviewArea.innerHTML = `<iframe src="${emb.href}" title="Preview" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture;web-share" allowfullscreen></iframe>`;
+    if (els.videoPreviewArea) els.videoPreviewArea.innerHTML =
+      `<iframe src="${emb.href}" title="Preview" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture;web-share" allowfullscreen></iframe>`;
   }
-
-  renderPreviewCard();
 }
 
 /* ── Location ── */
 async function useCurrentLocation() {
   try {
     const pos = await getCurrentPosition();
-    fields().latitude.value = pos.coords.latitude.toFixed(6);
+    fields().latitude.value  = pos.coords.latitude.toFixed(6);
     fields().longitude.value = pos.coords.longitude.toFixed(6);
     state.mapPicker?.setPosition(pos.coords.latitude, pos.coords.longitude, true);
     setStatus(fields().mapStatus, 'Location pinned.', 'success');
@@ -412,7 +369,6 @@ async function useCurrentLocation() {
 function getFormData() {
   const f = fields(), tpl = getTemplateById(state.templateId);
   const vs = hmsToSec('vs'), ve = hmsToSec('ve');
-  const isBasic = state.editorMode === 'basic';
   const canvasData = window.CanvasEditor ? window.CanvasEditor.getLayers() : null;
   return {
     slug: state.lastCreatedSlug || generateSlug('gift'),
@@ -421,10 +377,8 @@ function getFormData() {
     editorMode: state.editorMode,
     message: tpl.message,
     frontTitle: canvasData?.front?.[0]?.text || tpl.title,
-    frontSubtitle: tpl.subtitle,
-    frontText: tpl.message,
-    backText: tpl.backText,
-    canvasData: canvasData,
+    frontSubtitle: tpl.subtitle, frontText: tpl.message, backText: tpl.backText,
+    canvasData,
     frontColor: tpl.frontColor, accentColor: tpl.accentColor,
     videoUrl: safeUrl(f.videoUrl?.value.trim() || ''),
     videoStart: Number.isFinite(vs) ? vs : 0, videoEnd: Number.isFinite(ve) ? ve : 12,
@@ -439,61 +393,89 @@ function getFormData() {
 }
 
 function validate(data) {
-  if (!data.recipientName) return 'Receiver name required.';
-  if (!data.senderName) return 'Sender name required.';
-  if (!Number.isFinite(data.latitude) || !Number.isFinite(data.longitude)) return 'Lat/lng required.';
-  if (data.spawnHeight < 0.5 || data.spawnHeight > 5.5) return 'Height 0.5–5.5m.';
-  if (data.forwardDistance < 0.5 || data.forwardDistance > 5.5) return 'Distance 0.5–5.5m.';
-  if (data.unlockRadiusM < 10 || data.unlockRadiusM > 150) return 'Radius 10–150m.';
+  if (!data.recipientName)    return 'Receiver name is required.';
+  if (!data.senderName)       return 'Sender name is required.';
+  if (!Number.isFinite(data.latitude) || !Number.isFinite(data.longitude)) return 'Latitude and longitude are required.';
+  if (data.spawnHeight < 0.5 || data.spawnHeight > 5.5)       return 'Card height must be 0.5–5.5m.';
+  if (data.forwardDistance < 0.5 || data.forwardDistance > 5.5) return 'Distance must be 0.5–5.5m.';
+  if (data.unlockRadiusM < 10 || data.unlockRadiusM > 150)    return 'Radius must be 10–150m.';
   const f = fields();
-  if (f.videoUrl?.value.trim() && !parseYtId(f.videoUrl.value.trim())) return 'YouTube URLs only.';
-  if (data.videoEnd <= data.videoStart) return 'Video end > start.';
+  if (f.videoUrl?.value.trim() && !parseYtId(f.videoUrl.value.trim())) return 'Only YouTube URLs are supported.';
+  if (data.videoEnd <= data.videoStart) return 'Video end time must be after start time.';
   const s = new Date(f.startAt.value), e = new Date(f.expiresAt.value);
-  if (isNaN(s)) return 'Start date required.';
-  if (isNaN(e)) return 'Expiry required.';
-  if (e < s) return 'Expiry after start.';
-  if (e - s > 86400000) return 'Within 24h.';
+  if (isNaN(s)) return 'Start date is required.';
+  if (isNaN(e)) return 'Expiry date is required.';
+  if (e < s)    return 'Expiry must be after start date.';
+  if (e - s > 86400000) return 'Duration must be within 24 hours.';
   return '';
 }
 
-async function handleSubmit(ev) {
-  ev.preventDefault();
+/* ── Create link (Step 6 버튼) ── */
+async function handleCreateLink() {
   const data = getFormData(), err = validate(data);
   if (err) { setStatus(els.statusBox, err, 'error'); return; }
+
+  const btn = els.createLinkBtn, txt = els.createLinkText;
+  if (btn) { btn.disabled = true; if (txt) txt.textContent = 'Creating…'; }
+
   try {
     const saved = await saveGift(data);
     state.lastCreatedSlug = saved.slug;
-    els.shareLink.value = createRecipientUrl(saved.slug);
-    els.openLink.href = els.shareLink.value;
-    els.previewLink.href = createRecipientPreviewUrl(saved.slug);
-    els.openLink.classList.remove('disabled-link');
-    els.previewLink.classList.remove('disabled-link');
-    setStatus(els.statusBox, `Saved. Expires ${new Date(saved.expiresAt).toLocaleString()}.`, 'success');
-  } catch (e) { setStatus(els.statusBox, e.message || 'Save failed.', 'error'); }
+
+    const recipientUrl = createRecipientUrl(saved.slug);
+    const previewUrl   = createRecipientPreviewUrl(saved.slug);
+
+    if (els.shareLink)   els.shareLink.value = recipientUrl;
+
+    // Open Live → recipient URL (카메라 AR)
+    if (els.openLink) {
+      els.openLink.href = recipientUrl;
+      els.openLink.classList.remove('disabled-link');
+    }
+    // Buyer Preview → preview URL (카메라 AR 프리뷰 모드)
+    if (els.previewLink) {
+      els.previewLink.href = previewUrl;
+      els.previewLink.classList.remove('disabled-link');
+    }
+
+    setStatus(els.statusBox, `Card saved. Expires ${new Date(saved.expiresAt).toLocaleString()}.`, 'success');
+
+    // 버튼 텍스트 → "Created ✓"
+    if (txt) txt.textContent = 'Created ✓';
+    if (btn) btn.classList.add('btn-copy-success');
+    setTimeout(() => {
+      if (txt) txt.textContent = 'Create Link';
+      if (btn) { btn.classList.remove('btn-copy-success'); btn.disabled = false; }
+    }, 2500);
+
+  } catch (e) {
+    setStatus(els.statusBox, e.message || 'Save failed.', 'error');
+    if (txt) txt.textContent = 'Create Link';
+    if (btn) btn.disabled = false;
+  }
 }
 
-/* ★ copyLink */
+/* ── Copy link ── */
 async function copyLink() {
-  const btn = els.copyLink;
-  if (!els.shareLink.value) return;
+  const btn = els.copyLink, txt = els.copyLinkText;
+  const val = els.shareLink?.value;
+  if (!val) { setStatus(els.statusBox, 'Create the link first.', 'warn'); return; }
+
   try {
-    await navigator.clipboard.writeText(els.shareLink.value);
+    await navigator.clipboard.writeText(val);
   } catch {
     const ta = document.createElement('textarea');
-    ta.value = els.shareLink.value;
-    ta.style.cssText = 'position:fixed;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
+    ta.value = val; ta.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
   }
-  const originalText = btn.textContent;
-  btn.textContent = 'Created ✓';
-  btn.classList.add('btn-copy-success');
+
+  if (txt) txt.textContent = 'Copied ✓';
+  if (btn) btn.classList.add('btn-copy-success');
   setStatus(els.statusBox, 'Link copied to clipboard.', 'success');
   setTimeout(() => {
-    btn.textContent = originalText;
-    btn.classList.remove('btn-copy-success');
+    if (txt) txt.textContent = 'Copy Link';
+    if (btn) btn.classList.remove('btn-copy-success');
   }, 2000);
 }
 
@@ -506,17 +488,17 @@ async function initMap() {
       searchButton: f.mapSearchButton, statusEl: f.mapStatus
     });
     await state.mapPicker.init();
-  } catch (e) { setStatus(f.mapStatus, e.message || 'Map failed.', 'warn'); }
+  } catch (e) { setStatus(f.mapStatus, e.message || 'Map failed to load.', 'warn'); }
 }
 
 async function setRuntimeStatus() {
   const { url, anonKey } = await getSupabaseConfig();
-  if (!url || !anonKey) setStatus(els.statusBox, 'Local/demo mode.', 'muted');
+  if (!url || !anonKey) setStatus(els.statusBox, 'Running in local / demo mode.', 'muted');
 }
 
 /* ── HMS inputs ── */
 function bindHmsInputs() {
-  const inputs = ['vs-h', 'vs-m', 'vs-s', 've-h', 've-m', 've-s'].map(id => qs(`#${id}`)).filter(Boolean);
+  const inputs = ['vs-h','vs-m','vs-s','ve-h','ve-m','ve-s'].map(id => qs(`#${id}`)).filter(Boolean);
   inputs.forEach((inp, idx) => {
     inp.addEventListener('focus', () => inp.select());
     inp.addEventListener('input', e => {
@@ -530,7 +512,7 @@ function bindHmsInputs() {
     });
     inp.addEventListener('blur', () => {
       const v = inp.value.replace(/[^\d]/g, '').trim();
-      inp.value = (!v) ? '00' : v.length === 1 ? v.padStart(2, '0') : v.slice(0, 2);
+      inp.value = (!v) ? '00' : v.length === 1 ? v.padStart(2,'0') : v.slice(0,2);
       renderVideoPreview();
     });
   });
@@ -539,7 +521,7 @@ function bindHmsInputs() {
 /* ── Events ── */
 function bindEvents() {
   const f = fields();
-  els.templateList.addEventListener('click', e => {
+  els.templateList?.addEventListener('click', e => {
     const b = e.target.closest('[data-template-id]');
     if (b) applyTemplate(b.dataset.templateId);
   });
@@ -551,13 +533,13 @@ function bindEvents() {
   });
   bindHmsInputs();
   bindToggles();
-  bindPanels();
   f.startAt?.addEventListener('change', syncExpiry);
   f.expiresAt?.addEventListener('change', syncExpiry);
   f.unlockRadius?.addEventListener('input', () => state.mapPicker?.updateRadius());
   qs('#use-current-location')?.addEventListener('click', useCurrentLocation);
   qs('#studio-back-btn')?.addEventListener('click', prevPage);
-  els.form?.addEventListener('submit', handleSubmit);
+  // Step 6: 링크생성 + 링크카피
+  els.createLinkBtn?.addEventListener('click', handleCreateLink);
   els.copyLink?.addEventListener('click', copyLink);
   els.navPrev?.addEventListener('click', prevPage);
   els.navNext?.addEventListener('click', nextPage);
@@ -580,10 +562,8 @@ async function init() {
   renderTemplates();
   setDefaultDates();
   bindEvents();
-  bindStudioResizer();
   applyTemplate(state.templateId);
   renderVideoPreview();
-  renderPreviewCard();
   syncEditorMode();
   syncSideToggle();
   if (window.CanvasEditor) window.CanvasEditor.init();

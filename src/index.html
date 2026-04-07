@@ -46,7 +46,7 @@
     </div>
   </section>
 
-  <!-- ══ Main app (hidden until permissions done) ══ -->
+  <!-- ══ Main app ══ -->
   <div id="app-shell" class="app-shell hidden">
     <header class="topbar">
       <div class="brand-wrap">
@@ -61,7 +61,7 @@
 
     <main class="sender-shell" id="sender-shell">
 
-      <!-- Step 1: Template (unchanged) -->
+      <!-- ══ Step 1: Template ══ -->
       <section class="card-panel page-view" data-step="1">
         <span class="eyebrow">CHARIEL STANDARD</span>
         <h1>Build the card directly in the preview.</h1>
@@ -83,188 +83,175 @@
         <div id="template-list" class="template-list"></div>
       </section>
 
-     <!-- ★ Step 2: Design Studio — 레퍼런스와 동일한 DOM 구조로 완전 교체 -->
-<section class="page-view page-hidden studio-page" data-step="2">
+      <!-- ══ Step 2: Design Studio ══ -->
+      <section class="page-view page-hidden studio-page" data-step="2">
+        <div id="app" class="studio-inner">
 
-  <div id="app" class="studio-inner">
-
-    <div class="header studio-header">
-      <div class="top-row">
-        <div class="top-left">
-          <!-- 뒤로가기 버튼 자리 (Step 1로) -->
-          <button class="icon-btn" type="button" id="studio-back-btn" title="Back">
-            <i data-lucide="arrow-left"></i>
-          </button>
-        </div>
-
-        <div class="title-wrap">
-          <div class="title">디자인스튜디오</div>
-          <div class="subtitle">Design your custom 3D card layout.</div>
-        </div>
-
-        <div class="top-right">
-          <button class="icon-btn" id="undoBtn" type="button" title="Undo">
-            <i data-lucide="undo-2"></i>
-          </button>
-          <button class="icon-btn" id="redoBtn" type="button" title="Redo">
-            <i data-lucide="redo-2"></i>
-          </button>
-        </div>
-      </div>
-
-      <div class="seg-row">
-        <!-- ★ 레퍼런스와 동일한 id="modeSegment" + data-mode 속성 -->
-        <div class="segment" id="modeSegment">
-          <button type="button" class="active" data-mode="basic">Basic</button>
-          <button type="button" class="locked" data-mode="custom">
-            <i data-lucide="lock"></i>
-            <span>Custom</span>
-          </button>
-        </div>
-
-        <!-- ★ 레퍼런스와 동일한 id="sideSegment" + data-side 속성 -->
-        <div class="segment" id="sideSegment">
-          <button type="button" class="active" data-side="front">Front</button>
-          <button type="button" data-side="back">Back</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="main" id="main">
-      <div class="top-pane" id="topPane">
-        <div class="preview-header">
-          <div class="preview-status">
-            <span class="badge primary" id="modeBadge">
-              <i data-lucide="sparkles"></i>
-              <span>Basic Trial</span>
-            </span>
-            <span class="badge" id="sideBadge">Editing Front</span>
+          <div class="header studio-header">
+            <div class="top-row">
+              <div class="top-left">
+                <button class="icon-btn" type="button" id="studio-back-btn" title="Back">
+                  <i data-lucide="arrow-left"></i>
+                </button>
+              </div>
+              <div class="title-wrap">
+                <div class="title">Design Studio</div>
+                <div class="subtitle">Design your custom 3D card layout.</div>
+              </div>
+              <div class="top-right">
+                <button class="icon-btn" id="undoBtn" type="button" title="Undo">
+                  <i data-lucide="undo-2"></i>
+                </button>
+                <button class="icon-btn" id="redoBtn" type="button" title="Redo">
+                  <i data-lucide="redo-2"></i>
+                </button>
+              </div>
+            </div>
+            <div class="seg-row">
+              <div class="segment" id="modeSegment">
+                <button type="button" class="active" data-mode="basic">Basic</button>
+                <button type="button" class="locked" data-mode="custom">
+                  <i data-lucide="lock"></i>
+                  <span>Custom</span>
+                </button>
+              </div>
+              <div class="segment" id="sideSegment">
+                <button type="button" class="active" data-side="front">Front</button>
+                <button type="button" data-side="back">Back</button>
+              </div>
+            </div>
           </div>
-          <span class="badge warning" id="selectionBadge">
-            <i data-lucide="type"></i>
-            <span>No selection</span>
-          </span>
-        </div>
 
-        <div class="canvas-wrap">
-          <div class="card-stage">
-            <div class="card" id="card">
-              <div class="card-bg-color" id="cardBgColor"></div>
-              <div class="card-bg-image" id="cardBgImage"></div>
-              <div class="card-bg-overlay" id="cardBgOverlay"></div>
-              <div class="card-inner" id="cardInner"></div>
+          <div class="main" id="main">
+            <div class="top-pane" id="topPane">
+              <div class="preview-header">
+                <div class="preview-status">
+                  <span class="badge primary" id="modeBadge">
+                    <i data-lucide="sparkles"></i>
+                    <span>Basic Trial</span>
+                  </span>
+                  <span class="badge" id="sideBadge">Editing Front</span>
+                </div>
+                <span class="badge warning" id="selectionBadge">
+                  <i data-lucide="type"></i>
+                  <span>No selection</span>
+                </span>
+              </div>
+              <div class="canvas-wrap">
+                <div class="card-stage">
+                  <div class="card" id="card">
+                    <div class="card-bg-color" id="cardBgColor"></div>
+                    <div class="card-bg-image" id="cardBgImage"></div>
+                    <div class="card-bg-overlay" id="cardBgOverlay"></div>
+                    <div class="card-inner" id="cardInner"></div>
+                    <div class="context-bar" id="contextBar">
+                      <button type="button" id="ctxEdit">
+                        <i data-lucide="pencil-line"></i>
+                        <span>Edit</span>
+                      </button>
+                      <button type="button" id="ctxDuplicate">
+                        <i data-lucide="copy"></i>
+                        <span>Duplicate</span>
+                      </button>
+                      <button type="button" id="ctxBringFront">
+                        <i data-lucide="move-up"></i>
+                        <span>Front</span>
+                      </button>
+                      <button type="button" class="danger" id="ctxDelete">
+                        <i data-lucide="trash-2"></i>
+                        <span>Delete</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="basic-hint" id="basicHint">
+                <div style="flex:0 0 auto;color:#7c3aed">
+                  <i data-lucide="lock-keyhole"></i>
+                </div>
+                <div class="txt">
+                  <strong>Basic mode: edit text only.</strong><br>
+                  Fonts, colors, gradients, image editing, background changes, movement, resize, and layer tools are in <strong>Custom</strong>.
+                </div>
+              </div>
+            </div>
 
-              <div class="context-bar" id="contextBar">
-                <button type="button" id="ctxEdit">
-                  <i data-lucide="pencil-line"></i>
-                  <span>Edit</span>
-                </button>
-                <button type="button" id="ctxDuplicate">
-                  <i data-lucide="copy"></i>
-                  <span>Duplicate</span>
-                </button>
-                <button type="button" id="ctxBringFront">
-                  <i data-lucide="move-up"></i>
-                  <span>Front</span>
-                </button>
-                <button type="button" class="danger" id="ctxDelete">
-                  <i data-lucide="trash-2"></i>
-                  <span>Delete</span>
+            <div class="divider" id="divider">
+              <div class="grab"></div>
+            </div>
+
+            <div class="bottom-pane" id="bottomPane">
+              <div class="tool-tabs" id="toolTabs"></div>
+              <div id="panelHost"></div>
+            </div>
+          </div>
+
+          <div class="overlay" id="overlay"></div>
+
+          <div class="sheet" id="textSheet">
+            <div class="sheet-handle"></div>
+            <div class="sheet-head">
+              <div class="sheet-title" id="textSheetTitle">Edit Text</div>
+              <button class="icon-btn" type="button" id="closeTextSheet">
+                <i data-lucide="x"></i>
+              </button>
+            </div>
+            <div class="field">
+              <label for="textContentInput">Text Content</label>
+              <textarea id="textContentInput" placeholder="Type your message..."></textarea>
+            </div>
+            <div style="height:10px"></div>
+            <div class="button-row">
+              <button class="btn" type="button" id="cancelTextEdit">Cancel</button>
+              <button class="btn primary" type="button" id="saveTextEdit">Apply</button>
+            </div>
+            <div style="height:8px"></div>
+            <div class="helper" id="textSheetHelper">In Basic mode, you can edit text only.</div>
+          </div>
+
+          <div class="sheet" id="upgradeSheet">
+            <div class="sheet-handle"></div>
+            <div class="sheet-head">
+              <div class="sheet-title">Unlock Custom</div>
+              <button class="icon-btn" type="button" id="closeUpgradeSheet">
+                <i data-lucide="x"></i>
+              </button>
+            </div>
+            <div class="upgrade-card">
+              <div class="upgrade-title">
+                <i data-lucide="sparkles"></i>
+                <span>Customize the full card</span>
+              </div>
+              <div class="upgrade-list">
+                <div class="upgrade-item"><i data-lucide="check"></i><span>20 Korean fonts</span></div>
+                <div class="upgrade-item"><i data-lucide="check"></i><span>Fill / Stroke / Background styling</span></div>
+                <div class="upgrade-item"><i data-lucide="check"></i><span>Solid + gradient editing with stop controls</span></div>
+                <div class="upgrade-item"><i data-lucide="check"></i><span>Move, resize, rotate, duplicate, reorder</span></div>
+                <div class="upgrade-item"><i data-lucide="check"></i><span>Background image and image element editing</span></div>
+              </div>
+              <div class="button-row">
+                <button class="btn" type="button" id="upgradeLaterBtn">Maybe later</button>
+                <button class="btn primary" type="button" id="fakeUpgradeBtn">
+                  <i data-lucide="lock-keyhole"></i>
+                  <span>Switch to Custom</span>
                 </button>
               </div>
             </div>
           </div>
-        </div>
 
-        <div class="basic-hint" id="basicHint">
-          <div style="flex:0 0 auto;color:#7c3aed">
-            <i data-lucide="lock-keyhole"></i>
+          <div class="toast" id="toast">
+            <span id="toastText">Saved</span>
+            <button type="button" id="toastUndo">Undo</button>
           </div>
-          <div class="txt">
-            <strong>Basic lets you edit wording only.</strong><br>
-            Fonts, colors, gradients, image editing, background changes, movement, resize, and layer tools are available in <strong>Custom</strong>.
-          </div>
-        </div>
-      </div>
 
-      <div class="divider" id="divider">
-        <div class="grab"></div>
-      </div>
+        </div><!-- /#app -->
+      </section>
 
-      <div class="bottom-pane" id="bottomPane">
-        <div class="tool-tabs" id="toolTabs"></div>
-        <div id="panelHost"></div>
-      </div>
-    </div>
-
-    <!-- overlay / sheets / toast — 레퍼런스와 동일 구조 -->
-    <div class="overlay" id="overlay"></div>
-
-    <div class="sheet" id="textSheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-head">
-        <div class="sheet-title" id="textSheetTitle">Edit Text</div>
-        <button class="icon-btn" type="button" id="closeTextSheet">
-          <i data-lucide="x"></i>
-        </button>
-      </div>
-      <div class="field">
-        <label for="textContentInput">Text Content</label>
-        <textarea id="textContentInput" placeholder="Type your message..."></textarea>
-      </div>
-      <div style="height:10px"></div>
-      <div class="button-row">
-        <button class="btn" type="button" id="cancelTextEdit">Cancel</button>
-        <button class="btn primary" type="button" id="saveTextEdit">Apply</button>
-      </div>
-      <div style="height:8px"></div>
-      <div class="helper" id="textSheetHelper">In Basic, you can edit wording only.</div>
-    </div>
-
-    <div class="sheet" id="upgradeSheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-head">
-        <div class="sheet-title">Unlock Custom</div>
-        <button class="icon-btn" type="button" id="closeUpgradeSheet">
-          <i data-lucide="x"></i>
-        </button>
-      </div>
-      <div class="upgrade-card">
-        <div class="upgrade-title">
-          <i data-lucide="sparkles"></i>
-          <span>Customize the full card</span>
-        </div>
-        <div class="upgrade-list">
-          <div class="upgrade-item"><i data-lucide="check"></i><span>20 Korean fonts</span></div>
-          <div class="upgrade-item"><i data-lucide="check"></i><span>Fill / Stroke / Background styling</span></div>
-          <div class="upgrade-item"><i data-lucide="check"></i><span>Solid + gradient editing with stop controls</span></div>
-          <div class="upgrade-item"><i data-lucide="check"></i><span>Move, resize, rotate, duplicate, reorder</span></div>
-          <div class="upgrade-item"><i data-lucide="check"></i><span>Background image and image element editing</span></div>
-        </div>
-        <div class="button-row">
-          <button class="btn" type="button" id="upgradeLaterBtn">Maybe later</button>
-          <button class="btn primary" type="button" id="fakeUpgradeBtn">
-            <i data-lucide="lock-keyhole"></i>
-            <span>Switch to Custom</span>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div class="toast" id="toast">
-      <span id="toastText">Saved</span>
-      <button type="button" id="toastUndo">Undo</button>
-    </div>
-
-  </div><!-- /#app -->
-</section>
-
-
-      <!-- ★ Step 3: Media Management (was Step 2) -->
+      <!-- ══ Step 3: Media Management ══ -->
       <section class="card-panel page-view page-hidden" data-step="3">
         <div class="section-head">
           <span class="step">3</span>
-          <div><h2>Media Management</h2><p>Add a YouTube video to your AR card.</p></div>
+          <div><h2>Media</h2><p>Add a YouTube video to your AR card.</p></div>
         </div>
         <div class="stack-form aux-form">
           <label class="glass-field">
@@ -295,41 +282,41 @@
           </div>
           <div class="glass-field video-preview-block" style="margin-top:10px">
             <span>Preview</span>
-            <div id="video-preview-status" class="field-hint">Paste a YouTube link.</div>
+            <div id="video-preview-status" class="field-hint">Paste a YouTube link above.</div>
             <div id="video-preview-area" class="video-preview-area"></div>
           </div>
         </div>
       </section>
 
-      <!-- Step 4: Delivery rules (unchanged) -->
+      <!-- ══ Step 4: Delivery rules ══ -->
       <section class="card-panel page-view page-hidden" data-step="4">
         <div class="section-head">
           <span class="step">4</span>
-          <div><h2>Delivery rules</h2><p>CTA, unlock conditions, timing, AR placement.</p></div>
+          <div><h2>Delivery Rules</h2><p>CTA, unlock conditions, timing, AR placement.</p></div>
         </div>
         <div class="stack-form aux-form">
-          <label class="glass-field"><span>CTA link</span><input id="cta-link" type="url" placeholder="https://..." /></label>
-          <label class="glass-field"><span>Unlock radius (m)</span><input id="unlock-radius" type="number" min="10" max="150" step="5" value="50" inputmode="numeric" /></label>
+          <label class="glass-field"><span>CTA Link</span><input id="cta-link" type="url" placeholder="https://..." /></label>
+          <label class="glass-field"><span>Unlock Radius (m)</span><input id="unlock-radius" type="number" min="10" max="150" step="5" value="50" inputmode="numeric" /></label>
           <div class="field-grid two-up">
-            <label class="glass-field"><span>Start date &amp; time</span><input id="start-at" type="datetime-local" /></label>
-            <label class="glass-field"><span>Expires at</span><input id="expires-at" type="datetime-local" /></label>
+            <label class="glass-field"><span>Start Date &amp; Time</span><input id="start-at" type="datetime-local" /></label>
+            <label class="glass-field"><span>Expires At</span><input id="expires-at" type="datetime-local" /></label>
           </div>
           <div class="field-grid two-up">
-            <label class="glass-field"><span>Card height (m)</span><input id="spawn-height" type="number" min="0.5" max="5.5" step="0.1" value="3.0" inputmode="decimal" /></label>
-            <label class="glass-field"><span>Forward distance (m)</span><input id="forward-distance" type="number" min="0.5" max="5.5" step="0.1" value="2.0" inputmode="decimal" /></label>
+            <label class="glass-field"><span>Card Height (m)</span><input id="spawn-height" type="number" min="0.5" max="5.5" step="0.1" value="3.0" inputmode="decimal" /></label>
+            <label class="glass-field"><span>Forward Distance (m)</span><input id="forward-distance" type="number" min="0.5" max="5.5" step="0.1" value="2.0" inputmode="decimal" /></label>
           </div>
         </div>
       </section>
 
-      <!-- Step 5: Map (unchanged) -->
+      <!-- ══ Step 5: Map placement (링크생성/카피 제거됨 → Step 6으로 이동) ══ -->
       <section class="card-panel page-view page-hidden" data-step="5">
         <div class="section-head">
           <span class="step">5</span>
-          <div><h2>Map placement</h2><p>Pan the map under the fixed center pin.</p></div>
+          <div><h2>Map Placement</h2><p>Pan the map under the fixed center pin.</p></div>
         </div>
         <form id="gift-form" class="stack-form aux-form" novalidate>
           <div class="field-grid map-search-grid">
-            <label class="glass-field"><span>Place search</span><input id="map-search" type="text" placeholder="Search address or place" /></label>
+            <label class="glass-field"><span>Place Search</span><input id="map-search" type="text" placeholder="Search address or place" /></label>
             <div class="inline-actions end-align"><button id="map-search-btn" type="button" class="btn btn-secondary">Search</button></div>
           </div>
           <div id="sender-map" class="map-box"></div>
@@ -339,36 +326,59 @@
             <label class="glass-field"><span>Longitude</span><input id="longitude" type="number" step="0.000001" placeholder="126.978000" inputmode="decimal" /></label>
           </div>
           <div class="inline-actions">
-            <button id="use-current-location" type="button" class="btn btn-secondary">Use my location</button>
-          </div>
-          <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Create link</button>
-            <button id="copy-link" type="button" class="btn btn-secondary">Copy</button>
+            <button id="use-current-location" type="button" class="btn btn-secondary">Use My Location</button>
           </div>
         </form>
       </section>
 
-      <!-- Step 6: Share (unchanged) -->
+      <!-- ══ Step 6: Share (Open Live + Buyer Preview 상단 / 링크필드 / 링크생성+카피 버튼) ══ -->
       <section class="card-panel page-view page-hidden" data-step="6">
         <div class="section-head">
           <span class="step">6</span>
-          <div><h2>Share</h2><p>Copy the link or open live / preview.</p></div>
+          <div><h2>Share</h2><p>Preview your card live or share the link.</p></div>
         </div>
         <div class="share-stack">
-          <label class="glass-field"><span>Public link</span><input id="share-link" type="text" readonly placeholder="Not created yet" /></label>
-          <div class="inline-actions share-actions">
-            <div style="display:flex;flex-direction:column;gap:6px">
-              <a id="open-link" class="btn btn-secondary disabled-link" href="#" target="_blank" rel="noreferrer">Open live</a>
-              <span class="field-hint" style="text-align:center;margin-top:0">현장 테스트용</span>
+
+          <!-- 상단: Open Live + Buyer Preview -->
+          <div class="share-preview-row">
+            <div class="share-preview-card" id="open-live-card">
+              <a id="open-link" class="btn btn-secondary disabled-link share-action-btn" href="#" target="_blank" rel="noreferrer">
+                <i data-lucide="radio"></i>
+                Open Live
+              </a>
+              <span class="field-hint share-hint">On-site AR test</span>
             </div>
-            <div style="display:flex;flex-direction:column;gap:6px">
-              <a id="preview-link" class="btn btn-secondary disabled-link" href="#" target="_blank" rel="noreferrer">Buyer preview</a>
-              <span class="field-hint" style="text-align:center;margin-top:0">즉시 카드 확인</span>
+            <div class="share-preview-card" id="buyer-preview-card">
+              <a id="preview-link" class="btn btn-secondary disabled-link share-action-btn" href="#" target="_blank" rel="noreferrer">
+                <i data-lucide="camera"></i>
+                Buyer Preview
+              </a>
+              <span class="field-hint share-hint">Camera AR preview</span>
             </div>
           </div>
+
+          <!-- 중단: 링크 필드 -->
+          <label class="glass-field">
+            <span>Public Link</span>
+            <input id="share-link" type="text" readonly placeholder="Link will appear after creation" />
+          </label>
+
+          <!-- 하단: 링크생성 + 링크카피 버튼 -->
+          <div class="share-link-actions">
+            <button id="create-link-btn" type="button" class="btn btn-primary share-create-btn">
+              <i data-lucide="link"></i>
+              <span id="create-link-text">Create Link</span>
+            </button>
+            <button id="copy-link" type="button" class="btn btn-secondary share-copy-btn">
+              <i data-lucide="copy"></i>
+              <span id="copy-link-text">Copy Link</span>
+            </button>
+          </div>
+
           <div id="status-box" class="status-box muted">No gift created yet.</div>
         </div>
       </section>
+
     </main>
 
     <nav class="bottom-nav" id="bottom-nav">

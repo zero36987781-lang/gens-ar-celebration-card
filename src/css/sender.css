@@ -1202,3 +1202,63 @@
   transform: translateX(-50%) translateY(0);
   pointer-events: auto;
 }
+
+/* ══ Step 6 Share layout ══ */
+.share-preview-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.share-preview-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 10px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.share-action-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+}
+.share-action-btn.disabled-link {
+  opacity: 0.45;
+  pointer-events: none;
+}
+.share-hint {
+  text-align: center;
+  font-size: 11px;
+}
+.share-link-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.share-create-btn,
+.share-copy-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+
+/* ══ recipient.html — 영상보기 버튼 그라데이션 스트로크 ══ */
+@keyframes gradStroke {
+  0%   { border-color: #ff6b9d; box-shadow: 0 0 0 0.5px #ff6b9d; }
+  25%  { border-color: #c084fc; box-shadow: 0 0 0 0.5px #c084fc; }
+  50%  { border-color: #60a5fa; box-shadow: 0 0 0 0.5px #60a5fa; }
+  75%  { border-color: #34d399; box-shadow: 0 0 0 0.5px #34d399; }
+  100% { border-color: #ff6b9d; box-shadow: 0 0 0 0.5px #ff6b9d; }
+}
+#show-video-btn {
+  animation: gradStroke 2.4s linear infinite;
+  border-width: 0.5px !important;
+  border-style: solid !important;
+}
