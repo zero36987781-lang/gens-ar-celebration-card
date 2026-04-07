@@ -159,7 +159,12 @@ function updatePage() {
       if (topArea && shell) {
         shell.scrollTo({ top: topArea.offsetTop - 10, behavior: 'smooth' });
       }
-      if (window.CanvasEditor) window.CanvasEditor.init();
+  if (window.CanvasEditor) {
+    window.CanvasEditor.init();
+    window.CanvasEditor.setCurrentTemplate(state.templateId);
+    window.CanvasEditor.applyTemplateToLayers(getTemplateById(state.templateId));
+  }
+
     }, 50);
   }
 }
@@ -354,16 +359,19 @@ function renderTemplates() {
 
 function applyTemplate(id) {
   state.templateId = id;
-    if (window.CanvasEditor) window.CanvasEditor.setCurrentTemplate(id);
   const tpl = getTemplateById(id);
   els.previewTitle.textContent = tpl.title;
   els.previewSubtitle.textContent = tpl.subtitle;
   els.previewMessage.textContent = tpl.message;
   els.previewBackMessage.textContent = tpl.backText;
-  if (window.CanvasEditor) window.CanvasEditor.applyTemplateToLayers(tpl);
+  if (window.CanvasEditor) {
+    window.CanvasEditor.setCurrentTemplate(id);
+    window.CanvasEditor.applyTemplateToLayers(tpl);
+  }
   renderTemplates();
   renderPreviewCard();
 }
+
 
 function sanitize(el) { return (el?.innerText || '').replace(/\u00a0/g, ' ').replace(/\r/g, '').trim(); }
 

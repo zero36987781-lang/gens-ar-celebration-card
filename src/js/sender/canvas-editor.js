@@ -2201,11 +2201,13 @@ window.CanvasEditor = (() => {
 
   function applyTemplateToLayers(tpl) {
     const matched = TEMPLATES_INLINE.find(t => t.id === tpl.id) || TEMPLATES_INLINE[0];
+    appState.currentTemplateId = matched.id;
     appState.sides.front = defaultState('front', matched);
     appState.sides.back = defaultState('back', matched);
     appState.selectionId = null;
     try { commitAndRender(); } catch(e){}
   }
+
 
 
   function updateSenderReceiver(sender) {
