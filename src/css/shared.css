@@ -243,3 +243,25 @@ input::placeholder, textarea::placeholder {
   background: rgba(255,255,255,0.97) !important;
   border-top: 1px solid #e5e7eb !important;
 }
+
+/* ══ Topbar 높이 축소 ══ */
+.topbar {
+  padding: 6px 20px !important;
+  padding-top: calc(6px + var(--sat)) !important;
+  min-height: 0 !important;
+}
+.brand-wrap {
+  gap: 8px;
+}
+.brand-mark {
+  display: none !important;
+}
+.brand {
+  font-size: 15px !important;
+}
+.brand-sub {
+  display: none !important;
+}
+.ghost-link {
+  display: none !important;
+}
