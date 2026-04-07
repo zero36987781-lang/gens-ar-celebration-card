@@ -308,9 +308,44 @@ window.CanvasEditor = (() => {
     },
     elements: isFront
       ? [
-          // 헤더
-          Object.assign(createDefaultText(uid(), tpl?.title || 'Hello', 24, 48, 'clean'), {
-            w: 252, h: 80, fontSize: 32,
+          // 헤더 — 크고 굵게
+          Object.assign(createDefaultText(uid(), tpl?.title || 'Hello', 20, 32, 'clean'), {
+            w: 260, h: 90,
+            fontSize: 38,
+            fontFamily: '"Black Han Sans", sans-serif',
+            lineHeight: 1.1,
+            letterSpacing: -0.5,
+            fill: {mode:'solid', color:'#ffffff', gradient:null},
+            strokeEnabled: true, strokeWidth: 1,
+            stroke: {mode:'solid', color:'rgba(0,0,0,0.15)', gradient:null},
+            bgEnabled: false,
+            background: {mode:'solid', color:'transparent', opacity:0, radius:0, paddingX:0, paddingY:0, gradient:null}
+          }),
+          // 서브헤더 — 중간 크기, 가볍게
+          Object.assign(createDefaultText(uid(), tpl?.subtitle || '', 20, 148, 'clean'), {
+            w: 260, h: 52,
+            fontSize: 14,
+            fontFamily: '"Gowun Dodum", sans-serif',
+            lineHeight: 1.45,
+            letterSpacing: 0.3,
+            fill: {mode:'solid', color:'rgba(255,255,255,0.82)', gradient:null},
+            strokeEnabled: false, strokeWidth: 0,
+            bgEnabled: false,
+            background: {mode:'solid', color:'transparent', opacity:0, radius:0, paddingX:0, paddingY:0, gradient:null}
+          }),
+          // 본문 — 중간, 읽기 편하게
+          Object.assign(createDefaultText(uid(), tpl?.message || '', 20, 248, 'clean'), {
+            w: 260, h: 120,
+            fontSize: 18,
+            fontFamily: '"Noto Sans KR", sans-serif',
+            lineHeight: 1.65,
+            letterSpacing: 0,
+            fill: {mode:'solid', color:'rgba(255,255,255,0.96)', gradient:null},
+            strokeEnabled: false, strokeWidth: 0,
+            bgEnabled: false,
+            background: {mode:'solid', color:'transparent', opacity:0, radius:0, paddingX:0, paddingY:0, gradient:null}
+          })
+        ]
             fill: {mode:'solid', color:'#ffffff', gradient:null},
             strokeEnabled: false, strokeWidth: 0,
             bgEnabled: false,
