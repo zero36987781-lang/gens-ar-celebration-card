@@ -83,20 +83,19 @@
         <div id="template-list" class="template-list"></div>
       </section>
 
-      <!-- ══ Step 2: Design Studio ══ -->
+      <!-- ══ Step 2: Design Studio — 레퍼런스 완전 일치 구조 ══ -->
       <section class="page-view page-hidden studio-page" data-step="2">
         <div id="app" class="studio-inner">
 
+          <!-- 헤더: 좌측 뒤로가기 버튼 제거, 타이틀 "2 · Design Studio" -->
           <div class="header studio-header">
             <div class="top-row">
               <div class="top-left">
-                <button class="icon-btn" type="button" id="studio-back-btn" title="Back">
-                  <i data-lucide="arrow-left"></i>
-                </button>
+                <!-- 뒤로가기 버튼 제거됨 (요청사항) -->
               </div>
               <div class="title-wrap">
-                <div class="title">Design Studio</div>
-                <div class="subtitle">Design your custom 3D card layout.</div>
+                <div class="title">2 · Design Studio</div>
+                <div class="subtitle">Paid V1 &nbsp;·&nbsp; Basic Trial / Custom</div>
               </div>
               <div class="top-right">
                 <button class="icon-btn" id="undoBtn" type="button" title="Undo">
@@ -122,7 +121,10 @@
             </div>
           </div>
 
+          <!-- main: top-pane(독립 스크롤) + divider + bottom-pane(독립 스크롤) -->
           <div class="main" id="main">
+
+            <!-- 상단 영역: 카드 프리뷰 — 독립 overflow:auto -->
             <div class="top-pane" id="topPane">
               <div class="preview-header">
                 <div class="preview-status">
@@ -137,6 +139,7 @@
                   <span>No selection</span>
                 </span>
               </div>
+
               <div class="canvas-wrap">
                 <div class="card-stage">
                   <div class="card" id="card">
@@ -147,45 +150,50 @@
                     <div class="context-bar" id="contextBar">
                       <button type="button" id="ctxEdit">
                         <i data-lucide="pencil-line"></i>
-                        <span>Edit</span>
+                        <span>Edit Wording</span>
                       </button>
                       <button type="button" id="ctxDuplicate">
-                        <i data-lucide="copy"></i>
-                        <span>Duplicate</span>
+                        <i data-lucide="lock"></i>
+                        <span>Locked</span>
                       </button>
                       <button type="button" id="ctxBringFront">
-                        <i data-lucide="move-up"></i>
-                        <span>Front</span>
+                        <i data-lucide="lock"></i>
+                        <span>Locked</span>
                       </button>
                       <button type="button" class="danger" id="ctxDelete">
-                        <i data-lucide="trash-2"></i>
-                        <span>Delete</span>
+                        <i data-lucide="lock"></i>
+                        <span>Locked</span>
                       </button>
                     </div>
                   </div>
                 </div>
               </div>
+
               <div class="basic-hint" id="basicHint">
                 <div style="flex:0 0 auto;color:#7c3aed">
                   <i data-lucide="lock-keyhole"></i>
                 </div>
                 <div class="txt">
-                  <strong>Basic mode: edit text only.</strong><br>
-                  Fonts, colors, gradients, image editing, background changes, movement, resize, and layer tools are in <strong>Custom</strong>.
+                  <strong>Basic lets you edit wording only.</strong><br>
+                  Fonts, colors, gradients, image editing, background changes, movement, resize, and layer tools are available in <strong>Custom</strong>.
                 </div>
               </div>
             </div>
 
+            <!-- 드래그 분리선 -->
             <div class="divider" id="divider">
               <div class="grab"></div>
             </div>
 
+            <!-- 하단 영역: 툴 패널 — 독립 overflow:auto -->
             <div class="bottom-pane" id="bottomPane">
               <div class="tool-tabs" id="toolTabs"></div>
               <div id="panelHost"></div>
             </div>
-          </div>
 
+          </div><!-- /.main -->
+
+          <!-- overlay / sheet / toast -->
           <div class="overlay" id="overlay"></div>
 
           <div class="sheet" id="textSheet">
@@ -206,7 +214,7 @@
               <button class="btn primary" type="button" id="saveTextEdit">Apply</button>
             </div>
             <div style="height:8px"></div>
-            <div class="helper" id="textSheetHelper">In Basic mode, you can edit text only.</div>
+            <div class="helper" id="textSheetHelper">In Basic, you can edit wording only.</div>
           </div>
 
           <div class="sheet" id="upgradeSheet">
@@ -247,7 +255,7 @@
         </div><!-- /#app -->
       </section>
 
-      <!-- ══ Step 3: Media Management ══ -->
+      <!-- ══ Step 3: Media ══ -->
       <section class="card-panel page-view page-hidden" data-step="3">
         <div class="section-head">
           <span class="step">3</span>
@@ -288,7 +296,7 @@
         </div>
       </section>
 
-      <!-- ══ Step 4: Delivery rules ══ -->
+      <!-- ══ Step 4: Delivery Rules ══ -->
       <section class="card-panel page-view page-hidden" data-step="4">
         <div class="section-head">
           <span class="step">4</span>
@@ -308,7 +316,7 @@
         </div>
       </section>
 
-      <!-- ══ Step 5: Map placement (링크생성/카피 제거됨 → Step 6으로 이동) ══ -->
+      <!-- ══ Step 5: Map Placement ══ -->
       <section class="card-panel page-view page-hidden" data-step="5">
         <div class="section-head">
           <span class="step">5</span>
@@ -331,24 +339,22 @@
         </form>
       </section>
 
-      <!-- ══ Step 6: Share (Open Live + Buyer Preview 상단 / 링크필드 / 링크생성+카피 버튼) ══ -->
+      <!-- ══ Step 6: Share ══ -->
       <section class="card-panel page-view page-hidden" data-step="6">
         <div class="section-head">
           <span class="step">6</span>
           <div><h2>Share</h2><p>Preview your card live or share the link.</p></div>
         </div>
         <div class="share-stack">
-
-          <!-- 상단: Open Live + Buyer Preview -->
           <div class="share-preview-row">
-            <div class="share-preview-card" id="open-live-card">
+            <div class="share-preview-card">
               <a id="open-link" class="btn btn-secondary disabled-link share-action-btn" href="#" target="_blank" rel="noreferrer">
                 <i data-lucide="radio"></i>
                 Open Live
               </a>
               <span class="field-hint share-hint">On-site AR test</span>
             </div>
-            <div class="share-preview-card" id="buyer-preview-card">
+            <div class="share-preview-card">
               <a id="preview-link" class="btn btn-secondary disabled-link share-action-btn" href="#" target="_blank" rel="noreferrer">
                 <i data-lucide="camera"></i>
                 Buyer Preview
@@ -356,14 +362,10 @@
               <span class="field-hint share-hint">Camera AR preview</span>
             </div>
           </div>
-
-          <!-- 중단: 링크 필드 -->
           <label class="glass-field">
             <span>Public Link</span>
             <input id="share-link" type="text" readonly placeholder="Link will appear after creation" />
           </label>
-
-          <!-- 하단: 링크생성 + 링크카피 버튼 -->
           <div class="share-link-actions">
             <button id="create-link-btn" type="button" class="btn btn-primary share-create-btn">
               <i data-lucide="link"></i>
@@ -374,7 +376,6 @@
               <span id="copy-link-text">Copy Link</span>
             </button>
           </div>
-
           <div id="status-box" class="status-box muted">No gift created yet.</div>
         </div>
       </section>
@@ -384,7 +385,8 @@
     <nav class="bottom-nav" id="bottom-nav">
       <button id="nav-prev" class="btn btn-secondary nav-btn" type="button" disabled>◀ Prev</button>
       <div class="nav-dots" id="nav-dots">
-        <div class="dot active"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <div class="dot active"></div><div class="dot"></div><div class="dot"></div>
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
       </div>
       <button id="nav-next" class="btn btn-primary nav-btn" type="button">Next ▶</button>
     </nav>
