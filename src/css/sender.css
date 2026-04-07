@@ -1093,3 +1093,214 @@
       pointer-events:none;
     }
   
+    /* ══ Permission gate 흰색 테마 ══ */
+.permission-gate {
+  background: #ffffff !important;
+}
+
+.permission-card h1 {
+  color: #111827;
+}
+
+.permission-card p {
+  color: #6b7280;
+}
+
+.perm-item {
+  background: #f9fafb !important;
+  border: 1px solid #e5e7eb !important;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.perm-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #7c3aed;
+  flex-shrink: 0;
+  cursor: default;
+}
+
+.perm-item label {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  cursor: default;
+}
+
+.perm-name {
+  color: #111827 !important;
+}
+
+.perm-desc {
+  color: #6b7280 !important;
+}
+
+.perm-status.pending { color: #9ca3af; }
+.perm-status.granted { color: #16a34a; }
+.perm-status.denied  { color: #dc2626; }
+
+/* 경고 박스 */
+#perm-warning {
+  color: #92400e;
+  background: #fffbeb !important;
+  border: 1px solid #fde68a;
+}
+
+/* ══ Studio light theme override ══ */
+
+/* 전체 sender shell */
+.sender-shell {
+  background: #ffffff;
+}
+
+/* section head */
+.section-head .step {
+  background: #f3e8ff !important;
+  color: #6d28d9 !important;
+}
+
+/* template list */
+.template-item {
+  background: #f9fafb !important;
+  border-color: #e5e7eb !important;
+  color: #111827 !important;
+}
+.template-item.active {
+  background: #f3e8ff !important;
+  border-color: #d8b4fe !important;
+}
+.template-item h3 { color: #111827 !important; }
+.template-item p { color: #6b7280 !important; }
+
+/* glass field */
+.glass-field {
+  background: #f9fafb !important;
+  border-color: #e5e7eb !important;
+}
+.glass-field > span {
+  color: #6d28d9 !important;
+}
+
+/* hms inputs */
+.hms-input {
+  background: #ffffff !important;
+  border-color: #d1d5db !important;
+  color: #111827 !important;
+}
+.hms-sep { color: #9ca3af !important; }
+
+/* video preview */
+.video-preview-area {
+  background: #f9fafb !important;
+  border-color: #e5e7eb !important;
+}
+.video-preview-empty { color: #9ca3af !important; }
+.field-hint { color: #6b7280 !important; }
+
+/* top pane (studio canvas area) */
+.studio-page .top-pane {
+  background: #f8fafc !important;
+}
+
+/* bottom pane (tool panel) */
+.studio-page .bottom-pane {
+  background: #ffffff !important;
+}
+
+/* divider */
+.studio-page .divider {
+  background: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* tool tabs */
+.tool-tab {
+  background: #ffffff !important;
+  border-color: #e5e7eb !important;
+  color: #475467 !important;
+}
+.tool-tab.active {
+  background: #f3e8ff !important;
+  color: #6d28d9 !important;
+  border-color: #e9d5ff !important;
+}
+
+/* badge */
+.studio-page .badge {
+  background: #ffffff !important;
+  border-color: #e5e7eb !important;
+  color: #475467 !important;
+}
+.studio-page .badge.primary {
+  background: #f3e8ff !important;
+  color: #6d28d9 !important;
+  border-color: #e9d5ff !important;
+}
+.studio-page .badge.warning {
+  background: #fffbeb !important;
+  color: #92400e !important;
+  border-color: #fde68a !important;
+}
+
+/* context bar */
+.studio-page .context-bar {
+  background: rgba(17,24,39,0.90) !important;
+}
+
+/* sheet */
+.studio-page .sheet {
+  background: #ffffff !important;
+  box-shadow: 0 -8px 32px rgba(0,0,0,0.10) !important;
+}
+.studio-page .sheet-title { color: #111827 !important; }
+.studio-page .sheet-handle { background: #d1d5db !important; }
+
+/* overlay */
+.studio-page .overlay {
+  background: rgba(15,23,42,0.28) !important;
+}
+
+/* toast */
+.studio-page .toast {
+  background: #111827 !important;
+  color: #ffffff !important;
+}
+
+/* basic hint */
+.basic-hint {
+  background: #ffffff !important;
+  border-color: #e5e7eb !important;
+}
+.basic-hint .txt { color: #475467 !important; }
+
+/* toggle group */
+.toggle-group {
+  background: #f3f4f6 !important;
+  border-color: #e5e7eb !important;
+}
+.toggle-pill { color: #6b7280 !important; }
+.toggle-pill.active {
+  background: #111827 !important;
+  color: #ffffff !important;
+}
+
+/* upgrade card */
+.studio-page .upgrade-card {
+  background: linear-gradient(180deg, #faf5ff 0%, #ffffff 100%) !important;
+  border-color: #e9d5ff !important;
+}
+
+/* map box */
+.map-box {
+  border-color: #e5e7eb !important;
+  background: #f9fafb !important;
+}
+
+/* share stack */
+#share-link {
+  background: #f9fafb !important;
+  color: #111827 !important;
+}

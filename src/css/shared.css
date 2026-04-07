@@ -117,3 +117,129 @@ input[type='file']{padding:11px;}
   .two-up{grid-template-columns:1fr;}
   .topbar{padding:12px 16px;padding-top:calc(12px + var(--sat));}
 }
+
+/* ══ Global overrides ══ */
+html, body {
+  background: #ffffff !important;
+  color: #111827;
+}
+
+/* 배경 그라디언트 제거 */
+body {
+  background:
+    #ffffff !important;
+}
+
+/* 로고 마크(C 박스) 숨김 */
+.brand-mark {
+  display: none !important;
+}
+
+/* CHARIEL 텍스트 색상 다크로 변경 */
+.brand {
+  color: #111827;
+}
+.brand-sub {
+  color: #6b7280;
+}
+
+/* 탑바 배경 흰색 */
+.topbar {
+  background: rgba(255,255,255,0.95) !important;
+  border-bottom: 1px solid #e5e7eb !important;
+}
+
+/* 카드 패널 흰색 배경 */
+.card-panel {
+  background: #ffffff !important;
+  border-color: #e5e7eb !important;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08) !important;
+}
+
+/* 텍스트 색상 다크 모드 → 라이트 모드 */
+h1, h2, h3 { color: #111827; }
+p { color: #6b7280; }
+
+/* ══ Light theme global override ══ */
+html, body {
+  background: #ffffff !important;
+  color: #111827 !important;
+}
+
+.app-shell {
+  background: #ffffff;
+}
+
+/* 탑바 */
+.topbar {
+  background: rgba(255,255,255,0.97) !important;
+  border-bottom: 1px solid #e5e7eb !important;
+}
+
+/* 로고 박스 숨김 */
+.brand-mark {
+  display: none !important;
+}
+
+/* 브랜드 텍스트 */
+.brand {
+  color: #111827 !important;
+}
+.brand-sub {
+  color: #6b7280 !important;
+}
+.ghost-link {
+  color: #9ca3af !important;
+}
+
+/* 카드 패널 */
+.card-panel {
+  background: #ffffff !important;
+  border-color: #e5e7eb !important;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.07) !important;
+}
+
+/* 텍스트 */
+h1, h2, h3 { color: #111827 !important; }
+p { color: #6b7280 !important; }
+.eyebrow {
+  background: #f3e8ff !important;
+  color: #6d28d9 !important;
+}
+
+/* 인풋 */
+input, textarea, select {
+  background: #f9fafb !important;
+  border-color: #d1d5db !important;
+  color: #111827 !important;
+}
+input::placeholder, textarea::placeholder {
+  color: #9ca3af !important;
+}
+
+/* 버튼 */
+.btn-secondary {
+  background: #f3f4f6 !important;
+  color: #111827 !important;
+  border-color: #e5e7eb !important;
+}
+
+/* status box */
+.status-box {
+  background: #f9fafb !important;
+  color: #374151 !important;
+}
+.status-box.muted { color: #6b7280 !important; }
+.status-box.success { background: #f0fdf4 !important; color: #15803d !important; }
+.status-box.warn { background: #fffbeb !important; color: #92400e !important; }
+.status-box.error { background: #fef2f2 !important; color: #b91c1c !important; }
+
+/* nav dots */
+.dot { background: #d1d5db !important; }
+.dot.active { background: #7c3aed !important; }
+
+/* bottom nav */
+.bottom-nav {
+  background: rgba(255,255,255,0.97) !important;
+  border-top: 1px solid #e5e7eb !important;
+}

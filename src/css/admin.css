@@ -38,3 +38,48 @@
 .nested-inline-grid { align-items: center; }
 [contenteditable="true"]:focus { box-shadow: 0 0 0 1px rgba(255,255,255,0.28) inset; border-radius: 12px; }
 @media (max-width: 860px) { .admin-shell { padding: 16px; } .map-search-grid { grid-template-columns: 1fr; } }
+
+/* ══ Admin light theme override ══ */
+
+.admin-shell {
+  background: #ffffff;
+}
+
+.glass-field {
+  background: #f9fafb !important;
+  border-color: #e5e7eb !important;
+}
+.glass-field > span {
+  color: #6d28d9 !important;
+}
+.field-hint { color: #6b7280 !important; }
+
+.video-preview-area {
+  background: #f9fafb !important;
+  border-color: #e5e7eb !important;
+}
+
+/* admin preview card — 기존 그라디언트 유지, 배경만 흰색 */
+.admin-preview-shell {
+  background: #f8fafc;
+  border-radius: 20px;
+  padding: 16px 0;
+}
+
+/* gift list */
+.gift-item {
+  background: #f9fafb !important;
+  border-color: #e5e7eb !important;
+  color: #111827 !important;
+}
+.gift-item .meta { color: #6b7280 !important; }
+.gift-item:hover {
+  border-color: #d8b4fe !important;
+  background: #faf5ff !important;
+}
+
+/* contenteditable */
+[contenteditable="true"]:focus {
+  box-shadow: 0 0 0 2px #e9d5ff inset !important;
+  border-radius: 8px;
+}

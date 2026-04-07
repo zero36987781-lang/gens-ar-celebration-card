@@ -87,6 +87,7 @@ async function requestPermissions() {
 
   els.permGps.textContent = gpsOk ? 'Granted' : 'Denied';
   els.permGps.className = `perm-status ${gpsOk ? 'granted' : 'denied'}`;
+  
 
   if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
     try {
@@ -99,6 +100,12 @@ async function requestPermissions() {
 
   els.permMotion.textContent = motionOk ? 'Granted' : 'Denied';
   els.permMotion.className = `perm-status ${motionOk ? 'granted' : 'denied'}`;
+
+  // GPS granted
+document.querySelector('#chk-gps').checked = gpsOk;
+// Motion granted  
+document.querySelector('#chk-motion').checked = motionOk;
+
 
   if (!gpsOk || !motionOk) {
     els.permWarning.classList.remove('hidden');

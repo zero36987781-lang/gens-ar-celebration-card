@@ -20,24 +20,25 @@
       <div class="brand-mark perm-logo">C</div>
       <h1>CHARIEL</h1>
       <p>To place your AR card on the map, we need a few permissions.</p>
-      <div class="perm-list">
-        <div class="perm-item">
-          <span class="perm-icon">📍</span>
-          <div>
-            <div class="perm-name">GPS Location</div>
-            <div class="perm-desc">Pin the card on the map.</div>
-          </div>
-          <div id="perm-gps-status" class="perm-status pending">Pending</div>
-        </div>
-        <div class="perm-item">
-          <span class="perm-icon">🧭</span>
-          <div>
-            <div class="perm-name">Motion &amp; Orientation</div>
-            <div class="perm-desc">For AR compass heading.</div>
-          </div>
-          <div id="perm-motion-status" class="perm-status pending">Pending</div>
-        </div>
-      </div>
+     <div class="perm-list">
+  <div class="perm-item">
+    <input type="checkbox" id="chk-gps" disabled />
+    <label for="chk-gps">
+      <div class="perm-name">GPS Location</div>
+      <div class="perm-desc">Pin the card on the map.</div>
+    </label>
+    <div id="perm-gps-status" class="perm-status pending">Pending</div>
+  </div>
+  <div class="perm-item">
+    <input type="checkbox" id="chk-motion" disabled />
+    <label for="chk-motion">
+      <div class="perm-name">Motion &amp; Orientation</div>
+      <div class="perm-desc">For AR compass heading.</div>
+    </label>
+    <div id="perm-motion-status" class="perm-status pending">Pending</div>
+  </div>
+</div>
+ 
       <div id="perm-warning" class="status-box warn hidden">
         If blocked, open your device <strong>Settings → Browser</strong> to allow, then refresh.
       </div>

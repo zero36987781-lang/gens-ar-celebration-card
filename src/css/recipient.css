@@ -165,3 +165,60 @@ body.ar-live-mode { background: transparent !important; }
   .ar-stage { min-height: 540px; }
   .ar-stage canvas { height: 540px !important; }
 }
+
+/* ══ Recipient light theme override ══ */
+
+.recipient-shell {
+  background: #ffffff;
+}
+
+/* 잠긴 카드 */
+.locked-card-ghost {
+  background: linear-gradient(145deg, #f3e8ff, #ffffff) !important;
+  border-color: #e9d5ff !important;
+}
+.mini-label { color: #6b7280 !important; }
+.big-line { color: #111827 !important; }
+.message-line { color: #374151 !important; }
+
+/* distance states */
+.state-far { background: #fef2f2 !important; color: #b91c1c !important; }
+.state-near { background: #fffbeb !important; color: #92400e !important; }
+.state-ready { background: #f0fdf4 !important; color: #15803d !important; }
+.state-preview { background: #f3e8ff !important; color: #6d28d9 !important; }
+
+/* env panel */
+.env-item {
+  background: #f9fafb !important;
+  border-color: #e5e7eb !important;
+}
+.env-item__name { color: #111827 !important; }
+.env-item__desc { color: #6b7280 !important; }
+.env-item__status.pending { background: #f3f4f6 !important; color: #6b7280 !important; }
+.env-item__status.success { background: #f0fdf4 !important; color: #15803d !important; }
+.env-item__status.error   { background: #fef2f2 !important; color: #b91c1c !important; }
+.env-item__status.warn    { background: #fffbeb !important; color: #92400e !important; }
+
+/* AR stage */
+.ar-stage {
+  background: #f8fafc !important;
+  border-color: #e5e7eb !important;
+}
+
+/* gesture hint */
+.gesture-hint {
+  background: rgba(17,24,39,0.82) !important;
+  color: #f8fbff !important;
+  border-color: rgba(255,255,255,0.12) !important;
+}
+
+/* thanks panel */
+.thanks-panel {
+  border-color: #e9d5ff !important;
+}
+
+/* topbar */
+.recipient-topbar {
+  background: rgba(255,255,255,0.97) !important;
+  border-bottom: 1px solid #e5e7eb !important;
+}
