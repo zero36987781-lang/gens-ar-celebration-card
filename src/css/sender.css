@@ -1348,9 +1348,9 @@
 
 /* ══ Studio card light background ══ */
 .card {
-  background: #ffffff !important;
   box-shadow: 0 8px 32px rgba(0,0,0,0.10) !important;
   border: 1px solid #e5e7eb !important;
+  background: transparent !important;
 }
 
 .card-bg-color {
@@ -1379,4 +1379,36 @@
 #sideBadge,
 #selectionBadge {
   display: none !important;
+}
+
+/* ══ Card layer z-index 정리 ══ */
+.card {
+  background: transparent !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+.card-bg-color {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 0 !important;
+  border-radius: 24px !important;
+}
+.card-bg-image {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 1 !important;
+}
+.card-bg-overlay {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 2 !important;
+  pointer-events: none !important;
+}
+.card-inner {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 3 !important;
+}
+.context-bar {
+  z-index: 4 !important;
 }

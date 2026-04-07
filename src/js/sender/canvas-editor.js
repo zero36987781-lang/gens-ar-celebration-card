@@ -291,8 +291,8 @@ window.CanvasEditor = (() => {
       cardBgOverlay:document.getElementById('cardBgOverlay'),
       toolTabs:document.getElementById('toolTabs'),
       panelHost:document.getElementById('panelHost'),
-      modeSegment:document.getElementById('modeSegment'),
-      sideSegment:document.getElementById('sideSegment'),
+        modeSegment:document.getElementById('mode-toggle'),
+      sideSegment:document.getElementById('side-toggle'),
       modeBadge:document.getElementById('modeBadge'),
       sideBadge:document.getElementById('sideBadge'),
       selectionBadge:document.getElementById('selectionBadge'),
@@ -458,8 +458,9 @@ window.CanvasEditor = (() => {
     }
 
     function renderModeUI(){
+      if(!refs.modeSegment) return;
       [...refs.modeSegment.querySelectorAll('button')].forEach(btn=>{
-        const mode = btn.dataset.mode;
+        const mode = btn.dataset.value;
         btn.classList.toggle('active', appState.mode === mode);
       });
 
@@ -472,8 +473,9 @@ window.CanvasEditor = (() => {
     }
 
     function renderSideUI(){
+      if(!refs.sideSegment) return;
       [...refs.sideSegment.querySelectorAll('button')].forEach(btn=>{
-        btn.classList.toggle('active', btn.dataset.side === appState.side);
+        btn.classList.toggle('active', btn.dataset.value === appState.side);
       });
     }
 
@@ -493,7 +495,48 @@ window.CanvasEditor = (() => {
       const tplId = appState.currentTemplateId || 'birthday';
       const matched = TEMPLATES_INLINE.find(t => t.id === tplId) || TEMPLATES_INLINE[0];
       const grad = appState.side === 'front' ? matched.frontGradient : matched.backGradient;
+
+      // 그라디언트 배경 적용
       refs.cardBgColor.style.background = grad || side.bgColor || '#ffffff';
+      refs.cardBgColor.style.position = 'absolute';
+      refs.cardBgColor.style.inset = '0';
+      refs.cardBgColor.style.borderRadius = '24px';
+      refs.cardBgColor.style.zIndex = '0';
+
+      // bgImage
+      refs.cardBgImage.style.backgroundImage = side.bgImage ? `url(${side.bgImage})` : 'none';
+      refs.cardBgImage.style.opacity = side.bgImage ? String(side.bgImageOpacity ?? 1) : '0';
+      refs.cardBgImage.style.position = 'absolute';
+      refs.cardBgImage.style.inset = '0';
+      refs.cardBgImage.style.zIndex = '1';
+
+      if(side.bgImageFit === 'contain'){
+        refs.cardBgImage.style.backgroundSize = 'contain';
+      } else if(side.bgImageFit === 'stretch'){
+        refs.cardBgImage.style.backgroundSize = '100% 100%';
+      } else {
+        refs.cardBgImage.style.backgroundSize = `${side.bgImageScale || 100}%`;
+      }
+
+      // overlay
+      refs.cardBgOverlay.style.position = 'absolute';
+      refs.cardBgOverlay.style.inset = '0';
+      refs.cardBgOverlay.style.zIndex = '2';
+      refs.cardBgOverlay.style.pointerEvents = 'none';
+
+      if(side.bgOverlay?.enabled){
+        refs.cardBgOverlay.style.background =
+          side.bgOverlay.mode === 'gradient'
+            ? buildLinearGradient(side.bgOverlay.gradient)
+            : (side.bgOverlay.color || 'transparent');
+      } else {
+        refs.cardBgOverlay.style.background = 'transparent';
+      }
+
+      // cardInner 위로
+      refs.cardInner.style.position = 'absolute';
+      refs.cardInner.style.inset = '0';
+      refs.cardInner.style.zIndex = '3';
 
 
       refs.cardBgImage.style.backgroundImage = side.bgImage ? `url(${side.bgImage})` : 'none';
@@ -2046,16 +2089,23 @@ window.CanvasEditor = (() => {
     }
 
     function initEvents(){
-      refs.modeSegment.addEventListener('click', (e)=>{
-        const btn = e.target.closest('[data-mode]');
+           refs.modeSegment?.addEventListener('click', (e)=>{
+        const btn = e.target.closest('[data-value]');
         if(!btn) return;
-        const mode = btn.dataset.mode;
+        const mode = btn.dataset.value;
         if(mode === 'custom'){
           setMode('custom');
           return;
         }
         setMode('basic');
       });
+
+      refs.sideSegment?.addEventListener('click', (e)=>{
+        const btn = e.target.closest('[data-value]');
+        if(!btn) return;
+        setSide(btn.dataset.value);
+      });
+
 
       refs.sideSegment.addEventListener('click', (e)=>{
         const btn = e.target.closest('[data-side]');
@@ -2126,6 +2176,10 @@ window.CanvasEditor = (() => {
       initEvents();
       lucide.createIcons();
     }
+    // 초기 템플릿 그라디언트 적용
+    appState.currentTemplateId = 'birthday';
+    appState.sides.front = defaultState('front', TEMPLATES_INLINE[0]);
+    appState.sides.back = defaultState('back', TEMPLATES_INLINE[0]);
 
     init();
   
@@ -2179,8 +2233,8 @@ window.CanvasEditor = (() => {
       refs.cardBgOverlay = document.getElementById('cardBgOverlay');
       refs.toolTabs = document.getElementById('toolTabs');
       refs.panelHost = document.getElementById('panelHost');
-      refs.modeSegment = document.getElementById('modeSegment');
-      refs.sideSegment = document.getElementById('sideSegment');
+      refs.modeSegment = document.getElementById('mode-toggle');
+      refs.sideSegment = document.getElementById('side-toggle');
       refs.modeBadge = document.getElementById('modeBadge');
       refs.sideBadge = document.getElementById('sideBadge');
       refs.selectionBadge = document.getElementById('selectionBadge');
