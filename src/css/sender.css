@@ -1412,3 +1412,22 @@
 .context-bar {
   z-index: 4 !important;
 }
+
+/* ══ 카드 텍스트 품질 개선 ══ */
+.element.text-el {
+  text-shadow: 0 4px 12px rgba(0,0,0,0.22) !important;
+  word-break: break-word !important;
+  white-space: pre-wrap !important;
+}
+
+/* 이미지 요소 border + shadow */
+.element.image-el img {
+  border: 2px solid rgba(255,255,255,0.82) !important;
+  box-shadow: 0 8px 22px rgba(0,0,0,0.18) !important;
+  border-radius: 16px !important;
+}
+
+/* 카드 전체 shadow 강화 */
+.card {
+  box-shadow: 0 18px 36px rgba(17,24,39,0.16), inset 0 0 0 1px rgba(255,255,255,0.36) !important;
+}
