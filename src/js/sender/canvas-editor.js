@@ -254,22 +254,27 @@ window.CanvasEditor = (() => {
     function createDefaultText(id, text, x, y, presetName='clean'){
       const preset = TEXT_PRESETS.find(p=>p.id===presetName) || TEXT_PRESETS[0];
       return {
-        id,
-        type:'text',
-        name:text.slice(0,18) || 'Text',
-        text,
-        x,y,w:180,h:80,rotation:0,opacity:1,
-        fontFamily:preset.fontFamily,
-        fontSize:preset.fontSize,
-        align:'center',
-        lineHeight:preset.lineHeight,
-        letterSpacing:preset.letterSpacing,
-        fill:clone(preset.fill),
-        strokeEnabled:preset.strokeEnabled,
-        strokeWidth:preset.strokeWidth,
-        stroke:clone(preset.stroke),
-        bgEnabled:preset.bgEnabled,
-        background:clone(preset.background)
+        id: id,
+        type: 'text',
+        name: text.slice(0,18) || 'Text',
+        text: text,
+        x: x,
+        y: y,
+        w: 180,
+        h: 80,
+        rotation: 0,
+        opacity: 1,
+        fontFamily: preset.fontFamily,
+        fontSize: preset.fontSize,
+        align: 'center',
+        lineHeight: preset.lineHeight,
+        letterSpacing: preset.letterSpacing,
+        fill: clone(preset.fill),
+        strokeEnabled: preset.strokeEnabled,
+        strokeWidth: preset.strokeWidth,
+        stroke: clone(preset.stroke),
+        bgEnabled: preset.bgEnabled,
+        background: clone(preset.background)
       };
     }
 
@@ -309,13 +314,14 @@ window.CanvasEditor = (() => {
     elements: isFront
       ? [
           // 헤더 — 크고 굵게
-          Object.assign(createDefaultText(uid(), tpl?.title || 'Hello', 20, 32, 'clean'), {
-            w: 260, h: 90,
-            fontSize: 38,
-            fontFamily: '"Black Han Sans", sans-serif',
-            lineHeight: 1.1,
-            letterSpacing: -0.5,
-            fill: {mode:'solid', color:'#ffffff', gradient:null},
+              Object.assign(createDefaultText(uid(), tpl?.title || 'Title', 20, 32, 'clean'), {
+      w: 260,
+      h: 90,
+      fontSize: 38,
+      fontFamily: '"Black Han Sans", sans-serif',
+      lineHeight: 1.1,
+      letterSpacing: -0.5,
+      fill: {mode:'solid', color:'#ffffff', gradient:null},
             strokeEnabled: true, strokeWidth: 1,
             stroke: {mode:'solid', color:'rgba(0,0,0,0.15)', gradient:null},
             bgEnabled: false,

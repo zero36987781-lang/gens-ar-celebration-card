@@ -365,10 +365,10 @@ function renderTemplates() {
 function applyTemplate(id) {
   state.templateId = id;
   const tpl = getTemplateById(id);
-  els.previewTitle.textContent = tpl.title;
-  els.previewSubtitle.textContent = tpl.subtitle;
-  els.previewMessage.textContent = tpl.message;
-  els.previewBackMessage.textContent = tpl.backText;
+  if(els.previewTitle) els.previewTitle.textContent = tpl.title;
+  if(els.previewSubtitle) els.previewSubtitle.textContent = tpl.subtitle;
+  if(els.previewMessage) els.previewMessage.textContent = tpl.message;
+  if(els.previewBackMessage) els.previewBackMessage.textContent = tpl.backText;
   if (window.CanvasEditor) {
     window.CanvasEditor.setCurrentTemplate(id);
     window.CanvasEditor.applyTemplateToLayers(tpl);
@@ -385,8 +385,8 @@ function renderPreviewCard() {
   [els.previewCardDefault, els.previewCard].forEach(c => {
     if (c) { c.style.setProperty('--card-front', tpl.frontColor); c.style.setProperty('--card-accent', tpl.accentColor); }
   });
-  els.previewReceiver.textContent = f.recipientName.value.trim() || 'Receiver';
-  els.previewSender.textContent = `From ${f.senderName.value.trim() || 'Sender'}`;
+  if(els.previewReceiver) els.previewReceiver.textContent = f.recipientName.value.trim() || 'Receiver';
+  if(els.previewSender) els.previewSender.textContent = `From ${f.senderName.value.trim() || 'Sender'}`;
   if (window.CanvasEditor) window.CanvasEditor.updateSenderReceiver(f.senderName.value.trim());
   const hasVid = Boolean(parseYtId(f.videoUrl.value.trim()));
   els.videoBadgeDefault?.classList.toggle('hidden', !hasVid);
