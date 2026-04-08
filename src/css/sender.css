@@ -668,7 +668,7 @@
     .element.selected .resize-handle,
     .element.selected .rotate-handle{display:flex;}
 
-    .resize-handle{right:-10px;bottom:-10px;cursor:nwse-resize;}
+    .resize-handle{right:-28px;bottom:-28px;cursor:nwse-resize;}
     .rotate-handle{
       left:50%;top:-28px;transform:translateX(-50%);cursor:grab;
       align-items:center;justify-content:center;

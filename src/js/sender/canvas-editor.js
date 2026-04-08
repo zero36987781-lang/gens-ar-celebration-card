@@ -798,13 +798,26 @@ window.CanvasEditor = (() => {
         const resize = document.createElement('div');
         resize.className = 'resize-handle';
         resize.addEventListener('pointerdown', (e) => startResize(e, el.id, 'se'));
-        node.appendChild(resize);
 
         const rotate = document.createElement('div');
         rotate.className = 'rotate-handle';
         rotate.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6"/><path d="M21.34 15.57a10 10 0 1 1-.57-8.38"/></svg>`;
         rotate.addEventListener('pointerdown', (e)=> startRotate(e, el.id));
-        node.appendChild(rotate);
+
+        if(el.type === 'text'){
+          const innerTextDiv = node.firstElementChild && node.firstElementChild.firstElementChild;
+          if(innerTextDiv){
+            innerTextDiv.style.position = 'relative';
+            innerTextDiv.appendChild(resize);
+            innerTextDiv.appendChild(rotate);
+          } else {
+            node.appendChild(resize);
+            node.appendChild(rotate);
+          }
+        } else {
+          node.appendChild(resize);
+          node.appendChild(rotate);
+        }
 
         refs.cardInner.appendChild(node);
 
