@@ -2139,7 +2139,6 @@ window.CanvasEditor = (() => {
 
     function startResize(e, id, dir){
       e.stopPropagation();
-      if(appState.mode !== 'custom') return;
       const el = currentSideState().elements.find(x=>x.id===id);
       if(!el) return;
       e.target.classList.add('dragging');
@@ -2160,7 +2159,6 @@ window.CanvasEditor = (() => {
 
     function startRotate(e, id){
       e.stopPropagation();
-      if(appState.mode !== 'custom') return;
       const el = currentSideState().elements.find(x=>x.id===id);
       if(!el) return;
       e.target.classList.add('dragging');

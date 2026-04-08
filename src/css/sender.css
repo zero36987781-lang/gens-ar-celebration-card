@@ -667,8 +667,6 @@
 
     .element.selected .resize-handle,
     .element.selected .rotate-handle{display:flex;}
-    .element.locked-basic .resize-handle,
-    .element.locked-basic .rotate-handle{display:none!important;}
 
     .resize-handle{right:-10px;bottom:-10px;cursor:nwse-resize;}
     .rotate-handle{
