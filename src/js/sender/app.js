@@ -18,6 +18,16 @@ const state = {
 const MAX_PAGES = 6;
 const PERM_KEY = 'chariel:perm-done';
 
+/* ── Utility functions ── */
+function hexToRgb(hex) {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : null;
+}
+
 const els = {};
 
 function cacheDom() {
@@ -413,7 +423,16 @@ function sanitize(el) { return (el?.innerText || '').replace(/\u00a0/g, ' ').rep
 function renderPreviewCard() {
   const f = fields(), tpl = getTemplateById(state.templateId);
   [els.previewCardDefault, els.previewCard].forEach(c => {
-    if (c) { c.style.setProperty('--card-front', tpl.frontColor); c.style.setProperty('--card-accent', tpl.accentColor); }
+    if (c) { 
+      c.style.setProperty('--card-front', tpl.frontColor); 
+      c.style.setProperty('--card-accent', tpl.accentColor);
+      // Add shadow based on card color for depth and elegance
+      const rgb = hexToRgb(tpl.frontColor);
+      if (rgb) {
+        const shadowColor = `rgba(${rgb.r * 0.5}, ${rgb.g * 0.5}, ${rgb.b * 0.5}, 0.25)`;
+        c.style.boxShadow = `0 8px 32px ${shadowColor}, 0 4px 16px rgba(0,0,0,0.1)`;
+      }
+    }
   });
   if(els.previewReceiver) els.previewReceiver.textContent = f.recipientName.value.trim() || 'Receiver';
   if(els.previewSender) els.previewSender.textContent = `From ${f.senderName.value.trim() || 'Sender'}`;

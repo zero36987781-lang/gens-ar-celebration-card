@@ -26,7 +26,7 @@
 .sender-shell{
   flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;
   -webkit-overflow-scrolling:touch;max-width:1280px;margin:0 auto;
-  padding:18px 20px calc(80px + var(--sab));width:100%;
+  padding:18px 10px calc(80px + var(--sab));width:100%;
   display:flex;flex-direction:column;align-items:center;
 }
 .sender-shell > .page-view{
@@ -1433,6 +1433,9 @@
   inset: 0 !important;
   z-index: 2 !important;
   pointer-events: none !important;
+}
+.studio-page .card-bg-overlay {
+  display: none !important;
 }
 .card-inner {
   position: absolute !important;
