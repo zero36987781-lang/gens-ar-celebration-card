@@ -795,18 +795,16 @@ window.CanvasEditor = (() => {
           }
         });
 
-        if(appState.selectionId === el.id && appState.mode === 'custom'){
-          const resize = document.createElement('div');
-          resize.className = 'resize-handle';
-          resize.addEventListener('pointerdown', (e) => startResize(e, el.id, 'se'));
-          node.appendChild(resize);
+        const resize = document.createElement('div');
+        resize.className = 'resize-handle';
+        resize.addEventListener('pointerdown', (e) => startResize(e, el.id, 'se'));
+        node.appendChild(resize);
 
-          const rotate = document.createElement('div');
-          rotate.className = 'rotate-handle';
-          rotate.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6"/><path d="M21.34 15.57a10 10 0 1 1-.57-8.38"/></svg>`;
-          rotate.addEventListener('pointerdown', (e)=> startRotate(e, el.id));
-          node.appendChild(rotate);
-        }
+        const rotate = document.createElement('div');
+        rotate.className = 'rotate-handle';
+        rotate.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6"/><path d="M21.34 15.57a10 10 0 1 1-.57-8.38"/></svg>`;
+        rotate.addEventListener('pointerdown', (e)=> startRotate(e, el.id));
+        node.appendChild(rotate);
 
         refs.cardInner.appendChild(node);
 
@@ -2123,9 +2121,11 @@ window.CanvasEditor = (() => {
 
       if(e.target.classList.contains('resize-handle') || e.target.classList.contains('rotate-handle')) return;
 
+      const dragNode = refs.cardInner.querySelector(`[data-id="${id}"]`);
       dragState = {
         type:'move',
         id,
+        dragNode,
         startX:e.clientX,
         startY:e.clientY,
         origX:el.x,
@@ -2142,9 +2142,11 @@ window.CanvasEditor = (() => {
       const el = currentSideState().elements.find(x=>x.id===id);
       if(!el) return;
       e.target.classList.add('dragging');
+      const dragNode = refs.cardInner.querySelector(`[data-id="${id}"]`);
       dragState = {
         type:'resize', dir,
         id,
+        dragNode,
         handle: e.target,
         startX:e.clientX,
         startY:e.clientY,
@@ -2161,9 +2163,11 @@ window.CanvasEditor = (() => {
       if(!el) return;
       e.target.classList.add('dragging');
       const cardRect = refs.card.getBoundingClientRect();
+      const dragNode = refs.cardInner.querySelector(`[data-id="${id}"]`);
       dragState = {
         type:'rotate',
         id,
+        dragNode,
         handle: e.target,
         cx:cardRect.left + el.x + el.w/2,
         cy:cardRect.top + el.y + el.h/2
@@ -2210,12 +2214,19 @@ window.CanvasEditor = (() => {
         el.rotation = Math.round(angle + 90);
       }
 
-      renderAll(false);
+      if(dragState.dragNode){
+        dragState.dragNode.style.left = `${el.x}px`;
+        dragState.dragNode.style.top = `${el.y}px`;
+        dragState.dragNode.style.width = `${el.w}px`;
+        dragState.dragNode.style.height = `${el.h}px`;
+        dragState.dragNode.style.transform = `rotate(${el.rotation || 0}deg)`;
+      }
     }
 
     function onPointerUp(){
       if(dragState){
         dragState.handle?.classList.remove('dragging');
+        renderAll(false);
         pushHistory();
       }
       dragState = null;
