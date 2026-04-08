@@ -361,10 +361,12 @@ function createYtPlayer(ytId, startSec, endSec) {
 }
 
 /* ── Templates ── */
+let _templateObserver = null;
+
 function renderTemplates() {
   els.templateList.innerHTML = TEMPLATES.map(t => `
     <button type="button" class="template-item ${t.id === state.templateId ? 'active' : ''}" data-template-id="${t.id}"
-      style="background:${t.frontGradient};border-color:${t.frontColor}33;">
+      style="background:${t.frontGradient};">
       <h3 style="color:#111827">${t.name}</h3>
       <p style="color:#374151">${t.subtitle}</p>
       <div class="template-swatches">
@@ -372,11 +374,32 @@ function renderTemplates() {
         <span style="background:${t.accentColor}"></span>
       </div>
     </button>`).join('');
+  setupTemplateObserver();
+}
+
+function setupTemplateObserver() {
+  if (_templateObserver) _templateObserver.disconnect();
+  _templateObserver = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+        const id = entry.target.dataset.templateId;
+        if (id && id !== state.templateId) applyTemplate(id);
+      }
+    });
+  }, { root: els.templateList, threshold: 0.5 });
+  els.templateList.querySelectorAll('[data-template-id]').forEach(el => _templateObserver.observe(el));
+}
+
+function setTemplateActiveClass(id) {
+  els.templateList.querySelectorAll('[data-template-id]').forEach(el => {
+    el.classList.toggle('active', el.dataset.templateId === id);
+  });
 }
 
 function applyTemplate(id) {
   state.templateId = id;
   const tpl = getTemplateById(id);
+  setTemplateActiveClass(id);
   if(els.previewTitle) els.previewTitle.textContent = tpl.title;
   if(els.previewSubtitle) els.previewSubtitle.textContent = tpl.subtitle;
   if(els.previewMessage) els.previewMessage.textContent = tpl.message;
@@ -385,7 +408,6 @@ function applyTemplate(id) {
     window.CanvasEditor.setCurrentTemplate(id);
     window.CanvasEditor.applyTemplateToLayers(tpl);
   }
-  renderTemplates();
   renderPreviewCard();
 }
 
@@ -590,7 +612,10 @@ function bindHmsInputs() {
 /* ── Events ── */
 function bindEvents() {
   const f = fields();
-  els.templateList.addEventListener('click', e => { const b = e.target.closest('[data-template-id]'); if (b) applyTemplate(b.dataset.templateId); });
+  els.templateList.addEventListener('click', e => {
+    const b = e.target.closest('[data-template-id]');
+    if (b) b.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  });
   f.recipientName.addEventListener('input', renderPreviewCard);
   f.senderName.addEventListener('input', renderPreviewCard);
   f.videoUrl?.addEventListener('input', () => {
