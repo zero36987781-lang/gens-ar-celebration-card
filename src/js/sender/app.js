@@ -166,17 +166,13 @@ function updatePage() {
   }
 
   if (state.page === 2) {
+    if (shell) shell.scrollTo({ top: 0 });
     setTimeout(() => {
-      const topArea = qs('#main');
-      if (topArea && shell) {
-        shell.scrollTo({ top: topArea.offsetTop - 10, behavior: 'smooth' });
+      if (window.CanvasEditor) {
+        window.CanvasEditor.init();
+        window.CanvasEditor.setCurrentTemplate(state.templateId);
+        window.CanvasEditor.applyTemplateToLayers(getTemplateById(state.templateId));
       }
-  if (window.CanvasEditor) {
-    window.CanvasEditor.init();
-    window.CanvasEditor.setCurrentTemplate(state.templateId);
-    window.CanvasEditor.applyTemplateToLayers(getTemplateById(state.templateId));
-  }
-
     }, 50);
   }
 }

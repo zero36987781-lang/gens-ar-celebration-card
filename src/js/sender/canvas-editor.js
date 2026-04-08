@@ -798,16 +798,26 @@ window.CanvasEditor = (() => {
         if(appState.selectionId === el.id && appState.mode === 'custom'){
           const resize = document.createElement('div');
           resize.className = 'resize-handle';
-          resize.addEventListener('pointerdown', (e)=> startResize(e, el.id));
+          resize.addEventListener('pointerdown', (e) => startResize(e, el.id, 'se'));
           node.appendChild(resize);
 
           const rotate = document.createElement('div');
           rotate.className = 'rotate-handle';
+          rotate.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6"/><path d="M21.34 15.57a10 10 0 1 1-.57-8.38"/></svg>`;
           rotate.addEventListener('pointerdown', (e)=> startRotate(e, el.id));
           node.appendChild(rotate);
         }
 
         refs.cardInner.appendChild(node);
+
+        // 텍스트 요소: 실제 렌더 높이로 el.h 동기화 (콘텐츠 오버플로우 방지)
+        if(el.type === 'text'){
+          const actualH = node.scrollHeight;
+          if(actualH > el.h){
+            el.h = actualH;
+            node.style.height = `${el.h}px`;
+          }
+        }
       });
 
       refs.card.onclick = (e)=>{
@@ -2126,18 +2136,19 @@ window.CanvasEditor = (() => {
       window.addEventListener('pointerup', onPointerUp);
     }
 
-    function startResize(e, id){
+    function startResize(e, id, dir){
       e.stopPropagation();
       if(appState.mode !== 'custom') return;
       const el = currentSideState().elements.find(x=>x.id===id);
       if(!el) return;
+      e.target.classList.add('dragging');
       dragState = {
-        type:'resize',
+        type:'resize', dir,
         id,
+        handle: e.target,
         startX:e.clientX,
         startY:e.clientY,
-        origW:el.w,
-        origH:el.h
+        origW:el.w, origH:el.h, origX:el.x, origY:el.y
       };
       window.addEventListener('pointermove', onPointerMove);
       window.addEventListener('pointerup', onPointerUp);
@@ -2148,10 +2159,12 @@ window.CanvasEditor = (() => {
       if(appState.mode !== 'custom') return;
       const el = currentSideState().elements.find(x=>x.id===id);
       if(!el) return;
+      e.target.classList.add('dragging');
       const cardRect = refs.card.getBoundingClientRect();
       dragState = {
         type:'rotate',
         id,
+        handle: e.target,
         cx:cardRect.left + el.x + el.w/2,
         cy:cardRect.top + el.y + el.h/2
       };
@@ -2170,8 +2183,26 @@ window.CanvasEditor = (() => {
       }
 
       if(dragState.type === 'resize'){
-        el.w = Math.max(36, dragState.origW + (e.clientX - dragState.startX));
-        el.h = Math.max(30, dragState.origH + (e.clientY - dragState.startY));
+        const dx = e.clientX - dragState.startX;
+        const dy = e.clientY - dragState.startY;
+        const { dir } = dragState;
+        if(dir === 'se'){
+          el.w = Math.max(36, dragState.origW + dx);
+          el.h = Math.max(30, dragState.origH + dy);
+        } else if(dir === 'sw'){
+          el.w = Math.max(36, dragState.origW - dx);
+          el.h = Math.max(30, dragState.origH + dy);
+          el.x = dragState.origX + dragState.origW - el.w;
+        } else if(dir === 'ne'){
+          el.w = Math.max(36, dragState.origW + dx);
+          el.h = Math.max(30, dragState.origH - dy);
+          el.y = dragState.origY + dragState.origH - el.h;
+        } else if(dir === 'nw'){
+          el.w = Math.max(36, dragState.origW - dx);
+          el.h = Math.max(30, dragState.origH - dy);
+          el.x = dragState.origX + dragState.origW - el.w;
+          el.y = dragState.origY + dragState.origH - el.h;
+        }
       }
 
       if(dragState.type === 'rotate'){
@@ -2183,7 +2214,10 @@ window.CanvasEditor = (() => {
     }
 
     function onPointerUp(){
-      if(dragState) pushHistory();
+      if(dragState){
+        dragState.handle?.classList.remove('dragging');
+        pushHistory();
+      }
       dragState = null;
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup', onPointerUp);
