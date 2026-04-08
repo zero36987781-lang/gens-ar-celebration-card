@@ -37,8 +37,9 @@ button,input,textarea,select{font:inherit;}
 
 .topbar{
   position:sticky;top:0;z-index:30;
-  display:flex;align-items:center;justify-content:flex-start;gap:16px;
-  padding:calc(4px + var(--sat)) 16px 4px;
+  display:flex;align-items:center;justify-content:flex-start;gap:12px;
+  padding:calc(2px + var(--sat)) 16px 2px;
+  min-height:calc(38px + var(--sat));
   background:rgba(7,11,22,0.72);backdrop-filter:blur(10px);
   border-bottom:1px solid rgba(255,255,255,0.06);
   flex-shrink:0;
@@ -248,12 +249,14 @@ input::placeholder, textarea::placeholder {
 
 /* ══ Topbar 높이 축소 ══ */
 .topbar {
-  padding: 6px 20px !important;
-  padding-top: calc(6px + var(--sat)) !important;
+  padding: 4px 20px !important;
+  padding-top: calc(4px + var(--sat)) !important;
   min-height: 0 !important;
+  align-items: center !important;
 }
 .brand-wrap {
   gap: 8px;
+  align-items: center;
 }
 .brand-mark {
   display: none !important;
