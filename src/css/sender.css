@@ -26,7 +26,11 @@
 .sender-shell{
   flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;
   -webkit-overflow-scrolling:touch;max-width:1280px;margin:0 auto;
-  padding:18px 20px;padding-bottom:calc(80px + var(--sab));width:100%;
+  padding:18px 14px calc(80px + var(--sab));width:100%;
+  display:flex;flex-direction:column;align-items:center;
+}
+.sender-shell > .page-view{
+  width:100%;max-width:1180px;margin:0 auto;
 }
 
 /* Template */
