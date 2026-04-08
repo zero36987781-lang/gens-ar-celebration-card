@@ -375,11 +375,6 @@
       --tool-handle-active:#7c3aed;
     }
 
-    
-    html,
-
-    
-
     .desktop-wrap{
       width:min(430px, 100%);
       height:min(900px, calc(100vh - 32px));
