@@ -2228,14 +2228,6 @@ window.CanvasEditor = (() => {
       let startTopH = 0;
       let total = 0;
 
-      // 초기 높이: bottomPane 최소 높이(160px)만 남기고 topPane 최대화
-      requestAnimationFrame(() => {
-        const tot = refs.main.getBoundingClientRect().height;
-        const divH = refs.divider.getBoundingClientRect().height || 18;
-        const initTop = Math.max(180, tot - 160 - divH);
-        refs.topPane.style.flex = `0 0 ${initTop}px`;
-      });
-
       refs.divider.addEventListener('pointerdown', (e)=>{
         refs.divider.classList.add('active');
         startY = e.clientY;
@@ -2458,6 +2450,16 @@ window.CanvasEditor = (() => {
       refs.basicHint = document.getElementById('basicHint');
 
       try { renderAll(false); } catch(e){}
+
+      // 페이지가 표시된 후 실행 — topPane 최대화, bottomPane 최소(160px)
+      requestAnimationFrame(() => {
+        if (!refs.main || !refs.topPane) return;
+        const tot = refs.main.getBoundingClientRect().height;
+        if (tot <= 0) return;
+        const divH = (refs.divider && refs.divider.getBoundingClientRect().height) || 18;
+        const initTop = Math.max(180, tot - 160 - divH);
+        refs.topPane.style.flex = `0 0 ${initTop}px`;
+      });
     },
     resizeStages: function() {},
     switchSide: safeSetSide,
