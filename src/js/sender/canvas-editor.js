@@ -2136,25 +2136,39 @@ window.CanvasEditor = (() => {
 
     let dragState = null;
 
-    function cardScale(){
-      const r = refs.card.getBoundingClientRect();
-      return { sx: r.width / 350, sy: r.height / 490 };
+    function getCardRect(){ return refs.card.getBoundingClientRect(); }
+
+    // 클라이언트 좌표 → 카드 논리 좌표 (350×490 기준)
+    function clientToCard(clientX, clientY, cardRect){
+      const sx = cardRect.width  / 350;
+      const sy = cardRect.height / 490;
+      return {
+        x: (clientX - cardRect.left) / sx,
+        y: (clientY - cardRect.top)  / sy
+      };
     }
 
     function onElementPointerDown(e, id){
       e.stopPropagation();
+      if(e.target.classList.contains('resize-handle') || e.target.classList.contains('rotate-handle')) return;
+
       const el = currentSideState().elements.find(x=>x.id===id);
       if(!el) return;
-      selectElement(id);
 
-      if(e.target.classList.contains('resize-handle') || e.target.classList.contains('rotate-handle')) return;
+      // cardRect을 selectElement(re-render) 이전에 캡처
+      const cardRect = getCardRect();
+      const pos = clientToCard(e.clientX, e.clientY, cardRect);
+
+      selectElement(id);
 
       const dragNode = refs.cardInner.querySelector(`[data-id="${id}"]`);
       if(dragNode) dragNode.style.willChange = 'left,top';
+
+      // stick-to-finger: 포인터가 요소 내 어느 위치를 눌렀는지 오프셋으로 저장
       dragState = {
-        type:'move', id, dragNode,
-        startX:e.clientX, startY:e.clientY,
-        origX:el.x, origY:el.y
+        type:'move', id, dragNode, cardRect,
+        offsetX: pos.x - el.x,
+        offsetY: pos.y - el.y
       };
       window.addEventListener('pointermove', onPointerMove);
       window.addEventListener('pointerup', onPointerUp);
@@ -2165,10 +2179,11 @@ window.CanvasEditor = (() => {
       const el = currentSideState().elements.find(x=>x.id===id);
       if(!el) return;
       e.target.classList.add('dragging');
+      const cardRect = getCardRect();
       const dragNode = refs.cardInner.querySelector(`[data-id="${id}"]`);
       if(dragNode) dragNode.style.willChange = 'width,height,left,top';
       dragState = {
-        type:'resize', dir, id, dragNode,
+        type:'resize', dir, id, dragNode, cardRect,
         handle: e.target,
         startX:e.clientX, startY:e.clientY,
         origW:el.w, origH:el.h, origX:el.x, origY:el.y
@@ -2183,10 +2198,13 @@ window.CanvasEditor = (() => {
       if(!el) return;
       e.target.classList.add('dragging');
       const dragNode = refs.cardInner.querySelector(`[data-id="${id}"]`);
-      // DOM rect 기준 → scrollHeight 조정 반영된 실제 중심점
+      const cardRect = getCardRect();
+      const sx = cardRect.width / 350;
+      const sy = cardRect.height / 490;
+      // 실제 DOM node 중심점 (카드 기준)
       const nodeRect = dragNode.getBoundingClientRect();
-      const cx = nodeRect.left + nodeRect.width / 2;
-      const cy = nodeRect.top + nodeRect.height / 2;
+      const cx = nodeRect.left + nodeRect.width  / 2;
+      const cy = nodeRect.top  + nodeRect.height / 2;
       dragState = {
         type:'rotate', id, dragNode,
         handle: e.target,
@@ -2203,16 +2221,16 @@ window.CanvasEditor = (() => {
       const el = currentSideState().elements.find(x=>x.id===dragState.id);
       if(!el) return;
 
-      const { sx, sy } = cardScale();
-
       if(dragState.type === 'move'){
-        const dx = (e.clientX - dragState.startX) / sx;
-        const dy = (e.clientY - dragState.startY) / sy;
-        el.x = Math.max(-el.w * 0.5, Math.min(350 - el.w * 0.5, dragState.origX + dx));
-        el.y = Math.max(-el.h * 0.5, Math.min(490 - el.h * 0.5, dragState.origY + dy));
+        const pos = clientToCard(e.clientX, e.clientY, dragState.cardRect);
+        el.x = pos.x - dragState.offsetX;
+        el.y = pos.y - dragState.offsetY;
       }
 
       if(dragState.type === 'resize'){
+        const { cardRect } = dragState;
+        const sx = cardRect.width  / 350;
+        const sy = cardRect.height / 490;
         const dx = (e.clientX - dragState.startX) / sx;
         const dy = (e.clientY - dragState.startY) / sy;
         const { dir } = dragState;
@@ -2241,10 +2259,10 @@ window.CanvasEditor = (() => {
       }
 
       if(dragState.dragNode){
-        dragState.dragNode.style.left = `${el.x}px`;
-        dragState.dragNode.style.top = `${el.y}px`;
-        dragState.dragNode.style.width = `${el.w}px`;
-        dragState.dragNode.style.height = `${el.h}px`;
+        dragState.dragNode.style.left      = `${el.x}px`;
+        dragState.dragNode.style.top       = `${el.y}px`;
+        dragState.dragNode.style.width     = `${el.w}px`;
+        dragState.dragNode.style.height    = `${el.h}px`;
         dragState.dragNode.style.transform = `rotate(${el.rotation || 0}deg)`;
       }
     }
