@@ -5,10 +5,10 @@ window.CanvasEditor = (() => {
   const TEMPLATES_INLINE = [
   {
     id: 'birthday',
-    frontColor: '#f472b6',
-    accentColor: '#fb923c',
-    frontGradient: 'linear-gradient(160deg, #fdf2f8 0%, #fce7f3 45%, #fff7ed 100%)',
-    backGradient: 'linear-gradient(160deg, #fff7ed 0%, #fce7f3 100%)',
+    frontColor: '#d946a8',
+    accentColor: '#f97316',
+    frontGradient: 'linear-gradient(155deg, #be185d 0%, #db2777 28%, #f97316 72%, #fdba74 100%)',
+    backGradient: 'linear-gradient(155deg, #9d174d 0%, #db2777 50%, #f97316 100%)',
     bgImage: 'https://images.unsplash.com/photo-1510784722466-f2aa9c52fff6?w=800&auto=format&fit=crop&q=80',
     title: 'Happy Birthday',
     subtitle: 'May this day sparkle\nwith everything you love.',
@@ -321,9 +321,9 @@ window.CanvasEditor = (() => {
   const bgImg = tpl?.bgImage || '';
 
   return {
-    bgColor: '#ffffff',
+    bgColor: isFront ? main + 'cc' : accent + '99',
     bgImage: bgImg,
-    bgImageOpacity: isFront ? 0.52 : 0.18,
+    bgImageOpacity: isFront ? 0.30 : 0.18,
     bgImageScale: 100,
     bgImageFit: 'cover',
     bgOverlay: {
@@ -331,46 +331,58 @@ window.CanvasEditor = (() => {
       mode: 'gradient',
       color: main,
       gradient: {
-        angle: isFront ? 160 : 180,
+        angle: isFront ? 155 : 180,
         stops: isFront
           ? [
-              {id:uid(), pos:0,   color: main+'99'},
-              {id:uid(), pos:50,  color: accent+'55'},
-              {id:uid(), pos:100, color:'#ffffff22'}
+              {id:uid(), pos:0,   color: main+'ee'},
+              {id:uid(), pos:40,  color: main+'88'},
+              {id:uid(), pos:70,  color: accent+'44'},
+              {id:uid(), pos:100, color:'#00000022'}
             ]
           : [
-              {id:uid(), pos:0,   color: accent+'66'},
+              {id:uid(), pos:0,   color: accent+'88'},
               {id:uid(), pos:100, color:'#ffffff11'}
             ]
       }
     },
     elements: isFront
       ? [
-          Object.assign(createDefaultText(uid(), tpl?.title || 'Title', 20, 32, 'clean'), {
-            w:260, h:90, fontSize:38,
+          Object.assign(createDefaultText(uid(), tpl?.title || 'Title', 24, 40, 'clean'), {
+            w:300, h:100, fontSize:42,
             fontFamily:'"Black Han Sans", sans-serif',
-            lineHeight:1.1, letterSpacing:-0.5,
-            fill:{mode:'solid', color:'#ffffff', gradient:null},
+            lineHeight:1.05, letterSpacing:-1,
+            fill:{
+              mode:'gradient',
+              color:'#ffffff',
+              gradient:{
+                angle:135,
+                stops:[
+                  {id:uid(), pos:0,   color:'#ffffff'},
+                  {id:uid(), pos:60,  color:'rgba(255,255,255,0.88)'},
+                  {id:uid(), pos:100, color:'rgba(255,220,200,0.80)'}
+                ]
+              }
+            },
             strokeEnabled:false, strokeWidth:0,
             stroke:{mode:'solid', color:'#000000', gradient:null},
             bgEnabled:false,
             background:{mode:'solid', color:'transparent', opacity:0, radius:0, paddingX:0, paddingY:0, gradient:null}
           }),
-          Object.assign(createDefaultText(uid(), tpl?.subtitle || '', 20, 148, 'clean'), {
-            w:260, h:52, fontSize:14,
+          Object.assign(createDefaultText(uid(), tpl?.subtitle || '', 24, 158, 'clean'), {
+            w:290, h:52, fontSize:14,
             fontFamily:'"Gowun Dodum", sans-serif',
-            lineHeight:1.45, letterSpacing:0.3,
-            fill:{mode:'solid', color:'rgba(255,255,255,0.82)', gradient:null},
+            lineHeight:1.5, letterSpacing:0.4,
+            fill:{mode:'solid', color:'rgba(255,255,255,0.78)', gradient:null},
             strokeEnabled:false, strokeWidth:0,
             stroke:{mode:'solid', color:'#000000', gradient:null},
             bgEnabled:false,
             background:{mode:'solid', color:'transparent', opacity:0, radius:0, paddingX:0, paddingY:0, gradient:null}
           }),
-          Object.assign(createDefaultText(uid(), tpl?.message || '', 20, 220, 'clean'), {
-            w:260, h:120, fontSize:18,
+          Object.assign(createDefaultText(uid(), tpl?.message || '', 24, 230, 'clean'), {
+            w:290, h:120, fontSize:17,
             fontFamily:'"Noto Sans KR", sans-serif',
-            lineHeight:1.65, letterSpacing:0,
-            fill:{mode:'solid', color:'rgba(255,255,255,0.96)', gradient:null},
+            lineHeight:1.7, letterSpacing:0,
+            fill:{mode:'solid', color:'rgba(255,255,255,0.93)', gradient:null},
             strokeEnabled:false, strokeWidth:0,
             stroke:{mode:'solid', color:'#000000', gradient:null},
             bgEnabled:false,
@@ -2124,6 +2136,11 @@ window.CanvasEditor = (() => {
 
     let dragState = null;
 
+    function cardScale(){
+      const r = refs.card.getBoundingClientRect();
+      return { sx: r.width / 350, sy: r.height / 490 };
+    }
+
     function onElementPointerDown(e, id){
       e.stopPropagation();
       const el = currentSideState().elements.find(x=>x.id===id);
@@ -2135,15 +2152,10 @@ window.CanvasEditor = (() => {
       const dragNode = refs.cardInner.querySelector(`[data-id="${id}"]`);
       if(dragNode) dragNode.style.willChange = 'left,top';
       dragState = {
-        type:'move',
-        id,
-        dragNode,
-        startX:e.clientX,
-        startY:e.clientY,
-        origX:el.x,
-        origY:el.y
+        type:'move', id, dragNode,
+        startX:e.clientX, startY:e.clientY,
+        origX:el.x, origY:el.y
       };
-
       window.addEventListener('pointermove', onPointerMove);
       window.addEventListener('pointerup', onPointerUp);
     }
@@ -2156,12 +2168,9 @@ window.CanvasEditor = (() => {
       const dragNode = refs.cardInner.querySelector(`[data-id="${id}"]`);
       if(dragNode) dragNode.style.willChange = 'width,height,left,top';
       dragState = {
-        type:'resize', dir,
-        id,
-        dragNode,
+        type:'resize', dir, id, dragNode,
         handle: e.target,
-        startX:e.clientX,
-        startY:e.clientY,
+        startX:e.clientX, startY:e.clientY,
         origW:el.w, origH:el.h, origX:el.x, origY:el.y
       };
       window.addEventListener('pointermove', onPointerMove);
@@ -2173,14 +2182,13 @@ window.CanvasEditor = (() => {
       const el = currentSideState().elements.find(x=>x.id===id);
       if(!el) return;
       e.target.classList.add('dragging');
-      const cardRect = refs.card.getBoundingClientRect();
       const dragNode = refs.cardInner.querySelector(`[data-id="${id}"]`);
-      const cx = cardRect.left + el.x + el.w/2;
-      const cy = cardRect.top + el.y + el.h/2;
+      // DOM rect 기준 → scrollHeight 조정 반영된 실제 중심점
+      const nodeRect = dragNode.getBoundingClientRect();
+      const cx = nodeRect.left + nodeRect.width / 2;
+      const cy = nodeRect.top + nodeRect.height / 2;
       dragState = {
-        type:'rotate',
-        id,
-        dragNode,
+        type:'rotate', id, dragNode,
         handle: e.target,
         cx, cy,
         startAngle: Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI,
@@ -2195,14 +2203,18 @@ window.CanvasEditor = (() => {
       const el = currentSideState().elements.find(x=>x.id===dragState.id);
       if(!el) return;
 
+      const { sx, sy } = cardScale();
+
       if(dragState.type === 'move'){
-        el.x = Math.max(0, Math.min(300 - el.w, dragState.origX + (e.clientX - dragState.startX)));
-        el.y = Math.max(0, Math.min(420 - el.h, dragState.origY + (e.clientY - dragState.startY)));
+        const dx = (e.clientX - dragState.startX) / sx;
+        const dy = (e.clientY - dragState.startY) / sy;
+        el.x = Math.max(-el.w * 0.5, Math.min(350 - el.w * 0.5, dragState.origX + dx));
+        el.y = Math.max(-el.h * 0.5, Math.min(490 - el.h * 0.5, dragState.origY + dy));
       }
 
       if(dragState.type === 'resize'){
-        const dx = e.clientX - dragState.startX;
-        const dy = e.clientY - dragState.startY;
+        const dx = (e.clientX - dragState.startX) / sx;
+        const dy = (e.clientY - dragState.startY) / sy;
         const { dir } = dragState;
         if(dir === 'se'){
           el.w = Math.max(36, dragState.origW + dx);
