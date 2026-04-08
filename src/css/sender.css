@@ -622,16 +622,15 @@
       position:absolute;
       cursor:pointer;
       max-width:92%;
+      user-select:none;
+      touch-action:none;
     }
 
     .element.selected{
       outline:2px dashed var(--primary);
       outline-offset:4px;
-      border-radius:8px;
-    }
-
-    .element.locked-basic.selected{
-      outline-color:#94a3b8;
+      border-radius:10px;
+      box-shadow:0 0 0 2px rgba(109,93,252,.15);
     }
 
     .text-el{

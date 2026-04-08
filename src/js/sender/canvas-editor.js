@@ -2122,6 +2122,7 @@ window.CanvasEditor = (() => {
       if(e.target.classList.contains('resize-handle') || e.target.classList.contains('rotate-handle')) return;
 
       const dragNode = refs.cardInner.querySelector(`[data-id="${id}"]`);
+      if(dragNode) dragNode.style.willChange = 'left,top';
       dragState = {
         type:'move',
         id,
@@ -2143,6 +2144,7 @@ window.CanvasEditor = (() => {
       if(!el) return;
       e.target.classList.add('dragging');
       const dragNode = refs.cardInner.querySelector(`[data-id="${id}"]`);
+      if(dragNode) dragNode.style.willChange = 'width,height,left,top';
       dragState = {
         type:'resize', dir,
         id,
@@ -2226,6 +2228,7 @@ window.CanvasEditor = (() => {
     function onPointerUp(){
       if(dragState){
         dragState.handle?.classList.remove('dragging');
+        if(dragState.dragNode) dragState.dragNode.style.willChange = 'auto';
         renderAll(false);
         pushHistory();
       }
