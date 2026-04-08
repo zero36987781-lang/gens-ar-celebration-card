@@ -100,7 +100,7 @@
   background:#fff;
   border-bottom:1px solid var(--line);
 }
-.studio-card-wrap{display:flex;align-items:center;justify-content:center;width:100%;min-height:100%;padding:24px;}
+.studio-card-wrap{display:flex;align-items:center;justify-content:center;width:100%;min-height:100%;padding:12px;}
 
 .studio-divider{
   flex-shrink:0;height:24px;cursor:ns-resize;display:flex;align-items:center;justify-content:center;
@@ -576,8 +576,8 @@
 
     .card{
       position:relative;
-      width:300px;
-      height:420px;
+      width:350px;
+      height:490px;
       border-radius:24px;
       overflow:hidden;
       background:#fff;
