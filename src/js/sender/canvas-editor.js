@@ -2130,8 +2130,6 @@ window.CanvasEditor = (() => {
       if(!el) return;
       selectElement(id);
 
-      if(appState.mode === 'basic') return;
-
       if(e.target.classList.contains('resize-handle') || e.target.classList.contains('rotate-handle')) return;
 
       const dragNode = refs.cardInner.querySelector(`[data-id="${id}"]`);
@@ -2177,13 +2175,16 @@ window.CanvasEditor = (() => {
       e.target.classList.add('dragging');
       const cardRect = refs.card.getBoundingClientRect();
       const dragNode = refs.cardInner.querySelector(`[data-id="${id}"]`);
+      const cx = cardRect.left + el.x + el.w/2;
+      const cy = cardRect.top + el.y + el.h/2;
       dragState = {
         type:'rotate',
         id,
         dragNode,
         handle: e.target,
-        cx:cardRect.left + el.x + el.w/2,
-        cy:cardRect.top + el.y + el.h/2
+        cx, cy,
+        startAngle: Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI,
+        origRotation: el.rotation || 0
       };
       window.addEventListener('pointermove', onPointerMove);
       window.addEventListener('pointerup', onPointerUp);
@@ -2224,7 +2225,7 @@ window.CanvasEditor = (() => {
 
       if(dragState.type === 'rotate'){
         const angle = Math.atan2(e.clientY - dragState.cy, e.clientX - dragState.cx) * 180 / Math.PI;
-        el.rotation = Math.round(angle + 90);
+        el.rotation = Math.round(dragState.origRotation + (angle - dragState.startAngle));
       }
 
       if(dragState.dragNode){
