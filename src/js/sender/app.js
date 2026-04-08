@@ -164,6 +164,7 @@ function updatePage() {
   const shell = qs('.sender-shell');
   if (shell) {
     shell.style.overflowY = 'auto'; // Always allow scroll to secure workspace
+    shell.classList.toggle('studio-active', state.page === 2);
   }
 
   if (els.bottomNav) els.bottomNav.style.display = '';

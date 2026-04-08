@@ -1,0 +1,438 @@
+페이지에서 카드 내부 요소의 점선 선택 표시와 리사이즈 핸들은 CSS + JS + 렌더 구조 3개가 같이 맞물려 있어.
+다른 페이지에 옮기려면 이 3개를 세트로 이해하면 돼.
+
+1. 기본 구조
+카드 안에는 요소들이 .element 로 들어가고, 선택된 요소만 .selected 클래스가 붙어.
+
+구조는 대략 이렇게 렌더돼:
+
+Copy<div class="card-content">
+  <div class="element text-element selected" data-id="...">
+    텍스트
+    <div class="resize-handle" data-resize="1"></div>
+  </div>
+</div>
+이미지도 똑같이:
+
+Copy<div class="element image-element selected" data-id="...">
+  <img ...>
+  <div class="resize-handle" data-resize="1"></div>
+</div>
+즉 핵심은:
+
+모든 편집 대상 공통 클래스: .element
+선택 상태 클래스: .selected
+크기조절 핸들: .resize-handle
+2. 점선 표시 방식
+점선 표시 자체는 CSS로 처리돼.
+
+핵심 규칙:
+
+Copy.element.selected{
+  outline:2px dashed rgba(255,255,255,.96);
+  outline-offset:4px;
+  border-radius:10px;
+  box-shadow:0 0 0 2px rgba(109,93,252,.2);
+}
+의미는 이거야:
+
+.element.selected 가 되면
+요소 바깥쪽에 점선 outline이 생김
+outline-offset:4px 로 요소 바깥으로 띄워서 보이게 함
+border-radius 로 모서리 둥글게 맞춤
+box-shadow 로 선택 상태를 더 또렷하게 강조
+왜 outline을 썼는가
+이 방식은 장점이 있어:
+
+실제 요소 width/height를 안 바꿈
+border처럼 박스 크기에 영향 안 줌
+레이아웃 shift가 없음
+텍스트/이미지 공통 적용이 쉬움
+다른 페이지에 적용할 때도
+선택 테두리는 border보다 outline이 안전한 경우가 많다고 보면 돼.
+
+3. 핸들 표시 방식
+핸들은 항상 보이는 게 아니라, 선택됐을 때만 보여.
+
+CSS:
+
+Copy.resize-handle{
+  position:absolute;
+  right:-7px;
+  bottom:-7px;
+  width:14px;
+  height:14px;
+  border-radius:50%;
+  background:#fff;
+  border:2px solid var(--primary);
+  box-shadow:0 2px 8px rgba(17,24,39,.18);
+  display:none;
+}
+
+.element.selected .resize-handle{
+  display:block;
+}
+의미:
+
+핸들은 요소 오른쪽 아래 모서리에 붙어 있음
+평소엔 display:none
+부모 .element 가 .selected 면 보임
+즉, 핸들은 DOM에는 항상 넣어두고, 선택 상태일 때만 노출하는 구조야.
+
+4. 핸들은 어떻게 DOM에 붙는가
+렌더링 함수에서 각 요소를 만들 때 핸들을 같이 append 해.
+
+핵심 부분:
+
+Copyconst handle = document.createElement('div');
+handle.className = 'resize-handle';
+handle.dataset.resize = '1';
+node.appendChild(handle);
+즉 요소 하나 생성할 때:
+
+요소 노드 만들고
+텍스트 또는 이미지 내용 넣고
+핸들 div를 자식으로 붙임
+그래서 다른 페이지에 적용하려면
+선택 가능한 요소 내부에 핸들 요소를 같이 넣어야 해.
+
+5. 선택 상태는 어떻게 붙는가
+렌더 시 selected 여부를 보고 클래스가 붙어.
+
+Copynode.className = `element ${el.type}-element` + (s.selectedId === el.id ? ' selected' : '');
+여기서:
+
+현재 선택된 요소 id와
+렌더 중인 요소 id가 같으면
+selected 클래스 추가
+즉 선택 표시의 진짜 스위치는 CSS가 아니라
+JS가 selected 클래스를 붙여주는 것이야.
+
+6. 클릭하면 왜 점선이 생기나
+이벤트에서 선택 상태를 바꾸기 때문이야.
+
+Copynode.addEventListener('click', (e) => {
+  e.stopPropagation();
+  selectElement(el.id);
+});
+그리고:
+
+Copyfunction selectElement(id){
+  state().selectedId = id;
+  renderAll();
+}
+즉 흐름은:
+
+요소 클릭
+selectedId 저장
+다시 렌더
+해당 요소에 .selected 클래스 부여
+점선 + 핸들 표시
+7. 핸들을 누르면 왜 resize로 들어가나
+핸들에 data-resize="1" 이 붙어 있고, pointerdown에서 그걸 검사해.
+
+CopydragInfo = {
+  id,
+  mode: target.dataset.resize ? 'resize' : 'move',
+  ...
+};
+즉:
+
+일반 요소 몸통 누르면 move
+핸들 누르면 resize
+이 패턴이 다른 페이지에도 가장 단순하게 이식 가능해.
+
+8. resize 동작 방식
+리사이즈는 pointermove에서 처리돼.
+
+Copyif(dragInfo.mode === 'resize'){
+  if(el.type === 'image'){
+    const newSize = Math.max(40, Math.min(180, dragInfo.origW + dx));
+    el.width = newSize;
+    el.height = newSize;
+  } else if(el.type === 'text'){
+    el.width = Math.max(80, Math.min(240, dragInfo.origW + dx));
+  }
+}
+여기서 특징:
+
+이미지: 정사각형 비율 유지
+텍스트: width만 변경
+min/max 제한 있음
+즉 핸들은 단지 “resize 시작점”이고
+실제 크기 변경 규칙은 JS에서 결정해.
+
+9. 다른 페이지에 적용하려면 필요한 최소 세트
+다른 페이지에 그대로 옮기려면 최소한 아래 4개가 필요해.
+
+A. 선택 대상 공통 클래스
+Copy.element{
+  position:absolute;
+  user-select:none;
+  touch-action:none;
+}
+B. 선택 상태 스타일
+Copy.element.selected{
+  outline:2px dashed rgba(255,255,255,.96);
+  outline-offset:4px;
+  border-radius:10px;
+}
+C. 핸들 스타일
+Copy.resize-handle{
+  position:absolute;
+  right:-7px;
+  bottom:-7px;
+  width:14px;
+  height:14px;
+  border-radius:50%;
+  display:none;
+}
+.element.selected .resize-handle{
+  display:block;
+}
+D. JS 선택/렌더 로직
+selectedId 상태 보관
+렌더 시 selected 클래스 부여
+각 요소 내부에 resize-handle append
+pointerdown 시 핸들 여부로 move/resize 분기
+10. 다른 페이지에 적용할 때 구조 추천
+가장 안전한 구조는 이거야:
+
+Copy<div class="editor-canvas">
+  <div class="editor-layer element selected" data-id="t1">
+    <div class="editor-layer__content">텍스트</div>
+    <div class="resize-handle" data-resize="1"></div>
+  </div>
+</div>
+이렇게 하면 좋아:
+
+.element = 공통 편집 상태
+.selected = 선택 시각 효과
+.resize-handle = 크기 조절 트리거
+내부 콘텐츠는 별도 wrapper로 분리 가능
+11. 다른 페이지에 붙일 때 주의할 점
+1) 부모가 overflow:hidden 인지 확인
+핸들이 요소 바깥으로 살짝 튀어나오므로
+부모 clipping 구조에 따라 핸들이 잘릴 수 있어.
+
+이 페이지에서는 카드 캔버스 내부에서 보이도록 설계돼 있지만, 다른 페이지에서는 부모 레이어 구조 때문에 안 보일 수 있음.
+
+2) position: absolute 기준 부모 필요
+.element 가 absolute면
+부모 캔버스는 보통 position:relative 여야 해.
+
+예:
+
+Copy.editor-canvas{
+  position:relative;
+}
+이거 없으면 좌표 배치가 깨져.
+
+3) outline은 transform 요소와 같이 볼 것
+회전/확대가 들어간 요소는 outline이 기대와 다르게 보일 수 있어. 그래도 border보다 안전한 편이긴 해.
+
+더 정교하게 하려면 pseudo-element 선택 박스를 따로 만들 수도 있지만, 지금 방식은 단순하고 유지보수 쉬운 구조야.
+
+4) 클릭 해제 영역 필요
+이 페이지는 카드 빈 곳 클릭 시 선택 해제해.
+
+CopycardCanvas.addEventListener('click', () => {
+  state().selectedId = null;
+  renderAll();
+});
+다른 페이지에도 반드시 필요해. 안 그러면 한 번 선택된 점선이 계속 남아 UX가 답답해져.
+
+12. 재사용 가능한 개념으로 정리
+다른 페이지에 적용할 때는 이렇게 생각하면 돼:
+
+선택 표시 시스템
+상태값: selectedId
+렌더 규칙: 선택된 요소만 .selected
+시각효과: .element.selected
+핸들 시스템
+모든 요소에 핸들 자식 추가
+기본 숨김
+선택 상태에서만 노출
+data-resize 로 역할 구분
+인터랙션 시스템
+요소 클릭 → 선택
+빈 영역 클릭 → 해제
+핸들 pointerdown → resize
+요소 body pointerdown → move
+13. 이 페이지 방식의 장점
+이 구조를 다른 페이지에도 쓰기 좋은 이유는:
+
+구현이 단순함
+텍스트/이미지 공통 처리 가능
+CSS와 JS 역할이 명확함
+선택 표시가 레이아웃을 흔들지 않음
+핸들 표시 조건이 분명함
+14. 한 줄 요약
+이 페이지의 점선/핸들 시스템은
+
+“선택된 요소에만 selected 클래스를 붙이고, CSS로 점선/핸들을 보여주며, 핸들 클릭 여부를 data-resize로 판별해 move와 resize를 나누는 방식” 이야.
+
+원하면 다음 답변에서
+이걸 다른 페이지에 바로 이식할 수 있게 공통 CSS / 공통 JS 패턴만 따로 추려서 정리해줄게.
+
+위의 내용에서 부드러운 화면표시를 구현하는 기술이 있어?
+있어.
+위 코드에도 이미 일부 들어가 있고, 더 체계적으로 적용할 수 있어.
+
+부드러운 화면 표시를 만드는 기술은 크게 5가지로 보면 돼.
+
+1. CSS transition
+가장 기본이야.
+상태가 바뀔 때 갑자기 바뀌지 않고 자연스럽게 이어지게 함.
+
+이 코드에 이미 있는 예:
+
+.context-bar
+.toast
+.sheet
+.divider.active
+.icon-btn:active
+예:
+
+Copytransition:.18s ease;
+transition:.2s ease;
+transition:.22s ease;
+이건
+
+열림/닫힘
+위치 이동
+opacity 변화
+transform 변화
+같은 데 유효해.
+
+특히 안전한 조합은:
+
+opacity
+transform
+이 둘은 비교적 부드럽고 성능도 좋음.
+
+2. transform 기반 이동
+부드럽게 보이게 하려면 top/left보다 transform이 유리한 경우가 많아.
+
+이 코드에도 이미 일부 있음:
+
+.context-bar.hidden
+.toast.show
+.sheet.open
+cardBg.style.transform = scale(...)
+예:
+
+Copytransform:translateX(-50%) translateY(10px);
+transform:translateX(-50%) translateY(0);
+transform:translateY(100%);
+이 방식은 브라우저가 GPU 가속을 더 잘 쓰는 편이라 시각적으로 더 부드럽게 느껴질 수 있어.
+
+3. opacity + transform 조합
+가장 많이 쓰는 “부드럽게 뜨고 사라지는” 방식이야.
+
+예:
+
+Copyopacity:0;
+transform:translateY(20px);
+transition:.2s ease;
+보일 때:
+
+Copyopacity:1;
+transform:translateY(0);
+이 코드의:
+
+toast
+context bar
+bottom sheet
+이런 게 다 그 패턴이야.
+
+이 방식이 좋은 이유:
+
+갑작스럽지 않음
+레이아웃 변경이 적음
+시각적 완성도가 높음
+4. will-change
+질문한 “부드러운 화면표시 기술” 중에서 성능 쪽 보조기술이야.
+
+프로젝트 지침에도 있었지:
+
+스크롤/드래그는 will-change, transform 활용
+예를 들면 이런 대상에 고려 가능:
+
+카드 내부 드래그 요소
+bottom sheet
+toast
+context bar
+divider drag 중인 영역
+의미: 브라우저에게
+“이 요소는 곧 transform/opacity가 바뀔 거야”
+라고 미리 알려 최적화 여지를 주는 거야.
+
+다만 남발하면 오히려 메모리 낭비라서 실제로 자주 움직이는 요소에만 제한적으로 쓰는 게 맞아.
+
+5. requestAnimationFrame
+JS로 직접 움직임을 만들 때 쓰는 핵심 기술이야.
+
+현재 코드에서는 pointermove마다 바로 DOM 갱신하고 있는데, 더 부드럽게 하려면 requestAnimationFrame으로 렌더 타이밍을 맞출 수 있어.
+
+특히 이런 경우:
+
+드래그 이동
+리사이즈
+회전
+캔버스 내부 요소 실시간 반영
+이런 건 브라우저의 화면 갱신 타이밍에 맞춰 그리면 더 안정적으로 보여.
+
+즉:
+
+단순 show/hide = CSS transition
+실시간 drag/resize = requestAnimationFrame + transform 또는 최소 DOM 갱신
+이 조합이 좋음.
+
+이 코드에서 이미 “부드러움”에 해당하는 부분
+이미 들어간 요소들:
+
+transition
+transform
+opacity
+backdrop-filter
+scale
+sticky + overflow 구조
+shadow/blur를 이용한 시각적 완화
+즉 완전히 없는 건 아니고, 이미 “부드럽게 보이게 하는 UI 기술”은 쓰고 있어.
+
+더 부드럽게 만들 때 가장 효과 큰 포인트
+이 코드 기준으로는 아래가 효과 큼:
+
+1) 드래그 중 전체 renderAll() 남발 줄이기
+지금은 이동 중에도 전체 재렌더가 자주 일어나서 기기 따라 버벅일 수 있어.
+
+가장 큰 개선 포인트는:
+
+드래그 중엔 해당 요소만 업데이트
+pointerup 때 전체 동기화
+2) 이동을 left/top 대신 transform으로 처리
+드래그 요소가 많아지면 더 효과적일 수 있어.
+
+3) 자주 열고 닫는 UI에만 will-change 적용
+예:
+
+.context-bar
+.toast
+.sheet
+4) 스크롤 영역에 과한 효과 줄이기
+blur, shadow, sticky, nested scroll이 많으면 저사양 모바일에서 부드러움이 깨질 수 있어.
+
+한 줄 결론
+응, 있어.
+위 내용에서 부드러운 화면표시를 구현하는 대표 기술은:
+
+CSS transition
+transform
+opacity
+will-change
+requestAnimationFrame
+이 다섯 가지야.
+
+원하면 다음 답변에서
+이 HTML 코드 안에서 실제로 어떤 부분이 부드러운 표시 기술이고, 어떤 부분은 더 개선 가능할지 구체적으로 짚어줄게.
