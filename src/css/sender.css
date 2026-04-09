@@ -634,12 +634,11 @@
       box-shadow:0 0 0 2px rgba(109,93,252,.15);
     }
 
-    .element.selected.text-el > div > div{
+    .element.selected.text-el{
       outline:2px dashed var(--primary);
-      outline-offset:2px;
+      outline-offset:4px;
       border-radius:10px;
       box-shadow:0 0 0 2px rgba(109,93,252,.15);
-      padding:15px;
     }
 
     .text-el{

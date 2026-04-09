@@ -2155,14 +2155,18 @@ window.CanvasEditor = (() => {
       const el = currentSideState().elements.find(x=>x.id===id);
       if(!el) return;
 
-      // cardRect을 selectElement(re-render) 이전에 캡처
-      const cardRect = getCardRect();
-      const pos = clientToCard(e.clientX, e.clientY, cardRect);
+      // 터치 시 clientX/Y를 미리 저장 (이벤트 객체는 비동기 접근 불가)
+      const clientX = e.clientX;
+      const clientY = e.clientY;
 
       selectElement(id);
 
+      // cardRect을 selectElement(re-render) 이후에 캡처 → 레이아웃 확정 후 정확한 좌표
       const dragNode = refs.cardInner.querySelector(`[data-id="${id}"]`);
       if(dragNode) dragNode.style.willChange = 'left,top';
+
+      const cardRect = getCardRect();
+      const pos = clientToCard(clientX, clientY, cardRect);
 
       // stick-to-finger: 포인터가 요소 내 어느 위치를 눌렀는지 오프셋으로 저장
       dragState = {
