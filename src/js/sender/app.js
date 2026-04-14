@@ -188,7 +188,17 @@ function updatePage() {
   }
 }
 
-function nextPage() { if (state.page < MAX_PAGES) { state.page++; updatePage(); if (state.page !== 2) qs('.sender-shell')?.scrollTo({ top: 0, behavior: 'smooth' }); } }
+function nextPage() {
+  if (state.page === 1) {
+    location.href = '/editor/?template=' + encodeURIComponent(state.templateId || '');
+    return;
+  }
+  if (state.page < MAX_PAGES) {
+    state.page++;
+    updatePage();
+    if (state.page !== 2) qs('.sender-shell')?.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
 function prevPage() { if (state.page > 1) { state.page--; updatePage(); if (state.page !== 2) qs('.sender-shell')?.scrollTo({ top: 0, behavior: 'smooth' }); } }
 
 /* ── Studio split resizer ── */
