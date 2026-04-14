@@ -47,8 +47,8 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
 .canvas-scaler{width:100%;height:100%;display:flex;align-items:center;justify-content:center;position:relative;}
 .card{width:270px;height:338px;background:#fff;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.2),0 4px 12px rgba(0,0,0,.1);position:relative;overflow:hidden;flex-shrink:0;}
 #canvas{position:absolute;inset:0;background:#fff;transform-origin:top left;}
-.divider{height:24px;background:linear-gradient(to bottom,#e0e0e0,#f0f0f2 50%,#e0e0e0);cursor:ns-resize;display:flex;align-items:center;justify-content:center;flex-shrink:0;user-select:none;}
-.divider::before{content:'';width:40px;height:4px;background:rgba(0,0,0,.2);border-radius:2px;}
+.divider{height:32px;background:linear-gradient(to bottom,#e0e0e0,#f0f0f2 50%,#e0e0e0);cursor:ns-resize;display:flex;align-items:center;justify-content:center;flex-shrink:0;user-select:none;touch-action:none;}
+.divider::before{content:'';width:52px;height:5px;background:rgba(0,0,0,.18);border-radius:3px;transition:background 0.15s ease-out,width 0.15s ease-out;}
 .bottom-area{height:300px;background:#fff;display:flex;flex-direction:column;flex-shrink:0;}
 
 /* ===== Toolbar: horizontal scroll, 44x44 buttons, gap 8 ===== */
@@ -272,6 +272,132 @@ input:checked+.sw-sl{background:#000;}input:checked+.sw-sl::before{transform:tra
 .mot-swing{animation:mot-swing var(--mot-dur,1s) var(--mot-ease,ease-in-out) var(--mot-delay,0s) var(--mot-count,infinite)}
 .mot-slidein{animation:mot-slidein var(--mot-dur,0.8s) var(--mot-ease,ease-out) var(--mot-delay,0s) var(--mot-count,1) both}
 .mot-slideout{animation:mot-slideout var(--mot-dur,0.8s) var(--mot-ease,ease-in) var(--mot-delay,0s) var(--mot-count,1) forwards}
+
+/* ===== Soft-Dark Theme (canvas 제외 전체 적용) ===== */
+:root{
+  --dk-bg:#1c1c1e;
+  --dk-surface:#2c2c2e;
+  --dk-border:rgba(255,255,255,0.10);
+  --dk-text:#ffffff;
+  --dk-sub:rgba(255,255,255,0.55);
+  --dk-muted:rgba(255,255,255,0.30);
+}
+html,body{background:var(--dk-bg);}
+
+/* Header */
+.studio-header{background:var(--dk-surface);border-color:var(--dk-border);}
+.studio-brand-mark{background:#fff;color:#000;}
+.studio-brand-name,.studio-page-title{color:var(--dk-text);}
+.s-icon-btn{color:var(--dk-muted);}
+.s-icon-btn.active{color:var(--dk-text);}
+.s-sep{background:var(--dk-border);}
+.s-collapse-btn{color:var(--dk-sub);}
+
+/* Toggle pill (dark 배경용) */
+.toggle-group{display:flex;background:rgba(255,255,255,0.06);border-radius:10px;overflow:hidden;border:1px solid var(--dk-border);}
+.toggle-pill{padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;background:transparent;color:var(--dk-muted);border:none;transition:0.15s;white-space:nowrap;}
+.toggle-pill.active{background:#fff;color:#000;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.3);outline:2px solid rgba(255,255,255,0.6);outline-offset:-2px;}
+
+/* Top area (canvas 주변) */
+.top-area{background:var(--dk-bg);}
+.divider{height:32px;background:linear-gradient(to bottom,#333,var(--dk-surface) 50%,#333);touch-action:none;will-change:transform;transition:background 0.15s ease-out;}
+.divider::before{width:52px;height:5px;background:rgba(255,255,255,0.22);border-radius:3px;transition:background 0.15s ease-out,width 0.15s ease-out;}
+.divider:hover::before{background:rgba(255,255,255,0.45);}
+.divider.active{background:linear-gradient(to bottom,#444,#3a3a3a 50%,#444);}
+.divider.active::before{background:rgba(255,255,255,0.55);width:64px;}
+.bottom-area{will-change:height;}
+
+/* Bottom area */
+.bottom-area{background:var(--dk-surface);}
+.toolbar{background:rgba(28,28,30,0.98);border-color:var(--dk-border);}
+.btn{border-color:rgba(255,255,255,0.22);background:transparent;color:#fff;}
+.btn.on{background:#fff;color:#000;}
+.color-box{border-color:rgba(255,255,255,0.22);}
+.zoom-btn{border-color:rgba(255,255,255,0.22);background:transparent;color:#fff;}
+.zoom-btn.active,.zoom-btn.scrub-active{border-color:var(--clr-active);color:var(--clr-active);}
+.subtab-row{background:var(--dk-bg);border-color:var(--dk-border);}
+.subtab-btn{border-color:rgba(255,255,255,0.18);background:transparent;color:var(--dk-sub);}
+.subtab-btn.on{background:#fff;color:#000;}
+
+/* Edit panel */
+.panel{background:var(--dk-surface);}
+.ep-section{border-color:rgba(255,255,255,0.08);}
+.ep-sec-title{color:rgba(255,255,255,0.85);}
+.ep-label{color:var(--dk-sub);}
+.drag-val{background:var(--dk-bg);border-color:rgba(255,255,255,0.15);}
+.drag-label{color:rgba(255,255,255,0.7);}
+.drag-num{color:#fff;}
+.drag-val.scrub-active{border-color:var(--clr-active);background:#0a1f35;box-shadow:0 0 0 2px rgba(0,122,255,0.2);}
+.tog-btn{border-color:rgba(255,255,255,0.18);background:transparent;color:var(--dk-sub);}
+.tog-btn.on{background:#fff;color:#000;}
+.tog-btn.on svg{stroke:#000;}
+.ep-clr{border-color:rgba(255,255,255,0.2);}
+select{background:var(--dk-bg);border-color:rgba(255,255,255,0.2);color:#fff;}
+.sw-sl{background:#555;}
+input:checked+.sw-sl{background:#fff;}
+input:checked+.sw-sl::before{background:var(--dk-bg);}
+.no-bg-btn{background:repeating-linear-gradient(45deg,#2a2a2c,#2a2a2c 4px,#333 4px,#333 8px);border-color:rgba(255,255,255,0.2);color:#aaa;}
+.panel-btn{border-color:rgba(255,255,255,0.2);background:transparent;color:#fff;}
+.panel-btn:active{background:rgba(255,255,255,0.1);}
+.collapse-arrow svg{stroke:rgba(255,255,255,0.5);}
+.sw-label{color:rgba(255,255,255,0.82);}
+.sw-wrap{color:rgba(255,255,255,0.82);}
+
+/* Shadow direction buttons */
+.sh-dir-btn{border-color:rgba(255,255,255,0.15);background:transparent;}
+.sh-dir-btn.on{border-color:rgba(255,255,255,0.6);background:rgba(255,255,255,0.1);}
+.ft-dir-btn{border-color:rgba(255,255,255,0.15);background:transparent;}
+.ft-dir-btn.on{border-color:rgba(255,255,255,0.6);background:rgba(255,255,255,0.1);}
+
+/* Gradient section */
+.grad-section{border-color:rgba(255,255,255,0.1);}
+.grad-label{color:rgba(255,255,255,0.85);}
+.grad-toggle-btn{border-color:rgba(255,255,255,0.2);background:transparent;color:#fff;}
+.grad-toggle-btn.on{background:#fff;color:#000;}
+.grad-bar-wrap{border-color:rgba(255,255,255,0.2);}
+.grad-icon-btn{border-color:rgba(255,255,255,0.2);background:transparent;color:#fff;}
+.grad-icon-btn:active{background:#fff;color:#000;}
+.grad-icon-btn:active svg{stroke:#000;}
+.grad-angle-scrub{background:var(--dk-bg);border-color:rgba(255,255,255,0.2);}
+.grad-angle-scrub span:first-child{color:rgba(255,255,255,0.4);}
+.grad-angle-scrub span:last-child{color:#fff;}
+.grad-angle-scrub.scrub-active{border-color:var(--clr-active);background:#0a1f35;box-shadow:0 0 0 2px rgba(0,122,255,0.2);}
+
+/* Handles */
+.hdl{background:rgba(40,40,42,0.95);border-color:rgba(255,255,255,0.28);color:#fff;}
+.hdl.active-hdl{border-color:var(--clr-active);background:#0a1f35;color:var(--clr-active);}
+.hdl-ratio-locked{border-color:var(--clr-active)!important;background:#0a1f35!important;}
+
+/* Layer overlay */
+#layerOverlay{background:rgba(28,28,30,0.97);}
+.lyr-btn{border-color:rgba(255,255,255,0.2);background:transparent;color:#fff;}
+.lyr-btn:active{background:#fff;color:#000;}
+.lyr-btn:active svg{stroke:#000;}
+
+/* Emoji panel */
+.emoji-cat-btn{border-color:rgba(255,255,255,0.15);background:transparent;color:#fff;}
+.emoji-cat-btn.on{border-color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.08);}
+.emoji-item:active{background:rgba(255,255,255,0.1);}
+#emojiPanel{background:var(--dk-surface);}
+
+/* Studio footer */
+.studio-footer{background:var(--dk-surface);border-color:var(--dk-border);}
+.nav-btn-prev{background:rgba(255,255,255,0.1);color:#fff;}
+.nav-btn-next{background:#fff;color:#000;}
+.dot-s{background:rgba(255,255,255,0.2);}
+.dot-s.active{background:#fff;}
+
+/* Edit panel scrollbar dark */
+#editPanel{scrollbar-color:rgba(255,255,255,0.1) transparent;}
+#editPanel::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);}
+#editPanel.scroll-active{scrollbar-color:rgba(255,255,255,0.4) rgba(255,255,255,0.06);}
+#editPanel.scroll-active::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.4);}
+#editPanel.scroll-active::-webkit-scrollbar-track{background:rgba(255,255,255,0.06);}
+#ctrl-pnl-scroll{scrollbar-color:rgba(255,255,255,0.1) transparent;}
+#ctrl-pnl-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);}
+#ctrl-pnl-scroll.scroll-active{scrollbar-color:rgba(255,255,255,0.4) rgba(255,255,255,0.06);}
+#ctrl-pnl-scroll.scroll-active::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.4);}
+#ctrl-pnl-scroll.scroll-active::-webkit-scrollbar-track{background:rgba(255,255,255,0.06);}
 </style>
 </head>
 <body>
@@ -316,22 +442,14 @@ input:checked+.sw-sl{background:#000;}input:checked+.sw-sl::before{transform:tra
     </div>
     <div class="studio-page-title">Design Studio</div>
     <div class="studio-ctrl-row">
-      <div class="studio-toggle-group" id="modeToggle">
-        <button class="s-icon-btn active" data-mode="basic" title="Basic">
-          <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="12" y1="6" x2="12" y2="18"/></svg>
-        </button>
-        <button class="s-icon-btn" data-mode="custom" title="Custom">
-          <svg><use href="#ic-sliders"/></svg>
-        </button>
+      <div class="toggle-group" id="modeToggle">
+        <button type="button" class="toggle-pill active" data-mode="basic">Basic</button>
+        <button type="button" class="toggle-pill" data-mode="custom">Custom</button>
       </div>
       <div class="s-sep"></div>
-      <div class="studio-toggle-group" id="sideToggle">
-        <button class="s-icon-btn active" data-side="front" title="Front">
-          <svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/></svg>
-        </button>
-        <button class="s-icon-btn" data-side="back" title="Back">
-          <svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2" stroke-dasharray="3 2"/></svg>
-        </button>
+      <div class="toggle-group" id="sideToggle">
+        <button type="button" class="toggle-pill active" data-side="front">Front</button>
+        <button type="button" class="toggle-pill" data-side="back">Back</button>
       </div>
       <div class="s-spacer"></div>
       <button class="s-collapse-btn" id="collapseBtn" title="접기">
@@ -519,7 +637,7 @@ function setupHSBHorizontalWheel(id){
   },{passive:false});
 }
 
-function init(){loadPrefs();$('addBtn').onclick=()=>{if(S.sel){desel();}toggleAddSub();};$('delBtn').onclick=confirmDel;$('editBtn').onclick=()=>{if(!S.sel)return;navPush('editPanel','Edit');};$('toolbarBackBtn').onclick=navBack;$('undoBtn').onclick=undo;$('redoBtn').onclick=redo;$('subText').onclick=()=>{addTxt();hideAddSub();};$('subImage').onclick=()=>activateAddSub('image');$('subBg').onclick=()=>activateAddSub('bg');$('subEmoji').onclick=()=>activateAddSub('emoji');$('imgUploadBtn').onclick=()=>{addImg();closeMenus();hideAddSub();};$('imgColorBtn').onclick=()=>{addColorBlock();closeMenus();hideAddSub();};$('bgUploadBtn').onclick=()=>{addBgImg();closeMenus();hideAddSub();};$('bgColorBtn').onclick=()=>{S.colorTarget='bgClr';resetMainClr();navPush('hsbPanel','Bg Color');hideAddSub();updateCTL();updateGradSection();};$('bgNoneBtn').onclick=()=>{S.bg=null;draw();saveHist();closeMenus();hideAddSub();};$('lyrFrontBtn').onclick=()=>{moveLyr('front');hideLyrOv();};$('lyrUpBtn').onclick=()=>{moveLyr('up');hideLyrOv();};$('lyrDownBtn').onclick=()=>{moveLyr('down');hideLyrOv();};$('lyrBackBtn').onclick=()=>{moveLyr('back');hideLyrOv();};$('gradAddBtn').onclick=gradAdd;$('gradRemoveBtn').onclick=gradRemove;$('gradToggleBtn').onclick=gradToggle;$('gradBarWrap').onpointerdown=gradBarDown;$('gradAngleScrub').onpointerdown=e=>{e.stopPropagation();focusLock($('gradAngleScrub'));S.gradAngleDrag={sx:e.clientX,sv:curGrad().angle};};$('canvas').onpointerdown=cvDown;$('zoomBtn').onpointerdown=zoomScrubDown;$('divider').onpointerdown=e=>{e.stopPropagation();S.divDrag={sy:e.clientY,h:$('bottomArea').offsetHeight};};const vp=$('canvasViewport');vp.addEventListener('touchstart',vpTouchStart,{passive:false});vp.addEventListener('touchmove',vpTouchMove,{passive:false});vp.addEventListener('touchend',vpTouchEnd,{passive:false});document.onpointermove=e=>{if(e.target.closest('.toolbar'))return;onMove(e);};document.onpointerup=onUp;document.addEventListener('pointerdown',e=>{if($('layerOverlay').classList.contains('show')&&!$('layerOverlay').contains(e.target))hideLyrOv();const gs=$('gradSection');if(gs&&!gs.contains(e.target)&&!$('hsbPanel').contains(e.target)){const g=curGrad();if(g&&g.selIdx>=0){g.selIdx=-1;renderGradBar();}}},true);applyPrefs();initHSBSliders();initHSBPalette();setupHSBHorizontalWheel('hsb-wheel-pal');setupHSBHorizontalWheel('hsb-wheel-har');setupHSBHorizontalWheel('toolbar');setupHSBHorizontalWheel('toolbar');setupHSBHorizontalWheel('toolbar');setupHSBHorizontalWheel('toolbar');resetMainClr();S.colorTarget=null;updateCTL();saveHist();updBackBtn();initEmojiPanel();applyCanvasZoom();
+function init(){loadPrefs();$('addBtn').onclick=()=>{if(S.sel){desel();}toggleAddSub();};$('delBtn').onclick=confirmDel;$('editBtn').onclick=()=>{if(!S.sel)return;navPush('editPanel','Edit');};$('toolbarBackBtn').onclick=navBack;$('undoBtn').onclick=undo;$('redoBtn').onclick=redo;$('subText').onclick=()=>{addTxt();hideAddSub();};$('subImage').onclick=()=>activateAddSub('image');$('subBg').onclick=()=>activateAddSub('bg');$('subEmoji').onclick=()=>activateAddSub('emoji');$('imgUploadBtn').onclick=()=>{addImg();closeMenus();hideAddSub();};$('imgColorBtn').onclick=()=>{addColorBlock();closeMenus();hideAddSub();};$('bgUploadBtn').onclick=()=>{addBgImg();closeMenus();hideAddSub();};$('bgColorBtn').onclick=()=>{S.colorTarget='bgClr';resetMainClr();navPush('hsbPanel','Bg Color');hideAddSub();updateCTL();updateGradSection();};$('bgNoneBtn').onclick=()=>{S.bg=null;draw();saveHist();closeMenus();hideAddSub();};$('lyrFrontBtn').onclick=()=>{moveLyr('front');hideLyrOv();};$('lyrUpBtn').onclick=()=>{moveLyr('up');hideLyrOv();};$('lyrDownBtn').onclick=()=>{moveLyr('down');hideLyrOv();};$('lyrBackBtn').onclick=()=>{moveLyr('back');hideLyrOv();};$('gradAddBtn').onclick=gradAdd;$('gradRemoveBtn').onclick=gradRemove;$('gradToggleBtn').onclick=gradToggle;$('gradBarWrap').onpointerdown=gradBarDown;$('gradAngleScrub').onpointerdown=e=>{e.stopPropagation();focusLock($('gradAngleScrub'));S.gradAngleDrag={sx:e.clientX,sv:curGrad().angle};};$('canvas').onpointerdown=cvDown;$('zoomBtn').onpointerdown=zoomScrubDown;$('divider').onpointerdown=e=>{e.stopPropagation();e.preventDefault();$('divider').classList.add('active');$('divider').setPointerCapture(e.pointerId);S.divDrag={sy:e.clientY,h:$('bottomArea').offsetHeight};};const vp=$('canvasViewport');vp.addEventListener('touchstart',vpTouchStart,{passive:false});vp.addEventListener('touchmove',vpTouchMove,{passive:false});vp.addEventListener('touchend',vpTouchEnd,{passive:false});document.onpointermove=e=>{if(e.target.closest('.toolbar'))return;onMove(e);};document.onpointerup=onUp;document.addEventListener('pointerdown',e=>{if($('layerOverlay').classList.contains('show')&&!$('layerOverlay').contains(e.target))hideLyrOv();const gs=$('gradSection');if(gs&&!gs.contains(e.target)&&!$('hsbPanel').contains(e.target)){const g=curGrad();if(g&&g.selIdx>=0){g.selIdx=-1;renderGradBar();}}},true);applyPrefs();initHSBSliders();initHSBPalette();setupHSBHorizontalWheel('hsb-wheel-pal');setupHSBHorizontalWheel('hsb-wheel-har');setupHSBHorizontalWheel('toolbar');setupHSBHorizontalWheel('toolbar');setupHSBHorizontalWheel('toolbar');setupHSBHorizontalWheel('toolbar');resetMainClr();S.colorTarget=null;updateCTL();saveHist();updBackBtn();initEmojiPanel();applyCanvasZoom();
 // Init scroll highlight on scrollable panels
 initScrollHighlight($('editPanel'));$('editPanel').addEventListener('wheel',e=>{e.stopPropagation();$('editPanel').scrollTop+=e.deltaY;},{passive:false});
 initScrollHighlight($('hsbPanel'));$('hsbPanel').addEventListener('wheel',e=>{e.stopPropagation();$('hsbPanel').scrollTop+=e.deltaY;},{passive:false});
@@ -671,7 +789,7 @@ function exitEditMode(){if(!S.editing)return;S.editing=false;document.querySelec
 function startHdlDrag(ev,t,id){clearTimeout(S.longTmr);const el=S.els.find(e=>e.id===id);if(!el)return;const d=$('el-'+id),r=d.getBoundingClientRect();S.drag={t:'hdl',ht:t,id,sx:ev.clientX,sy:ev.clientY,erot:el.rot,eopa:el.opa,ew:el.w,eh:el.h,ebr:el.br,cx:r.left+r.width/2,cy:r.top+r.height/2,aspect:el.w/el.h};}
 
 function onMove(e){if(S.zoomDrag){zoomScrubMove(e);return;}if(S.divDrag){const dy=e.clientY-S.divDrag.sy;const nh=Math.max(180,Math.min(520,S.divDrag.h-dy));$('bottomArea').style.height=nh+'px';S.prefs.bottomH=nh;return;}if(S.vdrag){const dx=e.clientX-S.vdrag.sx,units=Math.floor(dx/12);const nv=Math.max(S.vdrag.min,Math.min(S.vdrag.max,S.vdrag.sv+units*S.vdrag.step));updElProp(S.vdrag.id,S.vdrag.prop,nv);updDragDisp(S.vdrag.did,nv,S.vdrag.unit);return;}if(S.gradAngleDrag){const g=curGrad();const dx=e.clientX-S.gradAngleDrag.sx;g.angle=((S.gradAngleDrag.sv+Math.round(dx/2))%360+360)%360;$('gradAngleVal').textContent=g.angle+'';if(g.on)applyGradToTarget();return;}if(S.gradStopDrag){const g=curGrad();const r=$('gradBarWrap').getBoundingClientRect();g.stops[S.gradStopDrag.idx].pos=Math.max(0,Math.min(100,S.gradStopDrag.startPos+(e.clientX-S.gradStopDrag.startX)/r.width*100));renderGradBar();if(g.on)applyGradToTarget();return;}if(!S.drag)return;e.preventDefault();const dx=e.clientX-S.drag.sx,dy=e.clientY-S.drag.sy;const el=S.els.find(e=>e.id===S.drag.id);if(!el)return;if(S.drag.t==='el'){el.x=S.drag.ex+dx/S.canvasZoom;el.y=S.drag.ey+dy/S.canvasZoom;if(S.snap)applySnap(el);}else if(S.drag.t==='hdl'){const ht=S.drag.ht;if(ht==='rot')el.rot=Math.atan2(e.clientY-S.drag.cy,e.clientX-S.drag.cx)*180/Math.PI+90;else if(ht==='opc'){el.opa=Math.max(0,Math.min(100,S.drag.eopa-dy));const oh=$('hdl-opc');if(oh){oh.classList.add('active-hdl');oh.innerHTML='<span class="hdl-opa-pct">'+Math.round(el.opa)+'%</span>';}}else if(ht==='rsz'){if(S.ratioLock[el.id]){const nw=Math.max(40,S.drag.ew+dx/S.canvasZoom);el.w=nw;el.h=Math.max(40,nw/(S.drag.aspect||1));}else{el.w=Math.max(40,S.drag.ew+dx/S.canvasZoom);el.h=Math.max(40,S.drag.eh+dy/S.canvasZoom);}}else if(ht==='brd'){const mx=Math.min(el.w,el.h)/2;el.br=Math.max(0,Math.min(mx,S.drag.ebr+dx/S.canvasZoom));}}draw();}
-function onUp(){if(S.zoomDrag){zoomScrubUp();return;}if(S.drag){if(S.drag.t==='hdl'&&S.drag.ht==='rsz'){const el=S.els.find(el=>el.id===S.drag.id);if(el&&(el.type==='img'||el.type==='emoji')&&S._rszDownTime&&Date.now()-S._rszDownTime<200){S.ratioLock[el.id]=!S.ratioLock[el.id];draw();}S._rszDownTime=null;}saveHist();S.drag=null;rmSnap();setTimeout(()=>{document.querySelectorAll('.hdl').forEach(h=>h.classList.remove('active-hdl'));S.activeHdl=null;},400);}if(S.divDrag){savePrefs();S.divDrag=null;}if(S.vdrag){const el=$(S.vdrag.did);if(el)el.classList.remove('active');focusUnlock();saveHist();S.vdrag=null;}if(S.gradAngleDrag){focusUnlock();S.gradAngleDrag=null;}if(S.gradStopDrag)S.gradStopDrag=null;clearTimeout(S.longTmr);}
+function onUp(){if(S.zoomDrag){zoomScrubUp();return;}if(S.drag){if(S.drag.t==='hdl'&&S.drag.ht==='rsz'){const el=S.els.find(el=>el.id===S.drag.id);if(el&&(el.type==='img'||el.type==='emoji')&&S._rszDownTime&&Date.now()-S._rszDownTime<200){S.ratioLock[el.id]=!S.ratioLock[el.id];draw();}S._rszDownTime=null;}saveHist();S.drag=null;rmSnap();setTimeout(()=>{document.querySelectorAll('.hdl').forEach(h=>h.classList.remove('active-hdl'));S.activeHdl=null;},400);}if(S.divDrag){savePrefs();S.divDrag=null;$('divider').classList.remove('active');}if(S.vdrag){const el=$(S.vdrag.did);if(el)el.classList.remove('active');focusUnlock();saveHist();S.vdrag=null;}if(S.gradAngleDrag){focusUnlock();S.gradAngleDrag=null;}if(S.gradStopDrag)S.gradStopDrag=null;clearTimeout(S.longTmr);}
 function applySnap(el){const cx=CARD_W/2,cy=CARD_H/2,th=8;rmSnap();if(Math.abs(el.x+el.w/2-cx)<th){el.x=cx-el.w/2;showSnap('v',cx);}if(Math.abs(el.y+el.h/2-cy)<th){el.y=cy-el.h/2;showSnap('h',cy);}}
 function showSnap(d,p){const l=document.createElement('div');l.className='snap '+d;if(d==='v')l.style.left=p+'px';else l.style.top=p+'px';$('canvas').appendChild(l);}
 function rmSnap(){document.querySelectorAll('.snap').forEach(s=>s.remove());}
@@ -734,6 +852,7 @@ document.addEventListener('DOMContentLoaded',init);
     _ty=e.touches[0].clientY;
   },{passive:true});
   phoneScreen.addEventListener('touchmove',function(e){
+    if(document.getElementById('divider').classList.contains('active'))return;
     if(e.touches[0].clientY-_ty>40&&header.classList.contains('collapsed')){
       header.classList.remove('collapsed');
     }
