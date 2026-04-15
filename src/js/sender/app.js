@@ -165,6 +165,12 @@ function updatePage() {
   const titleEl = qs('#topbar-page-title');
   if (titleEl) titleEl.textContent = PAGE_TITLES[state.page] || '';
 
+  const shell = qs('.sender-shell');
+  if (shell) {
+    shell.style.overflowY = 'auto'; // Always allow scroll to secure workspace
+    shell.classList.toggle('studio-active', state.page === 2);
+  }
+
   if (els.bottomNav) els.bottomNav.style.display = '';
 
   els.navDots.forEach((d, i) => d.classList.toggle('active', i === state.page - 1));
@@ -175,6 +181,7 @@ function updatePage() {
   }
 
   if (state.page === 2) {
+    if (shell) shell.scrollTo({ top: 0 });
     setTimeout(() => {
       if (window.CanvasEditor) {
         window.CanvasEditor.init();
@@ -202,9 +209,10 @@ function nextPage() {
   if (state.page < MAX_PAGES) {
     state.page++;
     updatePage();
+    if (state.page !== 2) qs('.sender-shell')?.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }
-function prevPage() { if (state.page > 1) { state.page--; updatePage(); } }
+function prevPage() { if (state.page > 1) { state.page--; updatePage(); if (state.page !== 2) qs('.sender-shell')?.scrollTo({ top: 0, behavior: 'smooth' }); } }
 
 /* ── Studio split resizer ── */
 function bindStudioResizer() {
@@ -664,24 +672,16 @@ function renderSampleCarousel() {
     });
   }
 
-  container.innerHTML = CARD_SAMPLES.map((s, i) => {
-    const imgEls = (s.data?.els || [])
-      .filter(e => e.type === 'img')
-      .sort((a, b) => (a.z || 0) - (b.z || 0))
-      .map(e => `<img class="sample-card__img-el" src="${e.src}" draggable="false" style="position:absolute;left:${(e.x/270*100).toFixed(3)}%;top:${(e.y/338*100).toFixed(3)}%;width:${(e.w/270*100).toFixed(3)}%;height:${(e.h/338*100).toFixed(3)}%;z-index:${e.z||1};border-radius:${e.br||0}px;object-fit:cover;pointer-events:none;" />`)
-      .join('');
-    return `
+  container.innerHTML = CARD_SAMPLES.map((s, i) => `
     <button class="sample-card${i === 0 ? ' active' : ''}" data-id="${s.id}" data-cat="${s.category}" type="button">
       <div class="sample-card__bg" style="background-image:url('${s.bg}')"></div>
-      ${imgEls}
       <div class="sample-card__overlay"></div>
       <div class="sample-card__body">
         <span class="sample-card__cat">${CAT_LABELS[s.category] || s.category}</span>
         <p class="sample-card__title">${s.texts[0].replace(/\n/g, '<br>')}</p>
         <p class="sample-card__sub">${s.texts[1].replace(/\n/g, '<br>')}</p>
       </div>
-    </button>`;
-  }).join('');
+    </button>`).join('');
   container.querySelectorAll('.sample-card').forEach(btn => {
     btn.addEventListener('click', () => {
       container.querySelectorAll('.sample-card').forEach(b => b.classList.remove('active'));

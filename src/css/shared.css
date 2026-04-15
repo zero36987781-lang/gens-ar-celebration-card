@@ -33,7 +33,7 @@ button,input,textarea,select{font:inherit;}
 .hidden{display:none!important;}
 
 /* Safe area aware app shell */
-.app-shell{display:flex;flex-direction:column;height:100vh;height:100dvh;padding-top:var(--sat);overflow:hidden;}
+.app-shell{display:flex;flex-direction:column;height:100vh;height:100dvh;padding-top:var(--sat);}
 
 .topbar{
   position:sticky;top:0;z-index:30;
