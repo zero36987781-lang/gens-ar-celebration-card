@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c 'import json; d=json.load\\(open\\('\\\\''c:/gens-ar-celebration-card/src/data/templates/__TRACKED_VAR__.json'\\\\''\\)\\); print\\(d['\\\\''__TRACKED_VAR__'\\\\''][0]['\\\\''data'\\\\'']['\\\\''bg'\\\\'']['\\\\''src'\\\\'']\\)')",
+      "Bash(node -e ':*)"
+    ]
+  }
+}

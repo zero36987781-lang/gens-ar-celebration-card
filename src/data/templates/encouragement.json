@@ -1,0 +1,569 @@
+{
+  "encouragement": [
+    {
+      "id": "encouragement-rising-light",
+      "name": "Rising Light",
+      "data": {
+        "els": [
+          {
+            "id": 1,
+            "type": "img",
+            "x": 160,
+            "y": 210,
+            "w": 82,
+            "h": 96,
+            "rot": -4,
+            "opa": 100,
+            "z": 1,
+            "src": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=700&q=80",
+            "bw": 3,
+            "bc": "#ffffff",
+            "br": 20,
+            "sh": true,
+            "sdirs": [
+              "bottom-right"
+            ],
+            "sdist": 8,
+            "sblur": 12,
+            "sopa": 20
+          },
+          {
+            "id": 2,
+            "type": "text",
+            "x": 24,
+            "y": 40,
+            "w": 180,
+            "z": 2,
+            "txt": "Keep Going",
+            "size": 32,
+            "font": "Playfair Display",
+            "align": "left",
+            "line": 1.05,
+            "txtGrad": "linear-gradient(90deg,#FFFFFF 0%,#FFE7C2 100%)",
+            "tsh": true,
+            "tsblur": 10,
+            "tsopa": 20
+          },
+          {
+            "id": 3,
+            "type": "text",
+            "x": 24,
+            "y": 92,
+            "w": 190,
+            "z": 3,
+            "txt": "You're closer than you think.",
+            "size": 18,
+            "font": "Poppins",
+            "align": "left",
+            "line": 1.3,
+            "clr": "#ffffff",
+            "tsh": true,
+            "tsblur": 6,
+            "tsopa": 18
+          },
+          {
+            "id": 4,
+            "type": "text",
+            "x": 24,
+            "y": 268,
+            "w": 190,
+            "z": 4,
+            "txt": "Every step you take is building something meaningful. Stay with it — you're doing better than you realize.",
+            "size": 13,
+            "font": "Open Sans",
+            "align": "left",
+            "line": 1.4,
+            "clr": "#ffffff",
+            "bg": "rgba(0,0,0,0.25)",
+            "br": 14
+          }
+        ],
+        "bg": {
+          "type": "img",
+          "src": "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80",
+          "opa": 100,
+          "filt": "none"
+        }
+      }
+    },
+    {
+      "id": "encouragement-rising-light",
+      "name": "Rising Light",
+      "data": {
+        "els": [
+          {
+            "id": 1,
+            "type": "img",
+            "x": 160,
+            "y": 210,
+            "w": 82,
+            "h": 96,
+            "rot": -4,
+            "opa": 100,
+            "z": 1,
+            "src": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=700&q=80",
+            "bw": 3,
+            "bc": "#ffffff",
+            "br": 20,
+            "sh": true,
+            "sdirs": [
+              "bottom-right"
+            ],
+            "sdist": 8,
+            "sblur": 12,
+            "sopa": 20
+          },
+          {
+            "id": 2,
+            "type": "text",
+            "x": 24,
+            "y": 40,
+            "w": 180,
+            "z": 2,
+            "txt": "Keep Going",
+            "size": 32,
+            "font": "Playfair Display",
+            "align": "left",
+            "line": 1.05,
+            "txtGrad": "linear-gradient(90deg,#FFFFFF 0%,#FFE7C2 100%)",
+            "tsh": true,
+            "tsblur": 10,
+            "tsopa": 20
+          },
+          {
+            "id": 3,
+            "type": "text",
+            "x": 24,
+            "y": 92,
+            "w": 190,
+            "z": 3,
+            "txt": "You're closer than you think.",
+            "size": 18,
+            "font": "Poppins",
+            "align": "left",
+            "line": 1.3,
+            "clr": "#ffffff",
+            "tsh": true,
+            "tsblur": 6,
+            "tsopa": 18
+          },
+          {
+            "id": 4,
+            "type": "text",
+            "x": 24,
+            "y": 268,
+            "w": 190,
+            "z": 4,
+            "txt": "Every step you take is building something meaningful. Stay with it — you're doing better than you realize.",
+            "size": 13,
+            "font": "Open Sans",
+            "align": "left",
+            "line": 1.4,
+            "clr": "#ffffff",
+            "bg": "rgba(0,0,0,0.25)",
+            "br": 14
+          }
+        ],
+        "bg": {
+          "type": "img",
+          "src": "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80",
+          "opa": 100,
+          "filt": "none"
+        }
+      }
+    },
+    {
+      "id": "encouragement-bold-energy",
+      "name": "Bold Energy",
+      "data": {
+        "els": [
+          {
+            "id": 11,
+            "type": "img",
+            "x": 150,
+            "y": 200,
+            "w": 88,
+            "h": 100,
+            "rot": 6,
+            "opa": 100,
+            "z": 1,
+            "src": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=700&q=80",
+            "bw": 3,
+            "bc": "#ffffff",
+            "br": 22,
+            "sh": true,
+            "sdist": 10,
+            "sblur": 14,
+            "sopa": 22
+          },
+          {
+            "id": 12,
+            "type": "text",
+            "x": 24,
+            "y": 36,
+            "w": 180,
+            "z": 2,
+            "txt": "You Got This",
+            "size": 34,
+            "font": "Bebas Neue",
+            "align": "left",
+            "line": 1,
+            "txtGrad": "linear-gradient(90deg,#FFFFFF,#FFD6A5)",
+            "tsh": true,
+            "tsblur": 8,
+            "tsopa": 18
+          },
+          {
+            "id": 13,
+            "type": "text",
+            "x": 24,
+            "y": 90,
+            "w": 190,
+            "z": 3,
+            "txt": "Even on the hard days.",
+            "size": 17,
+            "font": "Poppins",
+            "align": "left",
+            "line": 1.3,
+            "clr": "#ffffff"
+          },
+          {
+            "id": 14,
+            "type": "text",
+            "x": 24,
+            "y": 270,
+            "w": 190,
+            "z": 4,
+            "txt": "Progress doesn’t always feel loud or obvious. But it’s happening — one decision, one step at a time.",
+            "size": 13,
+            "font": "Open Sans",
+            "align": "left",
+            "line": 1.4,
+            "clr": "#ffffff",
+            "bg": "rgba(0,0,0,0.2)",
+            "br": 14
+          }
+        ],
+        "bg": {
+          "type": "img",
+          "src": "https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?auto=format&fit=crop&w=1200&q=80",
+          "opa": 100,
+          "filt": "none"
+        }
+      }
+    },
+    {
+      "id": "encouragement-calm-strength",
+      "name": "Calm Strength",
+      "data": {
+        "els": [
+          {
+            "id": 21,
+            "type": "img",
+            "x": 150,
+            "y": 210,
+            "w": 80,
+            "h": 94,
+            "rot": -3,
+            "opa": 100,
+            "z": 1,
+            "src": "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=700&q=80",
+            "bw": 3,
+            "bc": "#ffffff",
+            "br": 20,
+            "sh": true,
+            "sblur": 12,
+            "sopa": 18
+          },
+          {
+            "id": 22,
+            "type": "text",
+            "x": 24,
+            "y": 42,
+            "w": 180,
+            "z": 2,
+            "txt": "Stay Steady",
+            "size": 30,
+            "font": "Noto Serif",
+            "align": "left",
+            "line": 1.1,
+            "clr": "#ffffff",
+            "tsh": true,
+            "tsblur": 8,
+            "tsopa": 20
+          },
+          {
+            "id": 23,
+            "type": "text",
+            "x": 24,
+            "y": 90,
+            "w": 190,
+            "z": 3,
+            "txt": "You’re doing better than you feel.",
+            "size": 17,
+            "font": "Poppins",
+            "align": "left",
+            "line": 1.3,
+            "clr": "#ffffff"
+          },
+          {
+            "id": 24,
+            "type": "text",
+            "x": 24,
+            "y": 268,
+            "w": 190,
+            "z": 4,
+            "txt": "Growth can be quiet. Keep showing up, keep believing — it all adds up in ways you can’t see yet.",
+            "size": 13,
+            "font": "Open Sans",
+            "align": "left",
+            "line": 1.4,
+            "clr": "#ffffff",
+            "bg": "rgba(0,0,0,0.22)",
+            "br": 14
+          }
+        ],
+        "bg": {
+          "type": "img",
+          "src": "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=80",
+          "opa": 100,
+          "filt": "none"
+        }
+      }
+    },
+    {
+      "id": "encouragement-premium-golden-hour",
+      "name": "Golden Hour Strength",
+      "data": {
+        "els": [
+          {
+            "id": 1,
+            "type": "img",
+            "x": 158,
+            "y": 210,
+            "w": 78,
+            "h": 92,
+            "rot": -3,
+            "opa": 100,
+            "z": 1,
+            "src": "https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=700&q=80",
+            "bw": 2,
+            "bc": "#f5e6c8",
+            "br": 22,
+            "sh": true,
+            "sblur": 16,
+            "sopa": 18
+          },
+          {
+            "id": 2,
+            "type": "text",
+            "x": 24,
+            "y": 46,
+            "w": 180,
+            "z": 2,
+            "txt": "Stay With It",
+            "size": 30,
+            "font": "Playfair Display",
+            "align": "left",
+            "line": 1.08,
+            "txtGrad": "linear-gradient(90deg,#FFFFFF 0%,#E7D3A3 100%)",
+            "tsh": true,
+            "tsblur": 12,
+            "tsopa": 18
+          },
+          {
+            "id": 3,
+            "type": "text",
+            "x": 24,
+            "y": 94,
+            "w": 190,
+            "z": 3,
+            "txt": "It’s unfolding, even now.",
+            "size": 17,
+            "font": "Cormorant Garamond",
+            "align": "left",
+            "line": 1.3,
+            "clr": "#eaeaea"
+          },
+          {
+            "id": 4,
+            "type": "text",
+            "x": 24,
+            "y": 268,
+            "w": 190,
+            "z": 4,
+            "txt": "Not everything reveals itself at once. What you're building takes time — and it’s already in motion.",
+            "size": 13,
+            "font": "Libre Baskerville",
+            "align": "left",
+            "line": 1.45,
+            "clr": "#f1f1f1",
+            "bg": "rgba(0,0,0,0.35)",
+            "br": 16
+          }
+        ],
+        "bg": {
+          "type": "img",
+          "src": "https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=1200&q=80",
+          "opa": 100,
+          "filt": "none"
+        }
+      }
+    },
+    {
+      "id": "encouragement-premium-deep-focus",
+      "name": "Deep Focus",
+      "data": {
+        "els": [
+          {
+            "id": 11,
+            "type": "img",
+            "x": 150,
+            "y": 220,
+            "w": 82,
+            "h": 96,
+            "rot": 5,
+            "opa": 100,
+            "z": 1,
+            "src": "https://images.unsplash.com/photo-1552058544-f2b08422138a?auto=format&fit=crop&w=700&q=80",
+            "bw": 2,
+            "bc": "#d6c7a1",
+            "br": 24,
+            "sh": true,
+            "sblur": 18,
+            "sopa": 20
+          },
+          {
+            "id": 12,
+            "type": "text",
+            "x": 24,
+            "y": 50,
+            "w": 180,
+            "z": 2,
+            "txt": "Keep Moving",
+            "size": 32,
+            "font": "Playfair Display",
+            "align": "left",
+            "line": 1.05,
+            "clr": "#ffffff",
+            "tsh": true,
+            "tsblur": 10,
+            "tsopa": 20
+          },
+          {
+            "id": 13,
+            "type": "text",
+            "x": 24,
+            "y": 100,
+            "w": 190,
+            "z": 3,
+            "txt": "Quiet progress still counts.",
+            "size": 16,
+            "font": "Cormorant Garamond",
+            "align": "left",
+            "line": 1.35,
+            "clr": "#dddddd"
+          },
+          {
+            "id": 14,
+            "type": "text",
+            "x": 24,
+            "y": 270,
+            "w": 190,
+            "z": 4,
+            "txt": "There’s strength in consistency. Even when it feels small, it carries you further than you think.",
+            "size": 13,
+            "font": "Libre Baskerville",
+            "align": "left",
+            "line": 1.45,
+            "clr": "#f0f0f0",
+            "bg": "rgba(0,0,0,0.4)",
+            "br": 16
+          }
+        ],
+        "bg": {
+          "type": "img",
+          "src": "https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?auto=format&fit=crop&w=1200&q=80",
+          "opa": 100,
+          "filt": "none"
+        }
+      }
+    },
+    {
+      "id": "encouragement-premium-soft-minimal",
+      "name": "Soft Minimal Strength",
+      "data": {
+        "els": [
+          {
+            "id": 21,
+            "type": "img",
+            "x": 150,
+            "y": 230,
+            "w": 76,
+            "h": 90,
+            "rot": -2,
+            "opa": 100,
+            "z": 1,
+            "src": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=700&q=80",
+            "bw": 2,
+            "bc": "#e8e0c8",
+            "br": 22,
+            "sh": true,
+            "sblur": 14,
+            "sopa": 16
+          },
+          {
+            "id": 22,
+            "type": "text",
+            "x": 24,
+            "y": 60,
+            "w": 180,
+            "z": 2,
+            "txt": "You’re On Your Way",
+            "size": 28,
+            "font": "Playfair Display",
+            "align": "left",
+            "line": 1.1,
+            "clr": "#ffffff"
+          },
+          {
+            "id": 23,
+            "type": "text",
+            "x": 24,
+            "y": 104,
+            "w": 190,
+            "z": 3,
+            "txt": "Trust the pace.",
+            "size": 16,
+            "font": "Cormorant Garamond",
+            "align": "left",
+            "line": 1.3,
+            "clr": "#e5e5e5"
+          },
+          {
+            "id": 24,
+            "type": "text",
+            "x": 24,
+            "y": 272,
+            "w": 190,
+            "z": 4,
+            "txt": "You don’t need to rush what’s meant to grow. Give it time, and let it become what it’s meant to be.",
+            "size": 13,
+            "font": "Libre Baskerville",
+            "align": "left",
+            "line": 1.45,
+            "clr": "#f2f2f2",
+            "bg": "rgba(0,0,0,0.3)",
+            "br": 16
+          }
+        ],
+        "bg": {
+          "type": "img",
+          "src": "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80",
+          "opa": 100,
+          "filt": "none"
+        }
+      }
+    }
+  ]
+}

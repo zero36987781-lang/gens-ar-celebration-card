@@ -1,0 +1,238 @@
+{
+  "gratitude": [
+    {
+      "id": "gratitude-premium-quiet-thanks",
+      "name": "Quiet Thanks",
+      "data": {
+        "els": [
+          {
+            "id": 201,
+            "type": "img",
+            "x": 158,
+            "y": 210,
+            "w": 80,
+            "h": 94,
+            "rot": -3,
+            "opa": 100,
+            "z": 1,
+            "src": "https://images.unsplash.com/photo-1547425260-76bcadfb4f2c?auto=format&fit=crop&w=700&q=80",
+            "bw": 2,
+            "bc": "#f0d9a7",
+            "br": 22,
+            "sh": true,
+            "sblur": 16,
+            "sopa": 18
+          },
+          {
+            "id": 202,
+            "type": "text",
+            "x": 24,
+            "y": 46,
+            "w": 180,
+            "z": 2,
+            "txt": "Thank You",
+            "size": 30,
+            "font": "Playfair Display",
+            "align": "left",
+            "line": 1.08,
+            "txtGrad": "linear-gradient(90deg,#FFFFFF 0%,#E7D3A3 100%)",
+            "tsh": true,
+            "tsblur": 12,
+            "tsopa": 18
+          },
+          {
+            "id": 203,
+            "type": "text",
+            "x": 24,
+            "y": 94,
+            "w": 190,
+            "z": 3,
+            "txt": "It truly meant a lot.",
+            "size": 17,
+            "font": "Cormorant Garamond",
+            "align": "left",
+            "line": 1.3,
+            "clr": "#eaeaea"
+          },
+          {
+            "id": 204,
+            "type": "text",
+            "x": 24,
+            "y": 268,
+            "w": 190,
+            "z": 4,
+            "txt": "Some things stay with you longer than expected. Your kindness was one of them — and I’m grateful for it.",
+            "size": 13,
+            "font": "Libre Baskerville",
+            "align": "left",
+            "line": 1.45,
+            "clr": "#f1f1f1",
+            "bg": "rgba(0,0,0,0.35)",
+            "br": 16
+          }
+        ],
+        "bg": {
+          "type": "img",
+          "src": "https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=1200&q=80",
+          "opa": 100,
+          "filt": "none"
+        }
+      }
+    },
+    {
+      "id": "gratitude-premium-warm-recognition",
+      "name": "Warm Recognition",
+      "data": {
+        "els": [
+          {
+            "id": 211,
+            "type": "img",
+            "x": 150,
+            "y": 220,
+            "w": 82,
+            "h": 96,
+            "rot": 5,
+            "opa": 100,
+            "z": 1,
+            "src": "https://images.unsplash.com/photo-1552058544-f2b08422138a?auto=format&fit=crop&w=700&q=80",
+            "bw": 2,
+            "bc": "#d6c7a1",
+            "br": 24,
+            "sh": true,
+            "sblur": 18,
+            "sopa": 20
+          },
+          {
+            "id": 212,
+            "type": "text",
+            "x": 24,
+            "y": 50,
+            "w": 180,
+            "z": 2,
+            "txt": "I Appreciate You",
+            "size": 32,
+            "font": "Playfair Display",
+            "align": "left",
+            "line": 1.05,
+            "clr": "#ffffff",
+            "tsh": true,
+            "tsblur": 10,
+            "tsopa": 20
+          },
+          {
+            "id": 213,
+            "type": "text",
+            "x": 24,
+            "y": 100,
+            "w": 190,
+            "z": 3,
+            "txt": "More than I’ve said before.",
+            "size": 16,
+            "font": "Cormorant Garamond",
+            "align": "left",
+            "line": 1.35,
+            "clr": "#dddddd"
+          },
+          {
+            "id": 214,
+            "type": "text",
+            "x": 24,
+            "y": 270,
+            "w": 190,
+            "z": 4,
+            "txt": "Not everything gets acknowledged the way it should. But what you’ve done hasn’t gone unnoticed — it matters.",
+            "size": 13,
+            "font": "Libre Baskerville",
+            "align": "left",
+            "line": 1.45,
+            "clr": "#f0f0f0",
+            "bg": "rgba(0,0,0,0.4)",
+            "br": 16
+          }
+        ],
+        "bg": {
+          "type": "img",
+          "src": "https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=1200&q=80",
+          "opa": 100,
+          "filt": "none"
+        }
+      }
+    },
+    {
+      "id": "gratitude-premium-soft-presence",
+      "name": "Soft Presence",
+      "data": {
+        "els": [
+          {
+            "id": 221,
+            "type": "img",
+            "x": 150,
+            "y": 230,
+            "w": 76,
+            "h": 90,
+            "rot": -2,
+            "opa": 100,
+            "z": 1,
+            "src": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=700&q=80",
+            "bw": 2,
+            "bc": "#e8e0c8",
+            "br": 22,
+            "sh": true,
+            "sblur": 14,
+            "sopa": 16
+          },
+          {
+            "id": 222,
+            "type": "text",
+            "x": 24,
+            "y": 60,
+            "w": 180,
+            "z": 2,
+            "txt": "Grateful For You",
+            "size": 28,
+            "font": "Playfair Display",
+            "align": "left",
+            "line": 1.1,
+            "clr": "#ffffff"
+          },
+          {
+            "id": 223,
+            "type": "text",
+            "x": 24,
+            "y": 104,
+            "w": 190,
+            "z": 3,
+            "txt": "For simply being there.",
+            "size": 16,
+            "font": "Cormorant Garamond",
+            "align": "left",
+            "line": 1.3,
+            "clr": "#e5e5e5"
+          },
+          {
+            "id": 224,
+            "type": "text",
+            "x": 24,
+            "y": 272,
+            "w": 190,
+            "z": 4,
+            "txt": "It’s not always about big moments. Sometimes it’s the quiet presence that makes all the difference.",
+            "size": 13,
+            "font": "Libre Baskerville",
+            "align": "left",
+            "line": 1.45,
+            "clr": "#f2f2f2",
+            "bg": "rgba(0,0,0,0.3)",
+            "br": 16
+          }
+        ],
+        "bg": {
+          "type": "img",
+          "src": "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1200&q=80",
+          "opa": 100,
+          "filt": "none"
+        }
+      }
+    }
+  ]
+}

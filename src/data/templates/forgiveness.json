@@ -1,0 +1,232 @@
+{
+  "forgiveness": [
+    {
+      "id": "forgiveness-premium-open-heart",
+      "name": "Open Heart",
+      "data": {
+        "els": [
+          {
+            "id": 501,
+            "type": "img",
+            "x": 158,
+            "y": 210,
+            "w": 78,
+            "h": 92,
+            "rot": -3,
+            "opa": 100,
+            "z": 1,
+            "src": "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=700&q=80",
+            "bw": 2,
+            "bc": "#e6dcc7",
+            "br": 22,
+            "sh": true,
+            "sblur": 14,
+            "sopa": 16
+          },
+          {
+            "id": 502,
+            "type": "text",
+            "x": 24,
+            "y": 52,
+            "w": 180,
+            "z": 2,
+            "txt": "It’s Okay",
+            "size": 30,
+            "font": "Playfair Display",
+            "align": "left",
+            "line": 1.08,
+            "clr": "#ffffff"
+          },
+          {
+            "id": 503,
+            "type": "text",
+            "x": 24,
+            "y": 100,
+            "w": 190,
+            "z": 3,
+            "txt": "We can move forward.",
+            "size": 16,
+            "font": "Cormorant Garamond",
+            "align": "left",
+            "line": 1.35,
+            "clr": "#e8e8e8"
+          },
+          {
+            "id": 504,
+            "type": "text",
+            "x": 24,
+            "y": 270,
+            "w": 190,
+            "z": 4,
+            "txt": "What happened matters, but it doesn’t have to define everything. I’m choosing to let this soften.",
+            "size": 13,
+            "font": "Libre Baskerville",
+            "align": "left",
+            "line": 1.45,
+            "clr": "#f2f2f2",
+            "bg": "rgba(0,0,0,0.28)",
+            "br": 16
+          }
+        ],
+        "bg": {
+          "type": "img",
+          "src": "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80",
+          "opa": 100,
+          "filt": "none"
+        }
+      }
+    },
+    {
+      "id": "forgiveness-premium-soft-release",
+      "name": "Soft Release",
+      "data": {
+        "els": [
+          {
+            "id": 511,
+            "type": "img",
+            "x": 150,
+            "y": 220,
+            "w": 80,
+            "h": 94,
+            "rot": 4,
+            "opa": 100,
+            "z": 1,
+            "src": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=700&q=80",
+            "bw": 2,
+            "bc": "#dcd2b6",
+            "br": 24,
+            "sh": true,
+            "sblur": 16,
+            "sopa": 18
+          },
+          {
+            "id": 512,
+            "type": "text",
+            "x": 24,
+            "y": 54,
+            "w": 180,
+            "z": 2,
+            "txt": "Let’s Leave It Here",
+            "size": 30,
+            "font": "Playfair Display",
+            "align": "left",
+            "line": 1.05,
+            "clr": "#ffffff"
+          },
+          {
+            "id": 513,
+            "type": "text",
+            "x": 24,
+            "y": 104,
+            "w": 190,
+            "z": 3,
+            "txt": "We don’t have to carry it anymore.",
+            "size": 16,
+            "font": "Cormorant Garamond",
+            "align": "left",
+            "line": 1.35,
+            "clr": "#e5e5e5"
+          },
+          {
+            "id": 514,
+            "type": "text",
+            "x": 24,
+            "y": 272,
+            "w": 190,
+            "z": 4,
+            "txt": "Holding on won’t change what’s already passed. I’d rather make space for something better between us.",
+            "size": 13,
+            "font": "Libre Baskerville",
+            "align": "left",
+            "line": 1.45,
+            "clr": "#f2f2f2",
+            "bg": "rgba(0,0,0,0.3)",
+            "br": 16
+          }
+        ],
+        "bg": {
+          "type": "img",
+          "src": "https://images.unsplash.com/photo-1492724441997-5dc865305da7?auto=format&fit=crop&w=1200&q=80",
+          "opa": 100,
+          "filt": "none"
+        }
+      }
+    },
+    {
+      "id": "forgiveness-premium-gentle-return",
+      "name": "Gentle Return",
+      "data": {
+        "els": [
+          {
+            "id": 521,
+            "type": "img",
+            "x": 150,
+            "y": 230,
+            "w": 76,
+            "h": 90,
+            "rot": -2,
+            "opa": 100,
+            "z": 1,
+            "src": "https://images.unsplash.com/photo-1520813792240-56fc4a3765a7?auto=format&fit=crop&w=700&q=80",
+            "bw": 2,
+            "bc": "#e5dcc6",
+            "br": 22,
+            "sh": true,
+            "sblur": 14,
+            "sopa": 16
+          },
+          {
+            "id": 522,
+            "type": "text",
+            "x": 24,
+            "y": 60,
+            "w": 180,
+            "z": 2,
+            "txt": "We Can Try Again",
+            "size": 28,
+            "font": "Playfair Display",
+            "align": "left",
+            "line": 1.1,
+            "clr": "#ffffff"
+          },
+          {
+            "id": 523,
+            "type": "text",
+            "x": 24,
+            "y": 104,
+            "w": 190,
+            "z": 3,
+            "txt": "If you’re open to it.",
+            "size": 15,
+            "font": "Cormorant Garamond",
+            "align": "left",
+            "line": 1.3,
+            "clr": "#e5e5e5"
+          },
+          {
+            "id": 524,
+            "type": "text",
+            "x": 24,
+            "y": 272,
+            "w": 190,
+            "z": 4,
+            "txt": "Not everything has to end where it broke. Sometimes it just needs a little space to begin again.",
+            "size": 13,
+            "font": "Libre Baskerville",
+            "align": "left",
+            "line": 1.45,
+            "clr": "#f2f2f2",
+            "bg": "rgba(0,0,0,0.28)",
+            "br": 16
+          }
+        ],
+        "bg": {
+          "type": "img",
+          "src": "https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=1200&q=80",
+          "opa": 100,
+          "filt": "none"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,232 @@
+{
+  "longing": [
+    {
+      "id": "longing-premium-quiet-miss",
+      "name": "Quiet Miss",
+      "data": {
+        "els": [
+          {
+            "id": 901,
+            "type": "img",
+            "x": 158,
+            "y": 210,
+            "w": 78,
+            "h": 92,
+            "rot": -3,
+            "opa": 100,
+            "z": 1,
+            "src": "https://images.unsplash.com/photo-1520813792240-56fc4a3765a7?auto=format&fit=crop&w=700&q=80",
+            "bw": 2,
+            "bc": "#d9cfb8",
+            "br": 22,
+            "sh": true,
+            "sblur": 14,
+            "sopa": 16
+          },
+          {
+            "id": 902,
+            "type": "text",
+            "x": 24,
+            "y": 60,
+            "w": 180,
+            "z": 2,
+            "txt": "I Miss You",
+            "size": 30,
+            "font": "Playfair Display",
+            "align": "left",
+            "line": 1.1,
+            "clr": "#ffffff"
+          },
+          {
+            "id": 903,
+            "type": "text",
+            "x": 24,
+            "y": 108,
+            "w": 190,
+            "z": 3,
+            "txt": "More than I expected to.",
+            "size": 16,
+            "font": "Cormorant Garamond",
+            "align": "left",
+            "line": 1.35,
+            "clr": "#e6e6e6"
+          },
+          {
+            "id": 904,
+            "type": "text",
+            "x": 24,
+            "y": 276,
+            "w": 190,
+            "z": 4,
+            "txt": "It shows up in quiet moments — when things slow down and there’s space to notice what’s missing.",
+            "size": 13,
+            "font": "Libre Baskerville",
+            "align": "left",
+            "line": 1.45,
+            "clr": "#f2f2f2",
+            "bg": "rgba(0,0,0,0.28)",
+            "br": 16
+          }
+        ],
+        "bg": {
+          "type": "img",
+          "src": "https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=1200&q=80",
+          "opa": 100,
+          "filt": "none"
+        }
+      }
+    },
+    {
+      "id": "longing-premium-soft-distance",
+      "name": "Soft Distance",
+      "data": {
+        "els": [
+          {
+            "id": 911,
+            "type": "img",
+            "x": 150,
+            "y": 220,
+            "w": 80,
+            "h": 94,
+            "rot": 4,
+            "opa": 100,
+            "z": 1,
+            "src": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=700&q=80",
+            "bw": 2,
+            "bc": "#dcd2b6",
+            "br": 24,
+            "sh": true,
+            "sblur": 16,
+            "sopa": 18
+          },
+          {
+            "id": 912,
+            "type": "text",
+            "x": 24,
+            "y": 64,
+            "w": 180,
+            "z": 2,
+            "txt": "Wish You Were Here",
+            "size": 32,
+            "font": "Playfair Display",
+            "align": "left",
+            "line": 1.05,
+            "clr": "#ffffff"
+          },
+          {
+            "id": 913,
+            "type": "text",
+            "x": 24,
+            "y": 110,
+            "w": 190,
+            "z": 3,
+            "txt": "It would feel different.",
+            "size": 16,
+            "font": "Cormorant Garamond",
+            "align": "left",
+            "line": 1.35,
+            "clr": "#e5e5e5"
+          },
+          {
+            "id": 914,
+            "type": "text",
+            "x": 24,
+            "y": 278,
+            "w": 190,
+            "z": 4,
+            "txt": "Some things are fine as they are — but better with you in them. I notice that more than I expected.",
+            "size": 13,
+            "font": "Libre Baskerville",
+            "align": "left",
+            "line": 1.45,
+            "clr": "#f3f3f3",
+            "bg": "rgba(0,0,0,0.3)",
+            "br": 16
+          }
+        ],
+        "bg": {
+          "type": "img",
+          "src": "https://images.unsplash.com/photo-1492724441997-5dc865305da7?auto=format&fit=crop&w=1200&q=80",
+          "opa": 100,
+          "filt": "none"
+        }
+      }
+    },
+    {
+      "id": "longing-premium-gentle-echo",
+      "name": "Gentle Echo",
+      "data": {
+        "els": [
+          {
+            "id": 921,
+            "type": "img",
+            "x": 150,
+            "y": 230,
+            "w": 76,
+            "h": 90,
+            "rot": -2,
+            "opa": 100,
+            "z": 1,
+            "src": "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=700&q=80",
+            "bw": 2,
+            "bc": "#e5dcc6",
+            "br": 22,
+            "sh": true,
+            "sblur": 14,
+            "sopa": 16
+          },
+          {
+            "id": 922,
+            "type": "text",
+            "x": 24,
+            "y": 68,
+            "w": 180,
+            "z": 2,
+            "txt": "You Cross My Mind",
+            "size": 28,
+            "font": "Playfair Display",
+            "align": "left",
+            "line": 1.1,
+            "clr": "#ffffff"
+          },
+          {
+            "id": 923,
+            "type": "text",
+            "x": 24,
+            "y": 112,
+            "w": 190,
+            "z": 3,
+            "txt": "More often than I say.",
+            "size": 15,
+            "font": "Cormorant Garamond",
+            "align": "left",
+            "line": 1.3,
+            "clr": "#e8e8e8"
+          },
+          {
+            "id": 924,
+            "type": "text",
+            "x": 24,
+            "y": 280,
+            "w": 190,
+            "z": 4,
+            "txt": "It’s not loud or overwhelming — just steady, quiet, and there. Like something that never quite left.",
+            "size": 13,
+            "font": "Libre Baskerville",
+            "align": "left",
+            "line": 1.45,
+            "clr": "#f2f2f2",
+            "bg": "rgba(0,0,0,0.28)",
+            "br": 16
+          }
+        ],
+        "bg": {
+          "type": "img",
+          "src": "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1200&q=80",
+          "opa": 100,
+          "filt": "none"
+        }
+      }
+    }
+  ]
+}

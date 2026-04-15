@@ -1,5 +1,7 @@
 import { TEMPLATES, getTemplateById } from '../core/templates.js';
-import { CARD_SAMPLES } from '../core/card-samples.js';
+import { loadAllTemplates } from '../core/template-loader.js';
+
+let CARD_SAMPLES = [];
 import { createRecipientPreviewUrl, createRecipientUrl, generateSlug, getCurrentPosition, qs, readFileAsDataURL, safeUrl, setStatus } from '../core/utils.js';
 import { saveGift } from '../core/data-service.js';
 import { getSupabaseConfig } from '../core/auth.js';
@@ -579,16 +581,17 @@ function meInitControls() {
 /* ── Sample Carousel ── */
 const CAT_LABELS = {
   all: 'All',
-  gratitude: 'Gratitude',
-  birthday: 'Birthday',
-  congrats: 'Congrats',
-  wedding: 'Wedding',
-  anniversary: 'Anniversary',
-  'new-home': 'New Home',
-  'thank-you': 'Thank You',
-  praise: 'Praise',
+  affection: 'Affection',
+  apology: 'Apology',
+  celebration: 'Celebration',
+  checkin: 'Check-in',
+  comfort: 'Comfort',
   encouragement: 'Encouragement',
-  comfort: 'Comfort'
+  forgiveness: 'Forgiveness',
+  gratitude: 'Gratitude',
+  longing: 'Longing',
+  praise: 'Praise',
+  promise: 'Promise'
 };
 
 function filterSampleCarousel(cat) {
@@ -906,6 +909,7 @@ async function init() {
     bindPermissions();
   }
 
+  CARD_SAMPLES = await loadAllTemplates();
   renderSampleCarousel();
   meInitControls();
   setDefaultDates();
