@@ -104,8 +104,10 @@
 .me-el.me-sel{outline:2px dashed #007AFF;outline-offset:2px;}
 .me-el.me-txt{cursor:move;}
 .me-el.me-img{cursor:move;}
+.me-el::selection,.me-el *::selection{background:transparent;color:inherit;}
 .me-resize-handle{position:absolute;right:-6px;bottom:-6px;width:22px;height:22px;background:#007AFF;border-radius:50%;cursor:nwse-resize;touch-action:none;z-index:2;display:none;box-shadow:0 1px 4px rgba(0,0,0,0.3);}
 .me-el.me-img.me-sel .me-resize-handle{display:block;}
+.me-el.me-txt.me-sel .me-resize-handle{display:block;}
 .me-img-replace-btn{display:none;}
 .me-btn{height:38px;padding:0 16px;border:1.5px solid rgba(255,255,255,0.2);border-radius:10px;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.85);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;}
 .me-btn:active{opacity:.65;}.me-btn:disabled{opacity:.3;cursor:default;}

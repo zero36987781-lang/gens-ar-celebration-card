@@ -455,6 +455,10 @@ function meRender() {
       div.style.cssText = `left:${e.x}px;top:${e.y}px;width:${e.w}px;min-height:20px;z-index:${e.z||2};color:${clr};font-size:${e.size}px;font-family:'${e.font||'Poppins'}',sans-serif;line-height:${e.line||1.3};${extra}`;
       if (e.txtGrad) { div.style.backgroundImage = e.txtGrad; div.style.webkitBackgroundClip = 'text'; div.style.webkitTextFillColor = 'transparent'; }
       div.textContent = e.txt;
+      const rh = document.createElement('div');
+      rh.className = 'me-resize-handle';
+      rh.addEventListener('pointerdown', ev => meResizeStart(ev, e.id));
+      div.appendChild(rh);
       div.addEventListener('pointerdown', ev => meDragStart(ev, e.id));
       div.addEventListener('click', ev => {
         ev.stopPropagation();
