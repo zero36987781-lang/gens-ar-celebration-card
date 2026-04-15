@@ -237,6 +237,18 @@ input::placeholder, textarea::placeholder {
 .status-box.warn { background: #fffbeb !important; color: #92400e !important; }
 .status-box.error { background: #fef2f2 !important; color: #b91c1c !important; }
 
+/* category chips */
+.cat-chip {
+  color: #374151 !important;
+  border-color: #d1d5db !important;
+  background: rgba(0,0,0,0.05) !important;
+}
+.cat-chip.active {
+  background: #111827 !important;
+  border-color: transparent !important;
+  color: #ffffff !important;
+}
+
 /* nav dots */
 .dot { background: #d1d5db !important; }
 .dot.active { background: #7c3aed !important; }
