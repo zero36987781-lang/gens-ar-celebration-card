@@ -396,7 +396,7 @@ const MINI_PALETTE = [
   '#FF2D55','#FFD700','#FF6B6B','#4D96FF','#6BCB77'
 ];
 
-const miniState = { id: null, els: [], bg: null, sel: null, drag: null, scale: 1, nextId: 9000 };
+const miniState = { id: null, els: [], bg: null, sel: null, drag: null, resize: null, scale: 1, nextId: 9000 };
 
 function meScale() {
   const wrap = qs('#me-preview-wrap');
@@ -432,11 +432,19 @@ function meRender() {
     div.className = 'me-el';
     div.dataset.eid = e.id;
     if (e.type === 'img') {
-      div.style.cssText = `left:${e.x}px;top:${e.y}px;width:${e.w}px;height:${e.h}px;z-index:${e.z||1};pointer-events:none;`;
+      div.classList.add('me-img');
+      if (e.id === miniState.sel) div.classList.add('me-sel');
+      div.style.cssText = `left:${e.x}px;top:${e.y}px;width:${e.w}px;height:${e.h}px;z-index:${e.z||1};`;
       const img = document.createElement('img');
       img.src = e.src; img.draggable = false;
-      img.style.cssText = `width:100%;height:100%;object-fit:cover;border-radius:${e.br||0}px;`;
+      img.style.cssText = `width:100%;height:100%;object-fit:cover;border-radius:${e.br||0}px;pointer-events:none;`;
       div.appendChild(img);
+      const rh = document.createElement('div');
+      rh.className = 'me-resize-handle';
+      rh.addEventListener('pointerdown', ev => meResizeStart(ev, e.id));
+      div.appendChild(rh);
+      div.addEventListener('pointerdown', ev => meDragStart(ev, e.id));
+      div.addEventListener('click', ev => { ev.stopPropagation(); meSel(e.id); });
     } else if (e.type === 'text') {
       const clr = e.clr && e.clr !== 'transparent' ? e.clr : '#fff';
       div.classList.add('me-txt');
@@ -460,10 +468,13 @@ function meUpdCtrl() {
   const ctrl = qs('#me-controls');
   const delBtn = qs('#me-del-btn');
   const sizeVal = qs('#me-size-val');
+  const replaceBtn = qs('#me-img-replace-btn');
   if (!ctrl) return;
   const sel = miniState.els.find(e => e.id === miniState.sel && e.type === 'text');
+  const imgSel = miniState.els.find(e => e.id === miniState.sel && e.type === 'img');
   ctrl.classList.toggle('me-controls--hidden', !sel);
   if (delBtn) delBtn.disabled = !miniState.sel;
+  if (replaceBtn) replaceBtn.style.display = imgSel ? '' : 'none';
   if (sel && sizeVal) sizeVal.textContent = sel.size;
   const clrRow = qs('#me-clr-row');
   if (clrRow && sel) {
@@ -494,7 +505,7 @@ function meDragMove(ev) {
   const s = miniState.scale;
   const el = miniState.els.find(e => e.id === d.id); if (!el) return;
   el.x = Math.round(Math.max(0, Math.min(270 - el.w, d.ex + (ev.clientX - d.sx) / s)));
-  el.y = Math.round(Math.max(0, Math.min(318, d.ey + (ev.clientY - d.sy) / s)));
+  el.y = Math.round(Math.max(0, Math.min(338 - (el.h || 20), d.ey + (ev.clientY - d.sy) / s)));
   const div = qs('#me-card').querySelector(`[data-eid="${d.id}"]`);
   if (div) { div.style.left = el.x + 'px'; div.style.top = el.y + 'px'; }
 }
@@ -503,6 +514,30 @@ function meDragEnd(ev) {
   ev.currentTarget.removeEventListener('pointermove', meDragMove);
   ev.currentTarget.removeEventListener('pointerup', meDragEnd);
   ev.currentTarget.removeEventListener('pointercancel', meDragEnd);
+}
+function meResizeStart(ev, id) {
+  ev.stopPropagation();
+  const el = miniState.els.find(e => e.id === id); if (!el) return;
+  miniState.resize = { id, sx: ev.clientX, sy: ev.clientY, ew: el.w, eh: el.h };
+  ev.currentTarget.setPointerCapture(ev.pointerId);
+  ev.currentTarget.addEventListener('pointermove', meResizeMove);
+  ev.currentTarget.addEventListener('pointerup', meResizeEnd);
+  ev.currentTarget.addEventListener('pointercancel', meResizeEnd);
+}
+function meResizeMove(ev) {
+  const d = miniState.resize; if (!d) return;
+  const s = miniState.scale;
+  const el = miniState.els.find(e => e.id === d.id); if (!el) return;
+  el.w = Math.max(40, Math.min(270 - el.x, Math.round(d.ew + (ev.clientX - d.sx) / s)));
+  el.h = Math.max(40, Math.min(338 - el.y, Math.round(d.eh + (ev.clientY - d.sy) / s)));
+  const div = qs('#me-card').querySelector(`[data-eid="${d.id}"]`);
+  if (div) { div.style.width = el.w + 'px'; div.style.height = el.h + 'px'; }
+}
+function meResizeEnd(ev) {
+  miniState.resize = null;
+  ev.currentTarget.removeEventListener('pointermove', meResizeMove);
+  ev.currentTarget.removeEventListener('pointerup', meResizeEnd);
+  ev.currentTarget.removeEventListener('pointercancel', meResizeEnd);
 }
 
 function meAdd() {
@@ -574,6 +609,21 @@ function meInitControls() {
   qs('#me-add-btn')?.addEventListener('click', meAdd);
   qs('#me-del-btn')?.addEventListener('click', meDel);
   qs('#me-card')?.addEventListener('click', () => meDesel());
+  const imgFile = qs('#me-img-file');
+  qs('#me-img-replace-btn')?.addEventListener('click', () => imgFile?.click());
+  imgFile?.addEventListener('change', ev => {
+    const file = ev.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = re => {
+      const el = miniState.els.find(e => e.id === miniState.sel && e.type === 'img');
+      if (!el) return;
+      el.src = re.target.result;
+      const div = qs('#me-card')?.querySelector(`[data-eid="${el.id}"]`);
+      if (div) { const img = div.querySelector('img'); if (img) img.src = el.src; }
+    };
+    reader.readAsDataURL(file);
+    ev.target.value = '';
+  });
   window.addEventListener('resize', meScale);
   meScale();
 }
