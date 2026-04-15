@@ -760,6 +760,7 @@ document.addEventListener('DOMContentLoaded',function(){
   // Embedded mode: hide own footer, listen for parent messages
   const _embedded=new URLSearchParams(location.search).get('embedded')==='1';
   if(_embedded){
+    document.getElementById('studioHeader').style.display='none';
     document.querySelector('.studio-footer').style.display='none';
   }
   window.addEventListener('message',function(e){
