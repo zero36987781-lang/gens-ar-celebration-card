@@ -605,6 +605,23 @@ function meStartEdit(div, id) {
   const sel = window.getSelection();
   sel.removeAllRanges();
   sel.addRange(range);
+  // 키보드 올라오면 카드가 키보드 위에 보이도록 스크롤
+  function scrollAboveKeyboard() {
+    const vv = window.visualViewport;
+    const shell = qs('#sender-shell');
+    if (!shell || !vv) return;
+    const wrap = qs('#me-preview-wrap');
+    if (!wrap) return;
+    const wrapRect = wrap.getBoundingClientRect();
+    const wrapBottom = wrapRect.bottom;
+    const visibleBottom = vv.offsetTop + vv.height;
+    if (wrapBottom > visibleBottom - 8) {
+      shell.scrollBy({ top: wrapBottom - visibleBottom + 8, behavior: 'smooth' });
+    }
+  }
+  const vvHandler = () => scrollAboveKeyboard();
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', vvHandler);
+  setTimeout(scrollAboveKeyboard, 300);
   function commitEdit() {
     if (editDiv.contentEditable !== 'true') return;
     el.txt = editDiv.textContent || '';
@@ -614,6 +631,7 @@ function meStartEdit(div, id) {
     editDiv.style.cursor = '';
     editDiv.style.outline = '';
     editDiv.style.boxShadow = '';
+    if (window.visualViewport) window.visualViewport.removeEventListener('resize', vvHandler);
     editDiv.removeEventListener('blur', commitEdit);
     editDiv.removeEventListener('keydown', onKey);
   }
@@ -654,15 +672,26 @@ function meInitControls() {
       chip.addEventListener('click', () => meClrChg(chip.dataset.clr))
     );
   }
-  qs('#me-size-minus')?.addEventListener('click', () => meSizeChg(-1));
-  qs('#me-size-plus')?.addEventListener('click', () => meSizeChg(1));
-  function startRepeat(d) {
-    const t = setInterval(() => meSizeChg(d), 100);
-    const stop = () => { clearInterval(t); document.removeEventListener('pointerup', stop); };
-    document.addEventListener('pointerup', stop);
+  function bindSizeBtn(btnId, delta) {
+    const btn = qs(btnId); if (!btn) return;
+    let holdTimer = null, repeatTimer = null;
+    function stopAll() {
+      clearTimeout(holdTimer); clearInterval(repeatTimer);
+      holdTimer = null; repeatTimer = null;
+      document.removeEventListener('pointerup', stopAll);
+      document.removeEventListener('pointercancel', stopAll);
+    }
+    btn.addEventListener('click', () => meSizeChg(delta));
+    btn.addEventListener('pointerdown', () => {
+      document.addEventListener('pointerup', stopAll);
+      document.addEventListener('pointercancel', stopAll);
+      holdTimer = setTimeout(() => {
+        repeatTimer = setInterval(() => meSizeChg(delta), 80);
+      }, 450);
+    });
   }
-  qs('#me-size-minus')?.addEventListener('pointerdown', () => setTimeout(() => startRepeat(-1), 400));
-  qs('#me-size-plus')?.addEventListener('pointerdown', () => setTimeout(() => startRepeat(1), 400));
+  bindSizeBtn('#me-size-minus', -1);
+  bindSizeBtn('#me-size-plus', 1);
   qs('#me-add-btn')?.addEventListener('click', meAdd);
   qs('#me-del-btn')?.addEventListener('click', meDel);
   qs('#me-card')?.addEventListener('click', () => meDesel());
