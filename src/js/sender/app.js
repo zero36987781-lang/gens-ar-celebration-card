@@ -664,16 +664,24 @@ function renderSampleCarousel() {
     });
   }
 
-  container.innerHTML = CARD_SAMPLES.map((s, i) => `
+  container.innerHTML = CARD_SAMPLES.map((s, i) => {
+    const imgEls = (s.data?.els || [])
+      .filter(e => e.type === 'img')
+      .sort((a, b) => (a.z || 0) - (b.z || 0))
+      .map(e => `<img class="sample-card__img-el" src="${e.src}" draggable="false" style="position:absolute;left:${(e.x/270*100).toFixed(3)}%;top:${(e.y/338*100).toFixed(3)}%;width:${(e.w/270*100).toFixed(3)}%;height:${(e.h/338*100).toFixed(3)}%;z-index:${e.z||1};border-radius:${e.br||0}px;object-fit:cover;pointer-events:none;" />`)
+      .join('');
+    return `
     <button class="sample-card${i === 0 ? ' active' : ''}" data-id="${s.id}" data-cat="${s.category}" type="button">
       <div class="sample-card__bg" style="background-image:url('${s.bg}')"></div>
+      ${imgEls}
       <div class="sample-card__overlay"></div>
       <div class="sample-card__body">
         <span class="sample-card__cat">${CAT_LABELS[s.category] || s.category}</span>
         <p class="sample-card__title">${s.texts[0].replace(/\n/g, '<br>')}</p>
         <p class="sample-card__sub">${s.texts[1].replace(/\n/g, '<br>')}</p>
       </div>
-    </button>`).join('');
+    </button>`;
+  }).join('');
   container.querySelectorAll('.sample-card').forEach(btn => {
     btn.addEventListener('click', () => {
       container.querySelectorAll('.sample-card').forEach(b => b.classList.remove('active'));
