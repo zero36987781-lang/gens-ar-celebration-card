@@ -673,21 +673,32 @@ function renderSampleCarousel() {
   }
 
   container.innerHTML = CARD_SAMPLES.map((s, i) => {
-    const imgEls = (s.data?.els || [])
-      .filter(e => e.type === 'img')
+    const allEls = (s.data?.els || [])
       .sort((a, b) => (a.z || 0) - (b.z || 0))
-      .map(e => `<img class="sample-card__img-el" src="${e.src}" draggable="false" style="position:absolute;left:${(e.x/270*100).toFixed(3)}%;top:${(e.y/338*100).toFixed(3)}%;width:${(e.w/270*100).toFixed(3)}%;height:${(e.h/338*100).toFixed(3)}%;z-index:${e.z||1};border-radius:${e.br||0}px;object-fit:cover;pointer-events:none;" />`)
-      .join('');
+      .map(e => {
+        const lp = v => (v / 270 * 100).toFixed(3) + '%';
+        const tp = v => (v / 338 * 100).toFixed(3) + '%';
+        if (e.type === 'img') {
+          const rot = e.rot ? `transform:rotate(${e.rot}deg);` : '';
+          const opa = (e.opa ?? 100) < 100 ? `opacity:${e.opa/100};` : '';
+          return `<img class="sample-card__el" src="${e.src}" draggable="false" style="left:${lp(e.x)};top:${tp(e.y)};width:${lp(e.w)};height:${tp(e.h)};z-index:${e.z||1};border-radius:${e.br||0}px;object-fit:cover;${rot}${opa}" />`;
+        } else if (e.type === 'text') {
+          const clr = e.clr && e.clr !== 'transparent' ? e.clr : '#fff';
+          const fsz = (e.size / 270 * 100).toFixed(3) + 'cqw';
+          const opa = (e.opa ?? 100) < 100 ? `opacity:${e.opa/100};` : '';
+          let st = `left:${lp(e.x)};top:${tp(e.y)};width:${lp(e.w)};z-index:${e.z||2};color:${clr};font-size:${fsz};font-family:'${e.font||'sans-serif'}',sans-serif;line-height:${e.line||1.3};text-align:${e.align||'left'};${opa}`;
+          if (e.bg && e.bg !== 'transparent') st += `background:${e.bg};border-radius:${e.br||0}px;padding:2.2% 3%;`;
+          let grad = '';
+          if (e.txtGrad) grad = ` background-image:${e.txtGrad};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;`;
+          return `<div class="sample-card__el" style="${st}${grad}">${e.txt.replace(/\n/g, '<br>')}</div>`;
+        }
+        return '';
+      }).join('');
     return `
     <button class="sample-card${i === 0 ? ' active' : ''}" data-id="${s.id}" data-cat="${s.category}" type="button">
       <div class="sample-card__bg" style="background-image:url('${s.bg}')"></div>
-      ${imgEls}
+      ${allEls}
       <div class="sample-card__overlay"></div>
-      <div class="sample-card__body">
-        <span class="sample-card__cat">${CAT_LABELS[s.category] || s.category}</span>
-        <p class="sample-card__title">${s.texts[0].replace(/\n/g, '<br>')}</p>
-        <p class="sample-card__sub">${s.texts[1].replace(/\n/g, '<br>')}</p>
-      </div>
     </button>`;
   }).join('');
   container.querySelectorAll('.sample-card').forEach(btn => {
