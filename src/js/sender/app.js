@@ -426,7 +426,7 @@ function meRender() {
   const card = qs('#me-card');
   if (!card) return;
   const bg = qs('#me-bg');
-  if (bg && miniState.bg?.src) bg.style.backgroundImage = `url('${miniState.bg.src}')`;
+  if (bg) bg.style.backgroundImage = miniState.bg?.src ? `url('${miniState.bg.src}')` : 'none';
   card.querySelectorAll('.me-el').forEach(el => el.remove());
   [...miniState.els].sort((a, b) => (a.z || 0) - (b.z || 0)).forEach(e => {
     const div = document.createElement('div');
@@ -690,6 +690,21 @@ function renderSampleCarousel() {
       meLoad(btn.dataset.id);
     });
   });
+
+  // 캐루셀 스크롤 시 보이는 카드로 미니 에디터 동기화
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+        const btn = entry.target;
+        container.querySelectorAll('.sample-card').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.templateId = btn.dataset.id;
+        meLoad(btn.dataset.id);
+      }
+    });
+  }, { root: container, threshold: 0.5 });
+  container.querySelectorAll('.sample-card').forEach(btn => io.observe(btn));
+
   // 첫 번째 샘플 미니 에디터에 자동 로드
   if (CARD_SAMPLES.length > 0) meLoad(CARD_SAMPLES[0].id);
 }
