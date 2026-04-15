@@ -192,27 +192,22 @@ function updatePage() {
   }
 }
 
-function nextPage() {
-  if (state.page === 1) {
-    if (miniState.els.length > 0) {
-      sessionStorage.setItem('chariel:tpl-data', JSON.stringify({
-        id: miniState.id,
-        els: miniState.els,
-        bg: miniState.bg
-      }));
-    } else {
-      sessionStorage.removeItem('chariel:tpl-data');
-    }
-    location.href = '/editor/?template=' + encodeURIComponent(state.templateId || '');
-    return;
-  }
-  if (state.page < MAX_PAGES) {
-    state.page++;
-    updatePage();
-    if (state.page !== 2) qs('.sender-shell')?.scrollTo({ top: 0, behavior: 'smooth' });
+function saveMiniState() {
+  if (miniState.els.length > 0) {
+    sessionStorage.setItem('chariel:tpl-data', JSON.stringify({ id: miniState.id, els: miniState.els, bg: miniState.bg }));
+  } else {
+    sessionStorage.removeItem('chariel:tpl-data');
   }
 }
-function prevPage() { if (state.page > 1) { state.page--; updatePage(); if (state.page !== 2) qs('.sender-shell')?.scrollTo({ top: 0, behavior: 'smooth' }); } }
+function goPage(n) {
+  if (n < 1 || n > MAX_PAGES || n === state.page) return;
+  if (state.page === 1) saveMiniState();
+  state.page = n;
+  updatePage();
+  if (n !== 2) qs('.sender-shell')?.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function nextPage() { goPage(state.page + 1); }
+function prevPage() { goPage(state.page - 1); }
 
 /* ── Studio split resizer ── */
 function bindStudioResizer() {
@@ -1063,6 +1058,7 @@ function bindEvents() {
   els.copyLink?.addEventListener('click', copyLink);
   els.navPrev?.addEventListener('click', prevPage);
   els.navNext?.addEventListener('click', nextPage);
+  els.navDots.forEach((d, i) => d.addEventListener('click', () => goPage(i + 1)));
 }
 
 /* ── Init ── */

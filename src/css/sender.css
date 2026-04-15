@@ -1438,17 +1438,20 @@
 
 /* ══ Bottom nav 높이 축소 ══ */
 .bottom-nav {
-  padding: 6px 20px !important;
-  padding-bottom: calc(6px + var(--sab)) !important;
+  padding: 3px 16px !important;
+  padding-bottom: calc(3px + var(--sab)) !important;
 }
 .nav-btn {
-  min-height: 28px !important;
-  height: 28px !important;
-  padding: 0 14px !important;
-  font-size: 13px !important;
+  min-height: 30px !important;
+  height: 30px !important;
+  padding: 0 10px !important;
+  font-size: 15px !important;
 }
 .nav-dots {
   gap: 6px !important;
+}
+.dot {
+  cursor: pointer;
 }
 .dot {
   width: 6px !important;
