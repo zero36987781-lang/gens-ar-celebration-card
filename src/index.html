@@ -56,29 +56,19 @@
           <div class="brand">CHARIEL</div>
         </div>
       </div>
+      <div class="step-title" id="step-title">Templates</div>
     </header>
+    <!-- hidden name fields preserved for JS -->
+    <div style="display:none">
+      <input id="recipient-name" type="text" maxlength="40" />
+      <input id="sender-name" type="text" maxlength="30" />
+    </div>
 
     <main class="sender-shell" id="sender-shell">
 
-      <!-- Step 1: Template (unchanged) -->
-      <section class="card-panel page-view" data-step="1">
-        <span class="eyebrow">CHARIEL STANDARD</span>
-        <h1>Build the card directly<br>in the preview.</h1>
-        <p>Names live at the top, message editing happens on the card, and every template updates title, subtitle, default copy, colors, and layout in one step.</p>
-        <div class="field-grid two-up hero-names">
-          <label class="glass-field">
-            <span>Receiver</span>
-            <input id="recipient-name" type="text" maxlength="40" placeholder="Emma" />
-          </label>
-          <label class="glass-field">
-            <span>Sender</span>
-            <input id="sender-name" type="text" maxlength="30" placeholder="Minji" />
-          </label>
-        </div>
-        <div class="section-head" style="margin-top:18px">
-          <div><h2>Template</h2><p>Pick a style. It sets colors, title, and default copy.</p></div>
-        </div>
-        <div id="template-list" class="template-list"></div>
+      <!-- Step 1: Template Selection -->
+      <section class="card-panel page-view sample-page" data-step="1">
+        <div id="sample-carousel" class="sample-carousel"></div>
       </section>
 
       <!-- ★ Step 2: Design Studio (was Step 3) — TikTok-style split layout -->

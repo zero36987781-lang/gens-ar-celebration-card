@@ -1,4 +1,5 @@
 import { TEMPLATES, getTemplateById } from '../core/templates.js';
+import { CARD_SAMPLES } from '../core/card-samples.js';
 import { createRecipientPreviewUrl, createRecipientUrl, generateSlug, getCurrentPosition, qs, readFileAsDataURL, safeUrl, setStatus } from '../core/utils.js';
 import { saveGift } from '../core/data-service.js';
 import { getSupabaseConfig } from '../core/auth.js';
@@ -377,38 +378,31 @@ function createYtPlayer(ytId, startSec, endSec) {
   });
 }
 
-/* ── Templates ── */
-let _templateObserver = null;
-
-function renderTemplates() {
-  els.templateList.innerHTML = TEMPLATES.map(t => `
-    <button type="button" class="template-item ${t.id === state.templateId ? 'active' : ''}" data-template-id="${t.id}"
-      style="background:${t.frontGradient};">
-      <h3 style="color:#111827">${t.name}</h3>
-      <p style="color:#374151">${t.subtitle}</p>
-      <div class="template-swatches">
-        <span style="background:${t.frontColor}"></span>
-        <span style="background:${t.accentColor}"></span>
+/* ── Sample Carousel ── */
+function renderSampleCarousel() {
+  const container = qs('#sample-carousel');
+  if (!container) return;
+  container.innerHTML = CARD_SAMPLES.map((s, i) => `
+    <button class="sample-card${i === 0 ? ' active' : ''}" data-id="${s.id}" type="button">
+      <div class="sample-card__bg" style="background-image:url('${s.bg}')"></div>
+      <div class="sample-card__overlay"></div>
+      <div class="sample-card__body">
+        <span class="sample-card__cat">${s.category}</span>
+        <p class="sample-card__title">${s.texts[0].replace(/\n/g, '<br>')}</p>
+        <p class="sample-card__sub">${s.texts[1].replace(/\n/g, '<br>')}</p>
       </div>
     </button>`).join('');
-  setupTemplateObserver();
-}
-
-function setupTemplateObserver() {
-  if (_templateObserver) _templateObserver.disconnect();
-  _templateObserver = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
-        const id = entry.target.dataset.templateId;
-        if (id && id !== state.templateId) applyTemplate(id);
-      }
+  container.querySelectorAll('.sample-card').forEach(btn => {
+    btn.addEventListener('click', () => {
+      container.querySelectorAll('.sample-card').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.templateId = btn.dataset.id;
     });
-  }, { root: els.templateList, threshold: 0.5 });
-  els.templateList.querySelectorAll('[data-template-id]').forEach(el => _templateObserver.observe(el));
+  });
 }
 
 function setTemplateActiveClass(id) {
-  els.templateList.querySelectorAll('[data-template-id]').forEach(el => {
+  els.templateList?.querySelectorAll('[data-template-id]').forEach(el => {
     el.classList.toggle('active', el.dataset.templateId === id);
   });
 }
@@ -638,10 +632,7 @@ function bindHmsInputs() {
 /* ── Events ── */
 function bindEvents() {
   const f = fields();
-  els.templateList.addEventListener('click', e => {
-    const b = e.target.closest('[data-template-id]');
-    if (b) b.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-  });
+  // template list replaced by sample-carousel (click handled in renderSampleCarousel)
   f.recipientName.addEventListener('input', renderPreviewCard);
   f.senderName.addEventListener('input', renderPreviewCard);
   f.videoUrl?.addEventListener('input', () => {
@@ -676,7 +667,7 @@ async function init() {
     bindPermissions();
   }
 
-  renderTemplates();
+  renderSampleCarousel();
   setDefaultDates();
   bindEvents();
   bindStudioResizer();

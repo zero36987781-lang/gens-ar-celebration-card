@@ -42,7 +42,33 @@
   box-shadow:none;
 }
 
-/* Template */
+/* Step title */
+.step-title{margin-left:auto;font-size:13px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);}
+
+/* Sample page */
+.sample-page{padding:0!important;}
+.sample-carousel{
+  display:flex;overflow-x:scroll;scroll-snap-type:x mandatory;scroll-behavior:smooth;
+  -webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;
+  padding:16px 0 16px 16px;gap:14px;
+}
+.sample-carousel::-webkit-scrollbar{display:none;}
+.sample-card{
+  flex:0 0 82%;scroll-snap-align:start;scroll-snap-stop:always;
+  aspect-ratio:270/338;border-radius:22px;overflow:hidden;
+  position:relative;cursor:pointer;border:2px solid transparent;
+  transition:border-color 0.25s ease,box-shadow 0.25s ease;
+  will-change:transform;backface-visibility:hidden;
+}
+.sample-card.active{border-color:rgba(255,255,255,0.6);box-shadow:0 0 0 2px rgba(255,255,255,0.15);}
+.sample-card__bg{position:absolute;inset:0;background-size:cover;background-position:center;}
+.sample-card__overlay{position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,0.55) 100%);}
+.sample-card__body{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:18px;}
+.sample-card__cat{font-size:10px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.7);margin-bottom:6px;}
+.sample-card__title{font-size:22px;font-weight:900;color:#fff;line-height:1.1;margin:0 0 6px;}
+.sample-card__sub{font-size:12px;color:rgba(255,255,255,0.8);line-height:1.4;margin:0;}
+
+/* Legacy template (kept for other uses) */
 .hero-names input{font-size:18px;font-weight:700;}
 .template-list{display:flex;overflow-x:auto;scroll-behavior:smooth;scroll-snap-type:x mandatory;padding-bottom:8px;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;}
 .template-list::-webkit-scrollbar{height:0;}
