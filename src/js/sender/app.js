@@ -462,6 +462,7 @@ function meRender() {
       div.addEventListener('pointerdown', ev => meDragStart(ev, e.id));
       div.addEventListener('click', ev => {
         ev.stopPropagation();
+        if (miniState.wasDragged) { miniState.wasDragged = false; return; }
         if (miniState.sel === e.id) {
           meStartEdit(qs('#me-card').querySelector(`[data-eid="${e.id}"]`), e.id);
         } else {
@@ -507,7 +508,7 @@ function meDragStart(ev, id) {
   }
   const el = miniState.els.find(e => e.id === id);
   if (!el) return;
-  miniState.drag = { id, sx: ev.clientX, sy: ev.clientY, ex: el.x, ey: el.y };
+  miniState.drag = { id, sx: ev.clientX, sy: ev.clientY, ex: el.x, ey: el.y, moved: false };
   ev.currentTarget.setPointerCapture(ev.pointerId);
   ev.currentTarget.addEventListener('pointermove', meDragMove);
   ev.currentTarget.addEventListener('pointerup', meDragEnd);
@@ -517,12 +518,15 @@ function meDragMove(ev) {
   const d = miniState.drag; if (!d) return;
   const s = miniState.scale;
   const el = miniState.els.find(e => e.id === d.id); if (!el) return;
-  el.x = Math.round(Math.max(0, Math.min(270 - el.w, d.ex + (ev.clientX - d.sx) / s)));
-  el.y = Math.round(Math.max(0, Math.min(338 - (el.h || 20), d.ey + (ev.clientY - d.sy) / s)));
+  const nx = Math.max(0, Math.min(270 - el.w, d.ex + (ev.clientX - d.sx) / s));
+  const ny = Math.max(0, Math.min(338 - (el.h || 20), d.ey + (ev.clientY - d.sy) / s));
+  if (Math.abs(nx - el.x) > 1 || Math.abs(ny - el.y) > 1) d.moved = true;
+  el.x = nx; el.y = ny;
   const div = qs('#me-card').querySelector(`[data-eid="${d.id}"]`);
-  if (div) { div.style.left = el.x + 'px'; div.style.top = el.y + 'px'; }
+  if (div) { div.style.left = nx + 'px'; div.style.top = ny + 'px'; }
 }
 function meDragEnd(ev) {
+  miniState.wasDragged = miniState.drag?.moved || false;
   miniState.drag = null;
   ev.currentTarget.removeEventListener('pointermove', meDragMove);
   ev.currentTarget.removeEventListener('pointerup', meDragEnd);
@@ -592,6 +596,8 @@ function meStartEdit(div, id) {
   editDiv.style.userSelect = 'text';
   editDiv.style.webkitUserSelect = 'text';
   editDiv.style.cursor = 'text';
+  editDiv.style.outline = 'none';
+  editDiv.style.boxShadow = 'none';
   editDiv.focus();
   // 전체 선택
   const range = document.createRange();
@@ -606,6 +612,8 @@ function meStartEdit(div, id) {
     editDiv.style.userSelect = '';
     editDiv.style.webkitUserSelect = '';
     editDiv.style.cursor = '';
+    editDiv.style.outline = '';
+    editDiv.style.boxShadow = '';
     editDiv.removeEventListener('blur', commitEdit);
     editDiv.removeEventListener('keydown', onKey);
   }

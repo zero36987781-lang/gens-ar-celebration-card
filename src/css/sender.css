@@ -100,8 +100,8 @@
 .me-toolbar{display:flex;gap:8px;padding:12px 16px;}
 .me-controls{display:flex;flex-direction:column;gap:10px;padding:0 16px 16px;}
 .me-bg{position:absolute;inset:0;background-size:cover;background-position:center;}
-.me-el{position:absolute;touch-action:none;user-select:none;white-space:pre-wrap;word-break:break-word;}
-.me-el.me-sel{outline:2px dashed #007AFF;outline-offset:2px;}
+.me-el{position:absolute;touch-action:none;user-select:none;white-space:pre-wrap;word-break:break-word;will-change:transform;backface-visibility:hidden;}
+.me-el.me-sel{box-shadow:0 0 0 2px #007AFF;}
 .me-el.me-txt{cursor:move;}
 .me-el.me-img{cursor:move;}
 .me-el::selection,.me-el *::selection{background:transparent;color:inherit;}
