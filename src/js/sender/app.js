@@ -457,6 +457,7 @@ function meRender() {
       div.textContent = e.txt;
       div.addEventListener('pointerdown', ev => meDragStart(ev, e.id));
       div.addEventListener('click', ev => { ev.stopPropagation(); meSel(e.id); });
+      div.addEventListener('dblclick', ev => { ev.stopPropagation(); meStartEdit(div, e.id); });
     }
     card.appendChild(div);
   });
@@ -486,6 +487,7 @@ function meUpdCtrl() {
 
 function meDragStart(ev, id) {
   ev.stopPropagation();
+  if (ev.currentTarget.contentEditable === 'true') return;
   // 선택 상태만 업데이트 — meRender() 호출 금지 (DOM 재생성 시 currentTarget 무효화됨)
   if (miniState.sel !== id) {
     qs('#me-card').querySelectorAll('.me-sel').forEach(el => el.classList.remove('me-sel'));
@@ -568,6 +570,42 @@ function meDel() {
   miniState.els = miniState.els.filter(e => e.id !== miniState.sel);
   miniState.sel = null;
   meRender(); meUpdCtrl();
+}
+
+function meStartEdit(div, id) {
+  meSel(id);
+  const el = miniState.els.find(e => e.id === id && e.type === 'text');
+  if (!el) return;
+  const editDiv = qs('#me-card').querySelector(`[data-eid="${id}"]`);
+  if (!editDiv || editDiv.contentEditable === 'true') return;
+  editDiv.contentEditable = 'true';
+  editDiv.style.userSelect = 'text';
+  editDiv.style.webkitUserSelect = 'text';
+  editDiv.style.cursor = 'text';
+  editDiv.focus();
+  // 전체 선택
+  const range = document.createRange();
+  range.selectNodeContents(editDiv);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+  function commitEdit() {
+    if (editDiv.contentEditable !== 'true') return;
+    el.txt = editDiv.textContent || '';
+    editDiv.contentEditable = 'false';
+    editDiv.style.userSelect = '';
+    editDiv.style.webkitUserSelect = '';
+    editDiv.style.cursor = '';
+    editDiv.removeEventListener('blur', commitEdit);
+    editDiv.removeEventListener('keydown', onKey);
+  }
+  function onKey(ev) {
+    if (ev.key === 'Enter' && !ev.shiftKey) { ev.preventDefault(); commitEdit(); }
+    if (ev.key === 'Escape') { editDiv.textContent = el.txt; commitEdit(); }
+    ev.stopPropagation();
+  }
+  editDiv.addEventListener('blur', commitEdit);
+  editDiv.addEventListener('keydown', onKey);
 }
 
 function meSizeChg(delta) {
