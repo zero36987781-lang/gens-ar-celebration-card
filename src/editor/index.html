@@ -726,6 +726,11 @@ async function loadTemplate(id){
 }
 window.loadTemplate=loadTemplate;
 
+function _notifySaved(data){
+  window.dispatchEvent(new CustomEvent('editorSaved',{detail:data}));
+  if(window.parent!==window)window.parent.postMessage({type:'editorSaved',data:data},'*');
+}
+
 async function saveResult(){
   const payload={
     id:'result-'+Date.now(),
@@ -736,11 +741,11 @@ async function saveResult(){
   try{
     const res=await fetch('/api/results',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     const saved=await res.json();
-    window.dispatchEvent(new CustomEvent('editorSaved',{detail:saved}));
+    _notifySaved(saved);
     return saved;
   }catch(e){
     console.warn('saveResult error',e);
-    window.dispatchEvent(new CustomEvent('editorSaved',{detail:payload}));
+    _notifySaved(payload);
   }
 }
 window.saveResult=saveResult;
@@ -751,6 +756,16 @@ document.addEventListener('DOMContentLoaded',function(){
   // Init Bridge: auto-load template from ?template=id
   const _tplId=new URLSearchParams(location.search).get('template');
   if(_tplId)loadTemplate(_tplId);
+
+  // Embedded mode: hide own footer, listen for parent messages
+  const _embedded=new URLSearchParams(location.search).get('embedded')==='1';
+  if(_embedded){
+    document.querySelector('.studio-footer').style.display='none';
+  }
+  window.addEventListener('message',function(e){
+    if(!e.data)return;
+    if(e.data.type==='loadTemplate'&&e.data.id)loadTemplate(e.data.id);
+  });
 });
 </script>
 

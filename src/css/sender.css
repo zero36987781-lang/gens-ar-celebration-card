@@ -176,6 +176,11 @@
 }
 .studio-page.page-hidden{display:none!important;}
 
+/* ══ Embedded editor iframe ══ */
+.studio-embed-page{display:none;flex-direction:column;flex:1;min-height:0;}
+.studio-embed-page:not(.page-hidden){display:flex;}
+.studio-embed-page iframe{flex:1;min-height:0;width:100%;border:none;display:block;}
+
 .studio-canvas-area{
   position:relative;flex:1;
   overflow-y:auto;overflow-x:hidden;

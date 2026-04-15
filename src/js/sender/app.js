@@ -183,10 +183,9 @@ function updatePage() {
   if (state.page === 2) {
     if (shell) shell.scrollTo({ top: 0 });
     setTimeout(() => {
-      if (window.CanvasEditor) {
-        window.CanvasEditor.init();
-        window.CanvasEditor.setCurrentTemplate(state.templateId);
-        window.CanvasEditor.applyTemplateToLayers(getTemplateById(state.templateId));
+      const frame = qs('#editor-frame');
+      if (frame?.contentWindow) {
+        frame.contentWindow.postMessage({ type: 'loadTemplate', id: state.templateId }, '*');
       }
     }, 50);
   }
@@ -1059,6 +1058,17 @@ function bindEvents() {
   els.navPrev?.addEventListener('click', prevPage);
   els.navNext?.addEventListener('click', nextPage);
   els.navDots.forEach((d, i) => d.addEventListener('click', () => goPage(i + 1)));
+
+  window.addEventListener('message', (e) => {
+    if (!e.data) return;
+    if (e.data.type === 'navigate') {
+      if (e.data.dir === 'prev') prevPage();
+      else if (e.data.dir === 'next') nextPage();
+    }
+    if (e.data.type === 'editorSaved') {
+      state.editorData = e.data.data;
+    }
+  });
 }
 
 /* ── Init ── */
@@ -1086,7 +1096,6 @@ async function init() {
   renderPreviewCard();
   syncEditorMode();
   syncSideToggle();
-  if (window.CanvasEditor) window.CanvasEditor.init();
   await setRuntimeStatus();
   await initMap();
 }
