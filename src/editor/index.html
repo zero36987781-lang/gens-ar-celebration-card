@@ -709,15 +709,29 @@ function shOff(d,dist){return{['top-left']:{x:-dist,y:-dist},['top-right']:{x:di
 
 /* ===== R2 Bridge ===== */
 async function loadTemplate(id){
-  try{
-    const res=await fetch('/api/template/'+encodeURIComponent(id));
-    if(!res.ok){console.warn('loadTemplate: not found',id);return;}
-    const data=await res.json();
+  function _applyData(data){
     S.els=Array.isArray(data.els)?data.els:[];
     if(data.bg)S.bg=data.bg;else S.bg=null;
     draw();saveHist();updHistBtns();updBackBtn();
     $('delBtn').disabled=true;$('editBtn').disabled=true;
-  }catch(e){console.warn('loadTemplate error',e);}
+  }
+  try{
+    const res=await fetch('/api/template/'+encodeURIComponent(id));
+    if(res.ok){
+      const data=await res.json();
+      _applyData(data);
+      return;
+    }
+  }catch(e){console.warn('loadTemplate API error',e);}
+  // Fallback: sessionStorage에 저장된 샘플 데이터 사용
+  try{
+    const raw=sessionStorage.getItem('chariel:tpl-data');
+    if(raw){
+      const data=JSON.parse(raw);
+      if(!id||data.id===id||!data.id){_applyData(data);return;}
+    }
+  }catch(e){console.warn('loadTemplate sessionStorage error',e);}
+  console.warn('loadTemplate: no data for',id);
 }
 window.loadTemplate=loadTemplate;
 

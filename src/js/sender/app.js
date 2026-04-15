@@ -191,6 +191,12 @@ function updatePage() {
 
 function nextPage() {
   if (state.page === 1) {
+    const sample = CARD_SAMPLES.find(s => s.id === state.templateId);
+    if (sample?.data) {
+      sessionStorage.setItem('chariel:tpl-data', JSON.stringify({ id: sample.id, ...sample.data }));
+    } else {
+      sessionStorage.removeItem('chariel:tpl-data');
+    }
     location.href = '/editor/?template=' + encodeURIComponent(state.templateId || '');
     return;
   }
@@ -381,16 +387,16 @@ function createYtPlayer(ytId, startSec, endSec) {
 /* ── Sample Carousel ── */
 const CAT_LABELS = {
   all: 'All',
-  gratitude: '감사',
-  birthday: '생일',
-  congrats: '축하',
-  wedding: '결혼',
-  anniversary: '기념일',
-  'new-home': '이사',
-  'thank-you': '감사(Thank You)',
-  praise: '칭찬',
-  encouragement: '응원',
-  comfort: '위로'
+  gratitude: 'Gratitude',
+  birthday: 'Birthday',
+  congrats: 'Congrats',
+  wedding: 'Wedding',
+  anniversary: 'Anniversary',
+  'new-home': 'New Home',
+  'thank-you': 'Thank You',
+  praise: 'Praise',
+  encouragement: 'Encouragement',
+  comfort: 'Comfort'
 };
 
 function filterSampleCarousel(cat) {
