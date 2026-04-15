@@ -379,15 +379,53 @@ function createYtPlayer(ytId, startSec, endSec) {
 }
 
 /* ── Sample Carousel ── */
+const CAT_LABELS = {
+  all: 'All',
+  gratitude: '감사',
+  birthday: '생일',
+  congrats: '축하',
+  wedding: '결혼',
+  anniversary: '기념일',
+  'new-home': '이사',
+  'thank-you': '감사(Thank You)',
+  praise: '칭찬',
+  encouragement: '응원',
+  comfort: '위로'
+};
+
+function filterSampleCarousel(cat) {
+  const container = qs('#sample-carousel');
+  if (!container) return;
+  container.querySelectorAll('.sample-card').forEach(btn => {
+    btn.style.display = (cat === 'all' || btn.dataset.cat === cat) ? '' : 'none';
+  });
+  qs('#category-filter')?.querySelectorAll('.cat-chip').forEach(chip => {
+    chip.classList.toggle('active', chip.dataset.cat === cat);
+  });
+}
+
 function renderSampleCarousel() {
   const container = qs('#sample-carousel');
   if (!container) return;
+
+  // Category filter
+  const filterEl = qs('#category-filter');
+  if (filterEl) {
+    const cats = ['all', ...new Set(CARD_SAMPLES.map(s => s.category))];
+    filterEl.innerHTML = cats.map(c => `
+      <button class="cat-chip${c === 'all' ? ' active' : ''}" data-cat="${c}" type="button">${CAT_LABELS[c] || c}</button>`
+    ).join('');
+    filterEl.querySelectorAll('.cat-chip').forEach(chip => {
+      chip.addEventListener('click', () => filterSampleCarousel(chip.dataset.cat));
+    });
+  }
+
   container.innerHTML = CARD_SAMPLES.map((s, i) => `
-    <button class="sample-card${i === 0 ? ' active' : ''}" data-id="${s.id}" type="button">
+    <button class="sample-card${i === 0 ? ' active' : ''}" data-id="${s.id}" data-cat="${s.category}" type="button">
       <div class="sample-card__bg" style="background-image:url('${s.bg}')"></div>
       <div class="sample-card__overlay"></div>
       <div class="sample-card__body">
-        <span class="sample-card__cat">${s.category}</span>
+        <span class="sample-card__cat">${CAT_LABELS[s.category] || s.category}</span>
         <p class="sample-card__title">${s.texts[0].replace(/\n/g, '<br>')}</p>
         <p class="sample-card__sub">${s.texts[1].replace(/\n/g, '<br>')}</p>
       </div>
