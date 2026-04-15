@@ -472,7 +472,13 @@ function meUpdCtrl() {
 
 function meDragStart(ev, id) {
   ev.stopPropagation();
-  meSel(id);
+  // 선택 상태만 업데이트 — meRender() 호출 금지 (DOM 재생성 시 currentTarget 무효화됨)
+  if (miniState.sel !== id) {
+    qs('#me-card').querySelectorAll('.me-sel').forEach(el => el.classList.remove('me-sel'));
+    ev.currentTarget.classList.add('me-sel');
+    miniState.sel = id;
+    meUpdCtrl();
+  }
   const el = miniState.els.find(e => e.id === id);
   if (!el) return;
   miniState.drag = { id, sx: ev.clientX, sy: ev.clientY, ex: el.x, ey: el.y };
