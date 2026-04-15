@@ -165,12 +165,6 @@ function updatePage() {
   const titleEl = qs('#topbar-page-title');
   if (titleEl) titleEl.textContent = PAGE_TITLES[state.page] || '';
 
-  const shell = qs('.sender-shell');
-  if (shell) {
-    shell.style.overflowY = 'auto'; // Always allow scroll to secure workspace
-    shell.classList.toggle('studio-active', state.page === 2);
-  }
-
   if (els.bottomNav) els.bottomNav.style.display = '';
 
   els.navDots.forEach((d, i) => d.classList.toggle('active', i === state.page - 1));
@@ -181,7 +175,6 @@ function updatePage() {
   }
 
   if (state.page === 2) {
-    if (shell) shell.scrollTo({ top: 0 });
     setTimeout(() => {
       if (window.CanvasEditor) {
         window.CanvasEditor.init();
@@ -209,10 +202,9 @@ function nextPage() {
   if (state.page < MAX_PAGES) {
     state.page++;
     updatePage();
-    if (state.page !== 2) qs('.sender-shell')?.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }
-function prevPage() { if (state.page > 1) { state.page--; updatePage(); if (state.page !== 2) qs('.sender-shell')?.scrollTo({ top: 0, behavior: 'smooth' }); } }
+function prevPage() { if (state.page > 1) { state.page--; updatePage(); } }
 
 /* ── Studio split resizer ── */
 function bindStudioResizer() {
