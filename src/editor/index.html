@@ -16,22 +16,13 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
 .phone-screen{width:100%;background:#fff;overflow:hidden;display:flex;flex-direction:column;position:relative;}
 #phoneScreen{flex:1;min-height:0;border-radius:0;}
 
-/* ===== Studio Header ===== */
-.studio-header{flex-shrink:0;background:#fff;border-bottom:1px solid #e8e8e8;overflow:hidden;max-height:120px;transition:max-height 250ms ease-out;will-change:max-height;backface-visibility:hidden;}
+/* ===== Studio Header (topbar style) ===== */
+.studio-header{flex-shrink:0;background:rgba(7,11,22,0.72);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:12px;padding:6px 16px;min-height:46px;overflow:hidden;max-height:80px;transition:max-height 250ms ease-out;will-change:max-height;backface-visibility:hidden;}
 .studio-header.collapsed{max-height:0;}
-.studio-header-inner{padding:8px 14px 6px;display:flex;flex-direction:column;gap:2px;}
-.studio-brand-row{display:flex;align-items:center;gap:6px;}
-.studio-brand-mark{width:22px;height:22px;border-radius:5px;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;}
-.studio-brand-name{font-size:12px;font-weight:700;color:#000;letter-spacing:.3px;}
-.studio-page-title{font-size:17px;font-weight:800;color:#000;line-height:1.2;}
-.studio-ctrl-row{display:flex;align-items:center;height:36px;gap:0;}
-.studio-toggle-group{display:flex;align-items:center;gap:2px;flex-shrink:0;background:rgba(0,0,0,0.06);border-radius:8px;padding:2px;}
-.s-txt-btn{height:26px;padding:0 10px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:rgba(0,0,0,0.35);border-radius:6px;font-size:12px;font-weight:700;flex-shrink:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:color 0.15s,background 0.15s;white-space:nowrap;}
-.s-txt-btn.active{color:#000;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.12);}
-.s-sep{width:1px;height:18px;background:#e0e0e0;margin:0 6px;flex-shrink:0;}
-.s-spacer{flex:1;}
-.s-collapse-btn{width:36px;height:36px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:rgba(0,0,0,0.35);border-radius:8px;flex-shrink:0;-webkit-tap-highlight-color:transparent;padding:0;touch-action:manipulation;}
-.s-collapse-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;pointer-events:none;}
+.studio-brand-wrap{display:flex;align-items:center;gap:8px;}
+.studio-brand-mark{width:22px;height:22px;border-radius:8px;background:linear-gradient(135deg,rgba(255,255,255,0.98),rgba(220,233,255,0.84));color:#091225;display:grid;place-items:center;font-weight:900;letter-spacing:0.12em;font-size:10px;box-shadow:0 4px 12px rgba(255,255,255,0.12);flex-shrink:0;}
+.studio-brand-name{font-size:12px;font-weight:800;letter-spacing:0.14em;color:#fff;}
+.studio-page-title{margin-left:auto;font-size:13px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:#b7c5e8;}
 
 /* ===== Studio Footer ===== */
 .studio-footer{flex-shrink:0;display:flex;align-items:center;padding:8px 16px;background:#fff;border-top:1px solid #e8e8e8;gap:8px;min-height:56px;}
@@ -309,28 +300,11 @@ input:checked+.sw-sl{background:#000;}input:checked+.sw-sl::before{transform:tra
 
 <!-- Studio Header -->
 <header class="studio-header" id="studioHeader">
-  <div class="studio-header-inner">
-    <div class="studio-brand-row">
-      <div class="studio-brand-mark">C</div>
-      <span class="studio-brand-name">CHARIEL</span>
-    </div>
-    <div class="studio-page-title">Design Studio</div>
-    <div class="studio-ctrl-row">
-      <div class="studio-toggle-group" id="modeToggle">
-        <button class="s-txt-btn active" data-mode="basic">Basic</button>
-        <button class="s-txt-btn" data-mode="custom">Custom</button>
-      </div>
-      <div class="s-sep"></div>
-      <div class="studio-toggle-group" id="sideToggle">
-        <button class="s-txt-btn active" data-side="front">Front</button>
-        <button class="s-txt-btn" data-side="back">Back</button>
-      </div>
-      <div class="s-spacer"></div>
-      <button class="s-collapse-btn" id="collapseBtn" title="접기">
-        <svg><use href="#ic-chevup"/></svg>
-      </button>
-    </div>
+  <div class="studio-brand-wrap">
+    <div class="studio-brand-mark">C</div>
+    <span class="studio-brand-name">CHARIEL</span>
   </div>
+  <div class="studio-page-title">Design Studio</div>
 </header>
 
 <div class="phone">
@@ -753,13 +727,7 @@ document.addEventListener('DOMContentLoaded',function(){
 <script>
 (function(){
   const header=document.getElementById('studioHeader');
-  const collapseBtn=document.getElementById('collapseBtn');
   const phoneScreen=document.getElementById('phoneScreen');
-
-  /* ── 접기 버튼 ── */
-  collapseBtn.addEventListener('click',function(){
-    header.classList.add('collapsed');
-  });
 
   /* ── 스와이프 다운으로 펼치기 ── */
   let _ty=0;
@@ -771,22 +739,6 @@ document.addEventListener('DOMContentLoaded',function(){
       header.classList.remove('collapsed');
     }
   },{passive:true});
-
-  /* ── Mode 토글 (Basic / Custom) ── */
-  document.querySelectorAll('[data-mode]').forEach(function(btn){
-    btn.addEventListener('click',function(){
-      document.querySelectorAll('[data-mode]').forEach(function(b){b.classList.remove('active');});
-      btn.classList.add('active');
-    });
-  });
-
-  /* ── Side 토글 (Front / Back) ── */
-  document.querySelectorAll('[data-side]').forEach(function(btn){
-    btn.addEventListener('click',function(){
-      document.querySelectorAll('[data-side]').forEach(function(b){b.classList.remove('active');});
-      btn.classList.add('active');
-    });
-  });
 })();
 </script>
 </body>
