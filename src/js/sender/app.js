@@ -191,9 +191,12 @@ function updatePage() {
 
 function nextPage() {
   if (state.page === 1) {
-    const sample = CARD_SAMPLES.find(s => s.id === state.templateId);
-    if (sample?.data) {
-      sessionStorage.setItem('chariel:tpl-data', JSON.stringify({ id: sample.id, ...sample.data }));
+    if (miniState.els.length > 0) {
+      sessionStorage.setItem('chariel:tpl-data', JSON.stringify({
+        id: miniState.id,
+        els: miniState.els,
+        bg: miniState.bg
+      }));
     } else {
       sessionStorage.removeItem('chariel:tpl-data');
     }
@@ -384,6 +387,189 @@ function createYtPlayer(ytId, startSec, endSec) {
   });
 }
 
+/* ── Mini Editor ── */
+const MINI_PALETTE = [
+  '#FFFFFF','#000000','#FF3B30','#FF9500','#FFCC00',
+  '#34C759','#00C7BE','#007AFF','#5856D6','#AF52DE',
+  '#FF2D55','#FFD700','#FF6B6B','#4D96FF','#6BCB77'
+];
+
+const miniState = { id: null, els: [], bg: null, sel: null, drag: null, scale: 1, nextId: 9000 };
+
+function meScale() {
+  const wrap = qs('#me-preview-wrap');
+  const outer = qs('.me-card-outer');
+  if (!wrap || !outer) return;
+  const avail = wrap.offsetWidth;
+  const factor = Math.min(1, avail / 270);
+  outer.style.transform = `scale(${factor})`;
+  outer.style.width = '270px';
+  outer.style.height = Math.round(338 * factor) + 'px';
+  miniState.scale = factor;
+}
+
+function meLoad(id) {
+  const sample = CARD_SAMPLES.find(s => s.id === id);
+  if (!sample?.data) return;
+  miniState.id = id;
+  miniState.els = JSON.parse(JSON.stringify(sample.data.els));
+  miniState.bg = sample.data.bg ? JSON.parse(JSON.stringify(sample.data.bg)) : null;
+  miniState.sel = null;
+  meRender();
+  meUpdCtrl();
+}
+
+function meRender() {
+  const card = qs('#me-card');
+  if (!card) return;
+  const bg = qs('#me-bg');
+  if (bg && miniState.bg?.src) bg.style.backgroundImage = `url('${miniState.bg.src}')`;
+  card.querySelectorAll('.me-el').forEach(el => el.remove());
+  [...miniState.els].sort((a, b) => (a.z || 0) - (b.z || 0)).forEach(e => {
+    const div = document.createElement('div');
+    div.className = 'me-el';
+    div.dataset.eid = e.id;
+    if (e.type === 'img') {
+      div.style.cssText = `left:${e.x}px;top:${e.y}px;width:${e.w}px;height:${e.h}px;z-index:${e.z||1};pointer-events:none;`;
+      const img = document.createElement('img');
+      img.src = e.src; img.draggable = false;
+      img.style.cssText = `width:100%;height:100%;object-fit:cover;border-radius:${e.br||0}px;`;
+      div.appendChild(img);
+    } else if (e.type === 'text') {
+      const clr = e.clr && e.clr !== 'transparent' ? e.clr : '#fff';
+      div.classList.add('me-txt');
+      if (e.id === miniState.sel) div.classList.add('me-sel');
+      let extra = '';
+      if (e.bg && e.bg !== 'transparent') extra += `background:${e.bg};border-radius:${e.br||0}px;padding:6px 8px;`;
+      div.style.cssText = `left:${e.x}px;top:${e.y}px;width:${e.w}px;min-height:20px;z-index:${e.z||2};color:${clr};font-size:${e.size}px;font-family:'${e.font||'Poppins'}',sans-serif;line-height:${e.line||1.3};${extra}`;
+      if (e.txtGrad) { div.style.backgroundImage = e.txtGrad; div.style.webkitBackgroundClip = 'text'; div.style.webkitTextFillColor = 'transparent'; }
+      div.textContent = e.txt;
+      div.addEventListener('pointerdown', ev => meDragStart(ev, e.id));
+      div.addEventListener('click', ev => { ev.stopPropagation(); meSel(e.id); });
+    }
+    card.appendChild(div);
+  });
+}
+
+function meSel(id) { miniState.sel = id; meRender(); meUpdCtrl(); }
+function meDesel() { miniState.sel = null; meRender(); meUpdCtrl(); }
+
+function meUpdCtrl() {
+  const ctrl = qs('#me-controls');
+  const delBtn = qs('#me-del-btn');
+  const sizeVal = qs('#me-size-val');
+  if (!ctrl) return;
+  const sel = miniState.els.find(e => e.id === miniState.sel && e.type === 'text');
+  ctrl.classList.toggle('me-controls--hidden', !sel);
+  if (delBtn) delBtn.disabled = !miniState.sel;
+  if (sel && sizeVal) sizeVal.textContent = sel.size;
+  const clrRow = qs('#me-clr-row');
+  if (clrRow && sel) {
+    const cur = (sel.clr && sel.clr !== 'transparent' ? sel.clr : '#FFFFFF').toUpperCase();
+    clrRow.querySelectorAll('.me-clr-chip').forEach(c => c.classList.toggle('sel', c.dataset.clr.toUpperCase() === cur));
+  }
+}
+
+function meDragStart(ev, id) {
+  ev.stopPropagation();
+  meSel(id);
+  const el = miniState.els.find(e => e.id === id);
+  if (!el) return;
+  miniState.drag = { id, sx: ev.clientX, sy: ev.clientY, ex: el.x, ey: el.y };
+  ev.currentTarget.setPointerCapture(ev.pointerId);
+  ev.currentTarget.addEventListener('pointermove', meDragMove);
+  ev.currentTarget.addEventListener('pointerup', meDragEnd);
+  ev.currentTarget.addEventListener('pointercancel', meDragEnd);
+}
+function meDragMove(ev) {
+  const d = miniState.drag; if (!d) return;
+  const s = miniState.scale;
+  const el = miniState.els.find(e => e.id === d.id); if (!el) return;
+  el.x = Math.round(Math.max(0, Math.min(270 - el.w, d.ex + (ev.clientX - d.sx) / s)));
+  el.y = Math.round(Math.max(0, Math.min(318, d.ey + (ev.clientY - d.sy) / s)));
+  const div = qs('#me-card').querySelector(`[data-eid="${d.id}"]`);
+  if (div) { div.style.left = el.x + 'px'; div.style.top = el.y + 'px'; }
+}
+function meDragEnd(ev) {
+  miniState.drag = null;
+  ev.currentTarget.removeEventListener('pointermove', meDragMove);
+  ev.currentTarget.removeEventListener('pointerup', meDragEnd);
+  ev.currentTarget.removeEventListener('pointercancel', meDragEnd);
+}
+
+function meAdd() {
+  const newEl = {
+    id: miniState.nextId++, type: 'text',
+    x: 20, y: 150, w: 230, h: 40, z: miniState.els.length + 2,
+    txt: 'Your Text', size: 18, font: 'Poppins', clr: '#ffffff',
+    align: 'left', space: 0, line: 1.3,
+    strokeClr: 'transparent', strokeW: 0, txtGrad: null,
+    bg: 'transparent', bw: 0, bc: '#000', bs: 'solid', br: 0,
+    sh: false, tsh: false, ift: false, bft: false,
+    sdirs: ['bottom-right'], sdist: 8, sblur: 8, sclrHex: '#000000', sopa: 30,
+    tsdirs: ['bottom-right'], tsdist: 2, tsblur: 4, tsclrHex: '#000000', tsopa: 20,
+    ifdirs: ['bottom'], ifamt: 100, ifsoft: 50, ifclr: '#ffffff',
+    bfdirs: ['bottom'], bfamt: 40, bfsoft: 50, bfclr: '#ffffff',
+    mot: 'none', motDur: 2, motDelay: 0, motCount: 'infinite',
+    motEase: 'ease-in-out', motAmp: 12, motScl: 1.5,
+    motOMax: 1, motOMin: 0.1, motSlideDir: 'bottom',
+    opa: 100, rot: 0
+  };
+  miniState.els.push(newEl);
+  meSel(newEl.id);
+}
+
+function meDel() {
+  if (!miniState.sel) return;
+  miniState.els = miniState.els.filter(e => e.id !== miniState.sel);
+  miniState.sel = null;
+  meRender(); meUpdCtrl();
+}
+
+function meSizeChg(delta) {
+  const el = miniState.els.find(e => e.id === miniState.sel && e.type === 'text');
+  if (!el) return;
+  el.size = Math.max(8, Math.min(120, el.size + delta));
+  const sv = qs('#me-size-val'); if (sv) sv.textContent = el.size;
+  const div = qs('#me-card')?.querySelector(`[data-eid="${el.id}"]`);
+  if (div) div.style.fontSize = el.size + 'px';
+}
+
+function meClrChg(clr) {
+  const el = miniState.els.find(e => e.id === miniState.sel && e.type === 'text');
+  if (!el) return;
+  el.clr = clr; el.txtGrad = null;
+  const div = qs('#me-card')?.querySelector(`[data-eid="${el.id}"]`);
+  if (div) { div.style.backgroundImage = ''; div.style.webkitBackgroundClip = ''; div.style.webkitTextFillColor = ''; div.style.color = clr; }
+  meUpdCtrl();
+}
+
+function meInitControls() {
+  const clrRow = qs('#me-clr-row');
+  if (clrRow) {
+    clrRow.innerHTML = MINI_PALETTE.map(c =>
+      `<button class="me-clr-chip${c === '#FFFFFF' ? ' white-chip' : ''}" data-clr="${c}" style="background:${c};" type="button"></button>`
+    ).join('');
+    clrRow.querySelectorAll('.me-clr-chip').forEach(chip =>
+      chip.addEventListener('click', () => meClrChg(chip.dataset.clr))
+    );
+  }
+  qs('#me-size-minus')?.addEventListener('click', () => meSizeChg(-1));
+  qs('#me-size-plus')?.addEventListener('click', () => meSizeChg(1));
+  function startRepeat(d) {
+    const t = setInterval(() => meSizeChg(d), 100);
+    const stop = () => { clearInterval(t); document.removeEventListener('pointerup', stop); };
+    document.addEventListener('pointerup', stop);
+  }
+  qs('#me-size-minus')?.addEventListener('pointerdown', () => setTimeout(() => startRepeat(-1), 400));
+  qs('#me-size-plus')?.addEventListener('pointerdown', () => setTimeout(() => startRepeat(1), 400));
+  qs('#me-add-btn')?.addEventListener('click', meAdd);
+  qs('#me-del-btn')?.addEventListener('click', meDel);
+  qs('#me-card')?.addEventListener('click', () => meDesel());
+  window.addEventListener('resize', meScale);
+  meScale();
+}
+
 /* ── Sample Carousel ── */
 const CAT_LABELS = {
   all: 'All',
@@ -441,8 +627,11 @@ function renderSampleCarousel() {
       container.querySelectorAll('.sample-card').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       state.templateId = btn.dataset.id;
+      meLoad(btn.dataset.id);
     });
   });
+  // 첫 번째 샘플 미니 에디터에 자동 로드
+  if (CARD_SAMPLES.length > 0) meLoad(CARD_SAMPLES[0].id);
 }
 
 function setTemplateActiveClass(id) {
@@ -712,6 +901,7 @@ async function init() {
   }
 
   renderSampleCarousel();
+  meInitControls();
   setDefaultDates();
   bindEvents();
   bindStudioResizer();

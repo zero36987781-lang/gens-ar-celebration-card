@@ -66,10 +66,35 @@
 
     <main class="sender-shell" id="sender-shell">
 
-      <!-- Step 1: Template Selection -->
+      <!-- Step 1: Template Selection + Mini Editor -->
       <section class="card-panel page-view sample-page" data-step="1">
         <div id="category-filter" class="category-filter"></div>
         <div id="sample-carousel" class="sample-carousel"></div>
+
+        <!-- Inline text editor -->
+        <div id="mini-editor" class="mini-editor">
+          <div class="me-divider"><span>Edit Card Text</span></div>
+          <div class="me-preview-wrap" id="me-preview-wrap">
+            <div class="me-card-outer">
+              <div class="me-card" id="me-card">
+                <div class="me-bg" id="me-bg"></div>
+              </div>
+            </div>
+          </div>
+          <div class="me-toolbar">
+            <button class="me-btn" id="me-add-btn" type="button">+ Text</button>
+            <button class="me-btn me-del-btn" id="me-del-btn" type="button" disabled>Delete</button>
+          </div>
+          <div id="me-controls" class="me-controls me-controls--hidden">
+            <div class="me-ctrl-row">
+              <span class="me-ctrl-label">Size</span>
+              <button class="me-size-btn" id="me-size-minus" type="button">−</button>
+              <div class="me-size-val" id="me-size-val">16</div>
+              <button class="me-size-btn" id="me-size-plus" type="button">+</button>
+            </div>
+            <div class="me-clr-row" id="me-clr-row"></div>
+          </div>
+        </div>
       </section>
 
       <!-- ★ Step 2: Design Studio (was Step 3) — TikTok-style split layout -->
