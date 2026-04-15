@@ -46,7 +46,7 @@
 .step-title{margin-left:auto;font-size:13px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);}
 
 /* Sample page */
-.sample-page{padding:0!important;}
+.sample-page{padding:0!important;overflow:hidden;}
 .category-filter{
   display:flex;overflow-x:auto;scrollbar-width:none;
   scroll-snap-type:x mandatory;scroll-behavior:smooth;

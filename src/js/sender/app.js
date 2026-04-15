@@ -133,6 +133,7 @@ function finishPermissions() {
   els.appShell.classList.remove('hidden');
   state.page = 1;
   updatePage();
+  requestAnimationFrame(() => requestAnimationFrame(() => meScale()));
 }
 
 function bindPermissions() {
