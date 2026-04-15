@@ -275,6 +275,20 @@ input:checked+.sw-sl{background:#000;}input:checked+.sw-sl::before{transform:tra
 /* ===== Text-only mode: hide non-text subtabs & HSB scrubbers ===== */
 #subImage,#subBg,#subEmoji{display:none!important;}
 #hsb-sec-h,#hsb-sec-s,#hsb-sec-b,#hsb-sec-har,#gradSection{display:none!important;}
+/* ===== Simplified toolbar ===== */
+#editBtn,#zoomBtn,#toolbarBackBtn,#undoBtn,#redoBtn{display:none!important;}
+/* ===== Quick color swatch ===== */
+.stp-clr{width:36px;height:36px;border-radius:8px;border:2.5px solid transparent;cursor:pointer;flex-shrink:0;transition:border-color .15s,transform .12s;-webkit-tap-highlight-color:transparent;}
+.stp-clr.sel{border-color:#007AFF;transform:scale(1.12);}
+.stp-clr:active{transform:scale(.88);}
+.stp-clr-white{box-shadow:inset 0 0 0 1.5px rgba(0,0,0,0.15);}
+/* ===== Simple edit panel ===== */
+.sep-row{display:flex;align-items:center;gap:8px;padding:10px 0 4px;flex-wrap:wrap;}
+.sep-label{font-size:12px;font-weight:700;color:rgba(0,0,0,.6);text-transform:uppercase;letter-spacing:.3px;flex-shrink:0;}
+.sep-size-ctrl{display:flex;align-items:center;gap:6px;}
+.sep-size-btn{width:36px;height:36px;border:2px solid #000;border-radius:8px;background:#fff;font-size:18px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;}
+.sep-size-btn:active{background:#000;color:#fff;}
+.sep-size-val{min-width:44px;height:36px;border:2px solid #ccc;border-radius:8px;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;background:#f7f7f7;}
 </style>
 </head>
 <body>
@@ -757,8 +771,63 @@ window.saveResult=saveResult;
 document.addEventListener('DOMContentLoaded',function(){
   init();
   $('doneBtn').onclick=saveResult;
-  // Text-only mode: Add버튼 클릭 시 바로 텍스트 추가 (서브탭 스킵)
+  // Add버튼 클릭 시 바로 텍스트 추가
   $('addBtn').onclick=()=>{if(S.sel)desel();addTxt();};
+
+  // ===== Simplified drawTxtPnl: size + quick color only =====
+  window.drawTxtPnl=function(e){
+    const c=$('editPanelContent');
+    c.innerHTML='';
+
+    // Size control
+    const sDiv=document.createElement('div');
+    sDiv.className='ep-section';
+    sDiv.innerHTML=`<div class="ep-sec-title">Text Size</div>
+      <div class="sep-row sep-size-ctrl">
+        <button class="sep-size-btn" id="stp-minus">−</button>
+        <div class="sep-size-val" id="stp-size-val">${e.size}</div>
+        <button class="sep-size-btn" id="stp-plus">+</button>
+      </div>`;
+    c.appendChild(sDiv);
+
+    // Quick color
+    const textHex=(e.clr&&e.clr!=='transparent'&&!e.clr.startsWith('linear'))?e.clr.toUpperCase():'#FFFFFF';
+    const cDiv=document.createElement('div');
+    cDiv.className='ep-section';
+    cDiv.innerHTML=`<div class="ep-sec-title">Text Color</div>
+      <div class="sep-row">
+        ${PALETTE.map(p=>`<button class="stp-clr${(p.toUpperCase()===textHex||p===textHex.toLowerCase())?' sel':''} ${p==='#FFFFFF'||p==='#ffffff'?'stp-clr-white':''}" data-clr="${p}" style="background:${p};"></button>`).join('')}
+      </div>`;
+    c.appendChild(cDiv);
+
+    // Size +/- handlers
+    function updSize(delta){
+      const el=S.els.find(x=>x.id===e.id);
+      if(!el)return;
+      el.size=Math.max(8,Math.min(120,Math.round((el.size||16)+delta)));
+      $('stp-size-val').textContent=el.size;
+      draw();saveHist();
+    }
+    $('stp-minus').addEventListener('click',()=>updSize(-1));
+    $('stp-plus').addEventListener('click',()=>updSize(1));
+    // Long-press repeat
+    function startRepeat(delta){const t=setInterval(()=>updSize(delta),100);const stop=()=>{clearInterval(t);document.removeEventListener('pointerup',stop);document.removeEventListener('pointercancel',stop);};document.addEventListener('pointerup',stop);document.addEventListener('pointercancel',stop);}
+    $('stp-minus').addEventListener('pointerdown',()=>setTimeout(()=>startRepeat(-1),400));
+    $('stp-plus').addEventListener('pointerdown',()=>setTimeout(()=>startRepeat(1),400));
+
+    // Color click
+    c.querySelectorAll('.stp-clr').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const el=S.els.find(x=>x.id===e.id);
+        if(!el)return;
+        el.clr=btn.dataset.clr;
+        el.txtGrad=null;
+        draw();saveHist();
+        c.querySelectorAll('.stp-clr').forEach(b=>b.classList.toggle('sel',b===btn));
+      });
+    });
+  };
+
   // Init Bridge: auto-load template from ?template=id
   const _tplId=new URLSearchParams(location.search).get('template');
   if(_tplId)loadTemplate(_tplId);
