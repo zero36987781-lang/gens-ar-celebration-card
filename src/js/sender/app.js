@@ -456,8 +456,14 @@ function meRender() {
       if (e.txtGrad) { div.style.backgroundImage = e.txtGrad; div.style.webkitBackgroundClip = 'text'; div.style.webkitTextFillColor = 'transparent'; }
       div.textContent = e.txt;
       div.addEventListener('pointerdown', ev => meDragStart(ev, e.id));
-      div.addEventListener('click', ev => { ev.stopPropagation(); meSel(e.id); });
-      div.addEventListener('dblclick', ev => { ev.stopPropagation(); meStartEdit(div, e.id); });
+      div.addEventListener('click', ev => {
+        ev.stopPropagation();
+        if (miniState.sel === e.id) {
+          meStartEdit(qs('#me-card').querySelector(`[data-eid="${e.id}"]`), e.id);
+        } else {
+          meSel(e.id);
+        }
+      });
     }
     card.appendChild(div);
   });
