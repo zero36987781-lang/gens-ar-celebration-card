@@ -1,12 +1,3 @@
-/* ══ Studio Header (shared with template page) ══ */
-.studio-header{flex-shrink:0;background:#fff;border-bottom:1px solid #e8e8e8;overflow:hidden;max-height:120px;transition:max-height 250ms ease-out;will-change:max-height;backface-visibility:hidden;}
-.studio-header.collapsed{max-height:0;}
-.studio-header-inner{padding:8px 14px 6px;display:flex;flex-direction:column;gap:2px;}
-.studio-brand-row{display:flex;align-items:center;gap:6px;}
-.studio-brand-mark{width:22px;height:22px;border-radius:5px;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;}
-.studio-brand-name{font-size:12px;font-weight:700;color:#000;letter-spacing:.3px;}
-.studio-page-title{font-size:17px;font-weight:800;color:#000;line-height:1.2;}
-
 /* ══ Permission Gate ══ */
 .permission-gate{
   position:fixed;inset:0;z-index:200;
