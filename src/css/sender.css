@@ -571,9 +571,13 @@
   gap:0;
 }
 
+.studio-page > .section-head,
 .studio-page > .canvas-toggle-row {
   flex-shrink:0;
   overflow:visible;
+}
+.studio-page > .section-head {
+  padding:8px 14px 0 20px;
 }
 
     .studio-page .top-pane{
@@ -608,7 +612,7 @@
       flex:1;
       min-height:160px;
       overflow:auto;
-      background:#181820;
+      background:#fff;
       padding:14px;
     }
 
@@ -1326,7 +1330,7 @@
 
 /* bottom pane (tool panel) */
 .studio-page .bottom-pane {
-  background: #181820 !important;
+  background: #ffffff !important;
 }
 
 /* divider */
