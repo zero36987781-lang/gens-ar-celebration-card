@@ -314,8 +314,8 @@ async function validateFile(file) {
   if (file.size > 130 * 1024 * 1024) {
     return {
       ok: false,
-      error: `파일이 너무 큽니다 (${sizeMB}MB).`,
-      tip: '130MB 이하로 압축해 주세요. HandBrake(무료)에서 Preset → Web → Gmail Large로 내보내거나, iMovie/Premiere에서 720p H.264로 내보내면 크기를 크게 줄일 수 있습니다.'
+      error: `File too large (${sizeMB} MB).`,
+      tip: 'Max 130 MB. Export at 720p H.264 in HandBrake (free) or iMovie/Premiere to reduce size.'
     };
   }
   return new Promise(resolve => {
@@ -328,26 +328,26 @@ async function validateFile(file) {
       const w = v.videoWidth, h = v.videoHeight;
       const dur = v.duration;
       if (!isFinite(dur) || dur <= 0) {
-        done({ ok: false, error: '영상 길이를 읽을 수 없습니다.', tip: 'H.264 코덱 MP4 파일인지 확인해 주세요.' });
+        done({ ok: false, error: 'Could not read video duration.', tip: 'Make sure the file is a valid H.264 MP4.' });
         return;
       }
       if (dur > 300) {
         const m = Math.floor(dur / 60), s = Math.round(dur % 60);
-        done({ ok: false, error: `영상이 너무 깁니다 (${m}분 ${s}초).`, tip: '5분(300초) 이하로 편집한 뒤 다시 업로드해 주세요.' });
+        done({ ok: false, error: `Video too long (${m}m ${s}s).`, tip: 'Trim to 5 minutes or less, then re-upload.' });
         return;
       }
       if (w > 0 && h > 0 && w * h > 1280 * 720) {
-        done({ ok: false, error: `해상도가 너무 높습니다 (${w}×${h}).`, tip: '720p(1280×720) 이하로 내보내 주세요. H.264 + 720p 설정 시 파일 크기도 함께 줄어듭니다.' });
+        done({ ok: false, error: `Resolution too high (${w}×${h}).`, tip: 'Export at 720p (1280×720) or lower. H.264 + 720p also reduces file size.' });
         return;
       }
       done({ ok: true, duration: dur });
     };
     v.onerror = () => done({
       ok: false,
-      error: '영상 파일을 재생할 수 없습니다.',
-      tip: 'H.264(AVC) 코덱 + AAC 오디오 MP4 파일만 지원합니다. HandBrake에서 H.264로 변환하거나, iPhone·Android에서 직접 촬영한 영상을 그대로 사용해 보세요.'
+      error: 'Cannot play this video file.',
+      tip: 'Only H.264 (AVC) + AAC MP4 is supported. Convert with HandBrake (free), or try a video recorded directly on iPhone or Android.'
     });
-    setTimeout(() => done({ ok: false, error: '파일 읽기 시간이 초과됐습니다.', tip: '파일이 손상됐거나 형식이 맞지 않을 수 있습니다. 다른 파일로 시도해 주세요.' }), 12000);
+    setTimeout(() => done({ ok: false, error: 'Timed out reading file.', tip: 'The file may be corrupted or in an unsupported format. Try a different file.' }), 12000);
     v.src = url;
   });
 }
