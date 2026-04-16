@@ -565,6 +565,8 @@ async function activateEditor(blobUrl, duration) {
   }
 
   syncTimeline();
+  const uploader = qs('#media-uploader');
+  if (uploader) uploader.hidden = true;
   const editor = qs('#media-editor');
   if (editor) editor.hidden = false;
 }
@@ -635,6 +637,7 @@ async function onMediaExportClip() {
 function bindMediaDrop() {
   const zone     = qs('#media-drop-zone');
   const input    = qs('#media-file-input');
+  const uploader = qs('#media-uploader');
   const progress = qs('#media-upload-progress');
   const bar      = qs('#media-upload-bar');
   const label    = qs('#media-upload-label');
@@ -680,7 +683,9 @@ function bindMediaDrop() {
   expBtn?.addEventListener('click', onMediaExportClip);
 
   rstBtn?.addEventListener('click', () => {
-    if (editor) editor.hidden = true;
+    if (editor)   editor.hidden   = true;
+    if (uploader) uploader.hidden = false;
+    if (progress) progress.hidden = true;
     zone.classList.remove('media-drop__zone--has-file');
     mediaState.uploaded = false;
     clearValidationError();
