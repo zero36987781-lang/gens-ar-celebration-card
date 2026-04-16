@@ -1617,6 +1617,16 @@
    Media Manager — Step 3
    ══════════════════════════════════════════════════════ */
 
+/* ── Step 3 페이지뷰 오버라이드: 라운드·아웃라인 제거, 패딩 절반, 검정 배경 ── */
+[data-step="3"].card-panel {
+  border-radius: 0 !important;
+  border: none !important;
+  padding: 11px !important;
+  background: #000 !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
 /* ── Drop Zone ── */
 .media-uploader {
   display: flex;
@@ -1629,10 +1639,10 @@
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding: 36px 20px;
-  border: 2px dashed rgba(45,212,191,0.35);
-  border-radius: 24px;
-  background: rgba(45,212,191,0.03);
+  padding: 32px 16px;
+  border: 2px dashed rgba(255,255,255,0.3);
+  border-radius: 12px;
+  background: #111;
   cursor: pointer;
   transition: border-color 0.2s ease-out, background 0.2s ease-out, transform 0.15s ease-out;
   -webkit-tap-highlight-color: transparent;
@@ -1642,67 +1652,94 @@
 }
 .media-drop__zone:hover,
 .media-drop__zone:focus-visible {
-  border-color: rgba(45,212,191,0.6);
-  background: rgba(45,212,191,0.06);
+  border-color: rgba(255,255,255,0.6);
+  background: #1a1a1a;
 }
 .media-drop__zone--drag-over {
-  border-color: #2dd4bf;
-  background: rgba(45,212,191,0.1);
+  border-color: #fff;
+  background: #1a1a1a;
   transform: scale(1.01);
 }
 .media-drop__zone--has-file {
   border-style: solid;
-  border-color: #2dd4bf;
+  border-color: #fff;
 }
 
 .media-drop__icon {
-  width: 52px;
-  height: 52px;
-  color: #2dd4bf;
-  opacity: 0.85;
+  width: 48px;
+  height: 48px;
+  color: #fff;
+  opacity: 0.9;
   margin-bottom: 4px;
   flex-shrink: 0;
 }
 .media-drop__label {
   font-size: 16px;
   font-weight: 700;
-  color: var(--text, #f8fbff);
+  color: #fff;
   letter-spacing: -0.01em;
 }
 .media-drop__sublabel {
   font-size: 13px;
-  color: var(--muted, #b7c5e8);
+  color: rgba(255,255,255,0.6);
 }
 .media-drop__limits {
-  margin-top: 4px;
-  font-size: 11px;
+  margin-top: 6px;
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: rgba(45,212,191,0.7);
-  padding: 4px 12px;
-  border: 1px solid rgba(45,212,191,0.2);
+  letter-spacing: 0.03em;
+  color: rgba(255,255,255,0.5);
+  padding: 4px 14px;
+  border: 1px solid rgba(255,255,255,0.18);
   border-radius: 100px;
+}
+
+/* ── Validation message (uploader 영역에 표시) ── */
+.media-validation-msg {
+  border-radius: 10px;
+  padding: 14px 16px;
+  background: #1a0000;
+  border: 1px solid rgba(255,80,80,0.4);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.6;
+  animation: mediaEditorIn 0.2s ease-out;
+}
+.media-validation-msg strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: #ff6b6b;
+  margin-bottom: 6px;
+}
+.media-validation-msg .media-val__tip {
+  display: block;
+  margin-top: 8px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.55);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding-top: 8px;
 }
 
 /* ── Upload Progress ── */
 .media-upload-progress {
-  border-radius: 20px;
+  border-radius: 10px;
   padding: 16px;
-  background: rgba(45,212,191,0.05);
-  border: 1px solid rgba(45,212,191,0.18);
+  background: #111;
+  border: 1px solid rgba(255,255,255,0.12);
 }
 .media-upload-progress__bar-wrap {
   height: 6px;
   border-radius: 3px;
-  background: rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.1);
   overflow: hidden;
   margin-bottom: 12px;
 }
 .media-upload-progress__bar {
   height: 100%;
   border-radius: 3px;
-  background: linear-gradient(90deg, #2dd4bf, #7c3aed);
+  background: #fff;
   width: 0%;
   transition: width 0.3s ease-out;
   will-change: width;
@@ -1715,12 +1752,12 @@
 .media-upload-progress__label {
   font-size: 13px;
   font-weight: 600;
-  color: var(--muted, #b7c5e8);
+  color: rgba(255,255,255,0.7);
 }
 .media-upload-progress__cancel {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
-  color: var(--danger, #ef4444);
+  color: #ff6b6b;
   background: none;
   border: none;
   cursor: pointer;
@@ -1730,14 +1767,14 @@
   -webkit-tap-highlight-color: transparent;
 }
 .media-upload-progress__cancel:hover {
-  background: rgba(239,68,68,0.1);
+  background: rgba(255,80,80,0.12);
 }
 
 /* ── Editor container ── */
 .media-editor {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
   animation: mediaEditorIn 0.25s ease-out;
 }
 @keyframes mediaEditorIn {
@@ -1747,12 +1784,11 @@
 
 /* ── Video Preview ── */
 .media-editor__preview-wrap {
-  border-radius: 20px;
+  border-radius: 8px;
   overflow: hidden;
   background: #000;
   aspect-ratio: 16 / 9;
   position: relative;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
 }
 .media-editor__preview-wrap video {
   width: 100%;
@@ -1770,28 +1806,28 @@
 .media-tl__track-wrap {
   position: relative;
   height: 52px;
-  border-radius: 12px;
+  border-radius: 6px;
   overflow: hidden;
   cursor: pointer;
   touch-action: none;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: #111;
+  border: 1px solid rgba(255,255,255,0.15);
 }
 #media-tl-canvas {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  border-radius: 12px;
+  border-radius: 6px;
   object-fit: cover;
 }
 .media-tl__range {
   position: absolute;
   top: 0;
   height: 100%;
-  background: rgba(45,212,191,0.18);
-  border-top: 2px solid #2dd4bf;
-  border-bottom: 2px solid #2dd4bf;
+  background: rgba(255,255,255,0.12);
+  border-top: 2px solid #fff;
+  border-bottom: 2px solid #fff;
   pointer-events: none;
   z-index: 2;
 }
@@ -1800,7 +1836,7 @@
   top: 0;
   width: 18px;
   height: 100%;
-  background: #2dd4bf;
+  background: #fff;
   cursor: ew-resize;
   touch-action: none;
   z-index: 4;
@@ -1812,21 +1848,21 @@
 }
 .media-tl__handle:hover,
 .media-tl__handle:active {
-  background: #5eead4;
+  background: #e5e5e5;
 }
 .media-tl__handle::after {
   content: '';
   width: 3px;
   height: 22px;
   border-radius: 2px;
-  background: rgba(0,0,0,0.35);
+  background: rgba(0,0,0,0.4);
 }
 .media-tl__handle--in {
-  border-radius: 8px 0 0 8px;
+  border-radius: 4px 0 0 4px;
   transform: translateX(-100%);
 }
 .media-tl__handle--out {
-  border-radius: 0 8px 8px 0;
+  border-radius: 0 4px 4px 0;
 }
 .media-tl__playhead {
   position: absolute;
@@ -1837,20 +1873,19 @@
   pointer-events: none;
   z-index: 5;
   border-radius: 1px;
-  box-shadow: 0 0 6px rgba(255,255,255,0.55);
+  box-shadow: 0 0 6px rgba(255,255,255,0.6);
   will-change: left;
 }
 .media-tl__ruler {
   position: relative;
-  height: 18px;
+  height: 20px;
 }
 .media-tl__tick {
   position: absolute;
   transform: translateX(-50%);
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--muted, #b7c5e8);
-  opacity: 0.7;
+  color: rgba(255,255,255,0.5);
   pointer-events: none;
   white-space: nowrap;
 }
@@ -1867,16 +1902,16 @@
   align-items: center;
   gap: 8px;
   padding: 10px 14px;
-  border-radius: 14px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  background: #111;
+  border: 1px solid rgba(255,255,255,0.15);
 }
 .media-scrub__label {
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 800;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #2dd4bf;
+  color: rgba(255,255,255,0.5);
   flex-shrink: 0;
 }
 .media-scrub__val {
@@ -1886,9 +1921,9 @@
   cursor: ew-resize;
   touch-action: none;
   border: 1.5px solid transparent;
-  border-radius: 8px;
+  border-radius: 6px;
   padding: 3px 8px;
-  color: var(--text, #f8fbff);
+  color: #fff;
   transition: border-color 0.15s ease-out, background 0.15s ease-out;
   user-select: none;
   -webkit-user-select: none;
@@ -1897,41 +1932,41 @@
   backface-visibility: hidden;
 }
 .media-scrub__val:hover {
-  border-color: rgba(45,212,191,0.5);
-  background: rgba(45,212,191,0.06);
+  border-color: rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.06);
 }
 .media-scrub__val--active {
-  border-color: #2dd4bf !important;
-  background: rgba(45,212,191,0.1) !important;
-  box-shadow: 0 0 0 3px rgba(45,212,191,0.15);
+  border-color: #fff !important;
+  background: rgba(255,255,255,0.1) !important;
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.12);
 }
 .media-scrub__clip-len {
   margin-left: auto;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
-  color: var(--muted, #b7c5e8);
+  color: rgba(255,255,255,0.5);
   flex-shrink: 0;
 }
 .media-scrub__clip-len--warn {
-  color: var(--warn, #f59e0b);
+  color: #f59e0b;
 }
 
 /* ── Action buttons ── */
 .media-editor__actions {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 .media-editor__btn {
   flex: 1;
   min-width: 80px;
-  padding: 12px 16px;
+  padding: 13px 16px;
   border: none;
-  border-radius: 14px;
+  border-radius: 8px;
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  transition: opacity 0.15s ease-out, transform 0.15s ease-out, box-shadow 0.15s ease-out;
+  transition: opacity 0.15s ease-out, transform 0.15s ease-out;
   -webkit-tap-highlight-color: transparent;
   backface-visibility: hidden;
 }
@@ -1939,56 +1974,56 @@
   transform: scale(0.97);
 }
 .media-editor__btn--save {
-  background: #2dd4bf;
-  color: #041a16;
-  box-shadow: 0 4px 16px rgba(45,212,191,0.3);
+  background: #fff;
+  color: #000;
 }
 .media-editor__btn--save:hover {
-  box-shadow: 0 6px 20px rgba(45,212,191,0.45);
+  background: #e5e5e5;
 }
 .media-editor__btn--export {
-  background: rgba(124,58,237,0.15);
-  color: #c4b5fd;
-  border: 1.5px solid rgba(124,58,237,0.4);
+  background: #222;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.2);
 }
 .media-editor__btn--export:hover {
-  background: rgba(124,58,237,0.22);
+  background: #333;
 }
 .media-editor__btn--export:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 .media-editor__btn--reset {
-  background: rgba(255,255,255,0.06);
-  color: var(--muted, #b7c5e8);
-  border: 1.5px solid rgba(255,255,255,0.1);
+  background: #111;
+  color: rgba(255,255,255,0.6);
+  border: 1px solid rgba(255,255,255,0.15);
   flex: 0;
   min-width: 72px;
 }
 .media-editor__btn--reset:hover {
-  background: rgba(255,255,255,0.1);
+  background: #222;
+  color: #fff;
 }
 
-/* ── Status message ── */
+/* ── Status message (editor 내부) ── */
 .media-editor__status {
-  padding: 12px 16px;
-  border-radius: 14px;
+  padding: 13px 16px;
+  border-radius: 8px;
   font-size: 13px;
   font-weight: 600;
   animation: mediaEditorIn 0.2s ease-out;
 }
 .media-editor__status--success {
-  background: rgba(34,197,94,0.12);
-  border: 1px solid rgba(34,197,94,0.3);
+  background: #0a1f0f;
+  border: 1px solid rgba(74,222,128,0.35);
   color: #86efac;
 }
 .media-editor__status--error {
-  background: rgba(239,68,68,0.12);
-  border: 1px solid rgba(239,68,68,0.3);
+  background: #1a0000;
+  border: 1px solid rgba(255,80,80,0.35);
   color: #fca5a5;
 }
 .media-editor__status--info {
-  background: rgba(45,212,191,0.08);
-  border: 1px solid rgba(45,212,191,0.2);
-  color: #2dd4bf;
+  background: #0f1a1a;
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.8);
 }

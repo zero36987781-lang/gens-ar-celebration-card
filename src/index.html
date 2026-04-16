@@ -106,9 +106,6 @@
 
       <!-- ★ Step 3: Media Management — Video Upload & Editor -->
       <section class="card-panel page-view page-hidden" data-step="3">
-        <div class="section-head">
-          <div><h2>Media</h2><p>Upload a video clip for your AR card.</p></div>
-        </div>
 
         <!-- 업로드 드롭존 -->
         <div class="media-uploader" id="media-uploader">
@@ -118,11 +115,12 @@
               <path d="M24 32V20M24 20L19 25M24 20L29 25" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               <rect x="16" y="34" width="16" height="2.5" rx="1.25" fill="currentColor" opacity="0.5"/>
             </svg>
-            <span class="media-drop__label">Drop video here</span>
-            <span class="media-drop__sublabel">or tap to select</span>
-            <span class="media-drop__limits">130 MB &middot; 5 min &middot; 720p &middot; H.264</span>
+            <span class="media-drop__label">영상 업로드</span>
+            <span class="media-drop__sublabel">탭하거나 파일을 끌어다 놓으세요</span>
+            <span class="media-drop__limits">H.264 · AAC · 720p · 30fps · 130MB</span>
           </div>
           <input id="media-file-input" type="file" accept="video/*" hidden aria-hidden="true" />
+          <div class="media-validation-msg" id="media-validation-msg" hidden></div>
         </div>
 
         <!-- 업로드 진행 -->
