@@ -110,14 +110,16 @@
         <!-- 업로드 드롭존 -->
         <div class="media-uploader" id="media-uploader">
           <div class="media-drop__zone" id="media-drop-zone" role="button" tabindex="0" aria-label="Upload video">
-            <svg class="media-drop__icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <circle cx="24" cy="24" r="22" stroke="currentColor" stroke-width="1.5" stroke-dasharray="4 3"/>
-              <path d="M24 32V20M24 20L19 25M24 20L29 25" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <rect x="16" y="34" width="16" height="2.5" rx="1.25" fill="currentColor" opacity="0.5"/>
-            </svg>
-            <div class="media-drop__text">
-              <span class="media-drop__label">Drop video here</span>
-              <span class="media-drop__sublabel">or tap to select</span>
+            <div class="media-drop__row">
+              <svg class="media-drop__icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <circle cx="24" cy="24" r="22" stroke="currentColor" stroke-width="1.5" stroke-dasharray="4 3"/>
+                <path d="M24 32V20M24 20L19 25M24 20L29 25" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <rect x="16" y="34" width="16" height="2.5" rx="1.25" fill="currentColor" opacity="0.5"/>
+              </svg>
+              <div class="media-drop__text">
+                <span class="media-drop__label">Drop video here</span>
+                <span class="media-drop__sublabel">or tap to select</span>
+              </div>
             </div>
             <span class="media-drop__limits">H.264 · AAC · 720p · 30fps · 130MB</span>
           </div>
@@ -142,21 +144,37 @@
           <!-- 필름스트랩 (비디오 위) -->
           <div class="media-filmstrip" id="media-filmstrip">
             <div class="media-filmstrip__clips" id="media-filmstrip-clips"></div>
-            <div class="media-filmstrip__meta">
-              <span class="media-filmstrip__total" id="media-filmstrip-total">Total: 0s</span>
-              <div class="media-filmstrip__nudge" id="media-filmstrip-nudge" hidden>
-                <button class="media-filmstrip__nudge-btn" data-dir="-5" type="button">◄◄ 5s</button>
-                <button class="media-filmstrip__nudge-btn" data-dir="-1" type="button">◄ 1s</button>
-                <span class="media-filmstrip__nudge-label" id="media-filmstrip-clip-label">-</span>
-                <button class="media-filmstrip__nudge-btn" data-dir="1" type="button">1s ►</button>
-                <button class="media-filmstrip__nudge-btn" data-dir="5" type="button">5s ►►</button>
-              </div>
-            </div>
+            <span class="media-filmstrip__total" id="media-filmstrip-total">Total: 0s</span>
+          </div>
+
+          <!-- 필름스트랩 네비게이션 -->
+          <div class="media-filmstrip__nav" id="media-filmstrip-nav">
+            <button class="media-filmstrip__nav-btn" id="media-fs-first" type="button" title="First clip">
+              <span class="media-filmstrip__nav-arrow">|◄</span>
+            </button>
+            <button class="media-filmstrip__nav-btn" id="media-fs-prev" type="button" title="Previous clip">
+              <span class="media-filmstrip__nav-arrow">◄</span>
+            </button>
+            <button class="media-filmstrip__nav-btn media-filmstrip__nav-btn--play" id="media-fs-play" type="button" title="Play selected clip">
+              <span class="media-filmstrip__nav-arrow">▶</span>
+            </button>
+            <button class="media-filmstrip__nav-btn" id="media-fs-next" type="button" title="Next clip">
+              <span class="media-filmstrip__nav-arrow">►</span>
+            </button>
+            <button class="media-filmstrip__nav-btn" id="media-fs-last" type="button" title="Last clip">
+              <span class="media-filmstrip__nav-arrow">►|</span>
+            </button>
           </div>
 
           <!-- 미리보기 -->
           <div class="media-editor__preview-wrap">
             <video id="media-preview" playsinline preload="metadata"></video>
+            <div class="media-preview-play" id="media-preview-play">
+              <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <circle cx="32" cy="32" r="30" stroke="#fff" stroke-width="2.5" opacity="0.85"/>
+                <path d="M27 22L47 32L27 42V22Z" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>
+              </svg>
+            </div>
           </div>
 
           <!-- 타임라인 -->
@@ -173,11 +191,25 @@
 
           <!-- 트랜스포트 컨트롤 -->
           <div class="media-editor__transport">
-            <button class="media-transport__btn" id="media-t-minus5" type="button" title="-5s">◄◄ 5s</button>
-            <button class="media-transport__btn" id="media-t-minus1" type="button" title="-1s">◄ 1s</button>
-            <button class="media-transport__btn media-transport__btn--play" id="media-t-play" type="button">▶</button>
-            <button class="media-transport__btn" id="media-t-plus1" type="button" title="+1s">1s ►</button>
-            <button class="media-transport__btn" id="media-t-plus5" type="button" title="+5s">5s ►►</button>
+            <button class="media-transport__btn" id="media-t-minus5" type="button" title="-5s">
+              <span class="media-transport__arrow">◄◄</span>
+              <span class="media-transport__sec">5s</span>
+            </button>
+            <button class="media-transport__btn" id="media-t-minus1" type="button" title="-1s">
+              <span class="media-transport__arrow">◄</span>
+              <span class="media-transport__sec">1s</span>
+            </button>
+            <button class="media-transport__btn media-transport__btn--play" id="media-t-play" type="button">
+              <span class="media-transport__arrow">▶</span>
+            </button>
+            <button class="media-transport__btn" id="media-t-plus1" type="button" title="+1s">
+              <span class="media-transport__arrow">►</span>
+              <span class="media-transport__sec">1s</span>
+            </button>
+            <button class="media-transport__btn" id="media-t-plus5" type="button" title="+5s">
+              <span class="media-transport__arrow">►►</span>
+              <span class="media-transport__sec">5s</span>
+            </button>
           </div>
 
           <!-- 스크럽 숫자 입력 -->

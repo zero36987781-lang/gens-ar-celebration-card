@@ -575,11 +575,18 @@ async function activateEditor(blobUrl, duration) {
   clipState.clips = [];
   clipState.selectedIdx = -1;
   renderFilmstrip();
+  setPlayOverlay(true);
 
   const uploader = qs('#media-uploader');
   if (uploader) uploader.hidden = true;
   const editor = qs('#media-editor');
   if (editor) editor.hidden = false;
+}
+
+function setPlayOverlay(visible) {
+  const overlay = qs('#media-preview-play');
+  if (!overlay) return;
+  overlay.classList.toggle('media-preview-play--hidden', !visible);
 }
 
 function bindTransportControls() {
@@ -588,7 +595,6 @@ function bindTransportControls() {
   if (!video || !playBtn) return;
 
   const nudgeTime = delta => {
-    if (!video) return;
     video.currentTime = Math.max(0, Math.min(mediaState.duration || video.duration || 0, video.currentTime + delta));
   };
 
@@ -597,17 +603,27 @@ function bindTransportControls() {
   qs('#media-t-plus1')?.addEventListener('click',  () => nudgeTime(1));
   qs('#media-t-plus5')?.addEventListener('click',  () => nudgeTime(5));
 
+  const setPlay = playing => {
+    const arrow = playBtn.querySelector('.media-transport__arrow');
+    if (arrow) arrow.textContent = playing ? '⏸' : '▶';
+    setPlayOverlay(!playing);
+  };
+
   playBtn.addEventListener('click', () => {
-    if (video.paused) {
-      video.play();
-      playBtn.textContent = '⏸';
-    } else {
-      video.pause();
-      playBtn.textContent = '▶';
-    }
+    if (video.paused) { video.play(); } else { video.pause(); }
   });
 
-  video.addEventListener('ended', () => { playBtn.textContent = '▶'; });
+  video.addEventListener('play',  () => setPlay(true));
+  video.addEventListener('pause', () => setPlay(false));
+  video.addEventListener('ended', () => setPlay(false));
+
+  // 클릭으로 플레이 오버레이 토글
+  qs('#media-preview-play')?.addEventListener('click', () => {
+    if (video.paused) video.play(); else video.pause();
+  });
+  if (qs('#media-preview-play')) {
+    qs('#media-preview-play').style.pointerEvents = 'auto';
+  }
 }
 
 async function captureThumb(videoEl, timeSec) {
@@ -628,68 +644,105 @@ async function captureThumb(videoEl, timeSec) {
   });
 }
 
+const FILMSTRIP_SLOTS = 5;
+
+function makeEmptyClipEl() {
+  const el = document.createElement('div');
+  el.className = 'media-filmstrip__clip media-filmstrip__clip--empty';
+  el.innerHTML = `<svg class="media-filmstrip__empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+    <rect x="3" y="5" width="18" height="14" rx="2"/>
+    <path d="M10 9l5 3-5 3V9z" stroke-width="1.5"/>
+  </svg>`;
+  return el;
+}
+
 function renderFilmstrip() {
   const clipsEl = qs('#media-filmstrip-clips');
   const totalEl = qs('#media-filmstrip-total');
-  const nudgeEl = qs('#media-filmstrip-nudge');
-  const labelEl = qs('#media-filmstrip-clip-label');
   if (!clipsEl) return;
 
   const total = clipState.clips.reduce((s, c) => s + c.duration, 0);
   if (totalEl) totalEl.textContent = `Total: ${Math.round(total)}s`;
 
   clipsEl.innerHTML = '';
+
+  // 실제 클립
   clipState.clips.forEach((clip, idx) => {
-    const pxW = Math.max(48, Math.round(clip.duration * 6));
-    const el  = document.createElement('div');
+    const el = document.createElement('div');
     el.className = 'media-filmstrip__clip' + (idx === clipState.selectedIdx ? ' media-filmstrip__clip--active' : '');
     el.dataset.index = idx;
-    el.style.width = pxW + 'px';
 
-    const thumb = document.createElement('div');
-    thumb.className = 'media-filmstrip__thumb';
     if (clip.thumbDataUrl) {
+      const thumb = document.createElement('div');
+      thumb.className = 'media-filmstrip__thumb';
       const img = document.createElement('img');
       img.src = clip.thumbDataUrl;
-      img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
       thumb.appendChild(img);
+      el.appendChild(thumb);
     }
 
     const dur = document.createElement('span');
     dur.className = 'media-filmstrip__dur';
     dur.textContent = Math.round(clip.duration) + 's';
-
-    el.appendChild(thumb);
     el.appendChild(dur);
+
     el.addEventListener('click', () => {
       clipState.selectedIdx = idx;
       renderFilmstrip();
-      if (nudgeEl) nudgeEl.hidden = false;
-      if (labelEl) labelEl.textContent = `Clip ${idx + 1}: ${Math.round(clip.duration)}s`;
     });
     clipsEl.appendChild(el);
   });
 
-  if (clipState.selectedIdx < 0 && nudgeEl) nudgeEl.hidden = true;
+  // 빈 슬롯 (5개 기준 나머지)
+  const emptyCount = Math.max(0, FILMSTRIP_SLOTS - clipState.clips.length);
+  for (let i = 0; i < emptyCount; i++) {
+    clipsEl.appendChild(makeEmptyClipEl());
+  }
 }
 
-function bindFilmstripNudge() {
-  const nudgeEl = qs('#media-filmstrip-nudge');
-  if (!nudgeEl) return;
-  nudgeEl.addEventListener('click', e => {
-    const btn = e.target.closest('.media-filmstrip__nudge-btn');
-    if (!btn) return;
-    const dir = parseInt(btn.dataset.dir, 10);
-    const idx = clipState.selectedIdx;
-    if (idx < 0 || !clipState.clips[idx]) return;
-    const clip = clipState.clips[idx];
-    const newIn  = Math.max(0, Math.min(mediaState.duration - clip.duration, clip.inSec + dir));
-    clip.inSec   = newIn;
-    clip.outSec  = newIn + clip.duration;
+function bindFilmstripNav() {
+  const video = qs('#media-preview');
+  const playBtn = qs('#media-fs-play');
+
+  const selectClip = idx => {
+    if (clipState.clips.length === 0) return;
+    clipState.selectedIdx = Math.max(0, Math.min(clipState.clips.length - 1, idx));
     renderFilmstrip();
-    const labelEl = qs('#media-filmstrip-clip-label');
-    if (labelEl) labelEl.textContent = `Clip ${idx + 1}: ${Math.round(clip.duration)}s`;
+  };
+
+  qs('#media-fs-first')?.addEventListener('click', () => selectClip(0));
+  qs('#media-fs-last')?.addEventListener('click',  () => selectClip(clipState.clips.length - 1));
+  qs('#media-fs-prev')?.addEventListener('click',  () => selectClip(clipState.selectedIdx - 1));
+  qs('#media-fs-next')?.addEventListener('click',  () => selectClip(clipState.selectedIdx + 1));
+
+  playBtn?.addEventListener('click', () => {
+    if (!video || clipState.selectedIdx < 0) return;
+    const clip = clipState.clips[clipState.selectedIdx];
+    if (!clip) return;
+    if (!video.paused) {
+      video.pause();
+      return;
+    }
+    video.currentTime = clip.inSec;
+    video.play();
+    // 구간 끝에서 정지
+    const stopAt = () => {
+      if (video.currentTime >= clip.outSec) {
+        video.pause();
+        video.removeEventListener('timeupdate', stopAt);
+      }
+    };
+    video.addEventListener('timeupdate', stopAt);
   });
+
+  const updatePlayBtn = () => {
+    const arrow = playBtn?.querySelector('.media-filmstrip__nav-arrow');
+    if (!arrow || !video) return;
+    arrow.textContent = video.paused ? '▶' : '⏸';
+  };
+  video?.addEventListener('play',  updatePlayBtn);
+  video?.addEventListener('pause', updatePlayBtn);
+  video?.addEventListener('ended', updatePlayBtn);
 }
 
 function bindCutClip() {
@@ -794,7 +847,7 @@ function bindMediaDrop() {
 
   // 트랜스포트 / 필름스트랩 / Cut 바인딩 (1회)
   bindTransportControls();
-  bindFilmstripNudge();
+  bindFilmstripNav();
   bindCutClip();
 
   zone.addEventListener('click',   () => input.click());
@@ -839,8 +892,9 @@ function bindMediaDrop() {
     clipState.clips = [];
     clipState.selectedIdx = -1;
     renderFilmstrip();
-    const playBtn = qs('#media-t-play');
-    if (playBtn) playBtn.textContent = '▶';
+    setPlayOverlay(false);
+    const tArrow = qs('#media-t-play .media-transport__arrow');
+    if (tArrow) tArrow.textContent = '▶';
   });
 
   async function processFile(file) {
