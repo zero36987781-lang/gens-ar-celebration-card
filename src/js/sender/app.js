@@ -1504,7 +1504,7 @@ async function initMap() {
       radiusInput: f.unlockRadius, searchInput: f.mapSearch,
       searchButton: f.mapSearchButton, statusEl: f.mapStatus
     });
-    await state.mapPicker.init();
+    state.mapPicker.init();
   } catch (e) { setStatus(f.mapStatus, e.message || 'Map failed.', 'warn'); }
 }
 

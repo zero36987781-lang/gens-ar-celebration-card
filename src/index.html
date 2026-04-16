@@ -11,6 +11,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Gothic+A1:wght@400;700;800&family=Gowun+Dodum&family=Hahmlet:wght@400;700;800&family=IBM+Plex+Sans+KR:wght@400;700&family=Jua&family=Nanum+Gothic:wght@400;700;800&family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Sans+KR:wght@400;700;900&family=Noto+Serif+KR:wght@400;700;900&family=Song+Myung&family=Gaegu:wght@400;700&family=Poor+Story&family=Stylish&family=Hi+Melody&family=Black+And+White+Picture&family=Dokdo&family=Sunflower:wght@300;500;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
 
@@ -264,9 +266,6 @@
 
       <!-- Step 5: Map (unchanged) -->
       <section class="card-panel page-view page-hidden" data-step="5">
-        <div class="section-head">
-          <div><h2>Map placement</h2><p>Pan the map under the fixed center pin.</p></div>
-        </div>
         <form id="gift-form" class="stack-form aux-form" novalidate>
           <div class="field-grid map-search-grid">
             <label class="glass-field"><span>Place search</span><input id="map-search" type="text" placeholder="Search address or place" /></label>
