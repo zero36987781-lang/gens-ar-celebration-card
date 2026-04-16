@@ -17,8 +17,17 @@ function parseYouTubeId(url) {
   }
 }
 
-function isDirectVideoUrl(url) {
-  return /\.(mp4|webm|ogg)(\?|#|$)/i.test(String(url || ''));
+function isPlayableMediaUrl(url) {
+  return /\.(mp4|webm|ogg)(\?|#|$)/i.test(String(url || ''))
+    || String(url).includes('/api/media/');
+}
+
+function resolveMediaUrl(gift) {
+  if (gift.mediaR2Key) {
+    const parts = gift.mediaR2Key.split('/'); // ["media", ownerToken, mediaId]
+    if (parts.length >= 3) return `/api/media/${parts[1]}/${parts[2]}`;
+  }
+  return safeUrl(gift.videoUrl || '');
 }
 
 function createGlowTexture() {
@@ -227,8 +236,8 @@ export class WebXREngine {
   }
 
   async prepareMedia() {
-    const mediaUrl = safeUrl(this.gift.videoUrl);
-    if (!this.videoEl || !mediaUrl || !isDirectVideoUrl(mediaUrl)) return;
+    const mediaUrl = resolveMediaUrl(this.gift);
+    if (!this.videoEl || !mediaUrl || !isPlayableMediaUrl(mediaUrl)) return;
     this.videoEl.crossOrigin = 'anonymous';
     this.videoEl.preload = 'auto';
     this.videoEl.playsInline = true;
@@ -305,8 +314,8 @@ export class WebXREngine {
     this.contentGroup.add(this.floorCircle);
     this.contentGroup.visible = false;
 
-    const mediaUrl = safeUrl(this.gift.videoUrl);
-    if (mediaUrl && isDirectVideoUrl(mediaUrl)) {
+    const mediaUrl = resolveMediaUrl(this.gift);
+    if (mediaUrl && isPlayableMediaUrl(mediaUrl)) {
       this.videoEl.src = mediaUrl;
       this.videoEl.crossOrigin = 'anonymous';
       this.videoEl.loop = false;
@@ -527,16 +536,16 @@ export class WebXREngine {
 
   async playVideoSegment() {
     if (!this.videoPlane || !this.videoEl?.src) {
-      if (parseYouTubeId(this.gift.videoUrl || '')) {
-        this.setStatus('YouTube segment preview is supported in the editor. For runtime stability, the AR card opens without inline video texture.', 'muted');
+      if (!resolveMediaUrl(this.gift)) {
+        this.setStatus('재생할 미디어가 없습니다.', 'muted');
       }
       this.sequenceComplete = true;
       window.dispatchEvent(new CustomEvent('ar-sequence-complete'));
       return;
     }
 
-    const start = clamp(Number(this.gift.videoStart || 0), 0, 36000);
-    const rawEnd = Number(this.gift.videoEnd || start + 12);
+    const start = clamp(Number(this.gift.mediaStart ?? this.gift.videoStart ?? 0), 0, 36000);
+    const rawEnd = Number(this.gift.mediaEnd ?? this.gift.videoEnd ?? start + 12);
     const end = Math.max(start + 1, rawEnd);
     this.videoPlane.visible = true;
     this.videoEl.currentTime = start;
