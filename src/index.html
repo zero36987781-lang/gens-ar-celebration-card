@@ -115,8 +115,10 @@
               <path d="M24 32V20M24 20L19 25M24 20L29 25" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               <rect x="16" y="34" width="16" height="2.5" rx="1.25" fill="currentColor" opacity="0.5"/>
             </svg>
-            <span class="media-drop__label">Drop video here</span>
-            <span class="media-drop__sublabel">or tap to select</span>
+            <div class="media-drop__text">
+              <span class="media-drop__label">Drop video here</span>
+              <span class="media-drop__sublabel">or tap to select</span>
+            </div>
             <span class="media-drop__limits">H.264 · AAC · 720p · 30fps · 130MB</span>
           </div>
           <input id="media-file-input" type="file" accept="video/*" hidden aria-hidden="true" />
@@ -136,6 +138,22 @@
 
         <!-- 에디터 (업로드 완료 후) -->
         <div class="media-editor" id="media-editor" hidden>
+
+          <!-- 필름스트랩 (비디오 위) -->
+          <div class="media-filmstrip" id="media-filmstrip">
+            <div class="media-filmstrip__clips" id="media-filmstrip-clips"></div>
+            <div class="media-filmstrip__meta">
+              <span class="media-filmstrip__total" id="media-filmstrip-total">Total: 0s</span>
+              <div class="media-filmstrip__nudge" id="media-filmstrip-nudge" hidden>
+                <button class="media-filmstrip__nudge-btn" data-dir="-5" type="button">◄◄ 5s</button>
+                <button class="media-filmstrip__nudge-btn" data-dir="-1" type="button">◄ 1s</button>
+                <span class="media-filmstrip__nudge-label" id="media-filmstrip-clip-label">-</span>
+                <button class="media-filmstrip__nudge-btn" data-dir="1" type="button">1s ►</button>
+                <button class="media-filmstrip__nudge-btn" data-dir="5" type="button">5s ►►</button>
+              </div>
+            </div>
+          </div>
+
           <!-- 미리보기 -->
           <div class="media-editor__preview-wrap">
             <video id="media-preview" playsinline preload="metadata"></video>
@@ -153,6 +171,15 @@
             <div class="media-tl__ruler" id="media-tl-ruler"></div>
           </div>
 
+          <!-- 트랜스포트 컨트롤 -->
+          <div class="media-editor__transport">
+            <button class="media-transport__btn" id="media-t-minus5" type="button" title="-5s">◄◄ 5s</button>
+            <button class="media-transport__btn" id="media-t-minus1" type="button" title="-1s">◄ 1s</button>
+            <button class="media-transport__btn media-transport__btn--play" id="media-t-play" type="button">▶</button>
+            <button class="media-transport__btn" id="media-t-plus1" type="button" title="+1s">1s ►</button>
+            <button class="media-transport__btn" id="media-t-plus5" type="button" title="+5s">5s ►►</button>
+          </div>
+
           <!-- 스크럽 숫자 입력 -->
           <div class="media-editor__scrubs">
             <div class="media-scrub" data-field="in">
@@ -168,6 +195,7 @@
 
           <!-- 액션 버튼 -->
           <div class="media-editor__actions">
+            <button class="media-editor__btn media-editor__btn--cut" id="media-cut-btn" type="button">Cut Clip</button>
             <button class="media-editor__btn media-editor__btn--save" id="media-save-btn" type="button">Save</button>
             <button class="media-editor__btn media-editor__btn--export" id="media-export-btn" type="button">Export Clip</button>
             <button class="media-editor__btn media-editor__btn--reset" id="media-reset-btn" type="button">Replace</button>

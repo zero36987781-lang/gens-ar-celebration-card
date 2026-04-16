@@ -302,6 +302,11 @@ const mediaState = {
   activeXhr: null
 };
 
+const clipState = {
+  clips: [],       // [{inSec, outSec, duration, thumbDataUrl}]
+  selectedIdx: -1
+};
+
 function getOrCreateOwnerToken() {
   const KEY = 'gens-owner-id';
   let token = localStorage.getItem(KEY);
@@ -565,10 +570,146 @@ async function activateEditor(blobUrl, duration) {
   }
 
   syncTimeline();
+
+  // 클립 상태 초기화
+  clipState.clips = [];
+  clipState.selectedIdx = -1;
+  renderFilmstrip();
+
   const uploader = qs('#media-uploader');
   if (uploader) uploader.hidden = true;
   const editor = qs('#media-editor');
   if (editor) editor.hidden = false;
+}
+
+function bindTransportControls() {
+  const video   = qs('#media-preview');
+  const playBtn = qs('#media-t-play');
+  if (!video || !playBtn) return;
+
+  const nudgeTime = delta => {
+    if (!video) return;
+    video.currentTime = Math.max(0, Math.min(mediaState.duration || video.duration || 0, video.currentTime + delta));
+  };
+
+  qs('#media-t-minus5')?.addEventListener('click', () => nudgeTime(-5));
+  qs('#media-t-minus1')?.addEventListener('click', () => nudgeTime(-1));
+  qs('#media-t-plus1')?.addEventListener('click',  () => nudgeTime(1));
+  qs('#media-t-plus5')?.addEventListener('click',  () => nudgeTime(5));
+
+  playBtn.addEventListener('click', () => {
+    if (video.paused) {
+      video.play();
+      playBtn.textContent = '⏸';
+    } else {
+      video.pause();
+      playBtn.textContent = '▶';
+    }
+  });
+
+  video.addEventListener('ended', () => { playBtn.textContent = '▶'; });
+}
+
+async function captureThumb(videoEl, timeSec) {
+  return new Promise(resolve => {
+    const prev = videoEl.currentTime;
+    const cvs  = document.createElement('canvas');
+    cvs.width  = 80;
+    cvs.height = 52;
+    const ctx  = cvs.getContext('2d');
+    const done = () => {
+      try { ctx.drawImage(videoEl, 0, 0, 80, 52); } catch { /* skip */ }
+      videoEl.currentTime = prev;
+      resolve(cvs.toDataURL('image/jpeg', 0.6));
+    };
+    videoEl.addEventListener('seeked', done, { once: true });
+    videoEl.currentTime = timeSec;
+    setTimeout(() => { videoEl.removeEventListener('seeked', done); resolve(cvs.toDataURL()); }, 800);
+  });
+}
+
+function renderFilmstrip() {
+  const clipsEl = qs('#media-filmstrip-clips');
+  const totalEl = qs('#media-filmstrip-total');
+  const nudgeEl = qs('#media-filmstrip-nudge');
+  const labelEl = qs('#media-filmstrip-clip-label');
+  if (!clipsEl) return;
+
+  const total = clipState.clips.reduce((s, c) => s + c.duration, 0);
+  if (totalEl) totalEl.textContent = `Total: ${Math.round(total)}s`;
+
+  clipsEl.innerHTML = '';
+  clipState.clips.forEach((clip, idx) => {
+    const pxW = Math.max(48, Math.round(clip.duration * 6));
+    const el  = document.createElement('div');
+    el.className = 'media-filmstrip__clip' + (idx === clipState.selectedIdx ? ' media-filmstrip__clip--active' : '');
+    el.dataset.index = idx;
+    el.style.width = pxW + 'px';
+
+    const thumb = document.createElement('div');
+    thumb.className = 'media-filmstrip__thumb';
+    if (clip.thumbDataUrl) {
+      const img = document.createElement('img');
+      img.src = clip.thumbDataUrl;
+      img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+      thumb.appendChild(img);
+    }
+
+    const dur = document.createElement('span');
+    dur.className = 'media-filmstrip__dur';
+    dur.textContent = Math.round(clip.duration) + 's';
+
+    el.appendChild(thumb);
+    el.appendChild(dur);
+    el.addEventListener('click', () => {
+      clipState.selectedIdx = idx;
+      renderFilmstrip();
+      if (nudgeEl) nudgeEl.hidden = false;
+      if (labelEl) labelEl.textContent = `Clip ${idx + 1}: ${Math.round(clip.duration)}s`;
+    });
+    clipsEl.appendChild(el);
+  });
+
+  if (clipState.selectedIdx < 0 && nudgeEl) nudgeEl.hidden = true;
+}
+
+function bindFilmstripNudge() {
+  const nudgeEl = qs('#media-filmstrip-nudge');
+  if (!nudgeEl) return;
+  nudgeEl.addEventListener('click', e => {
+    const btn = e.target.closest('.media-filmstrip__nudge-btn');
+    if (!btn) return;
+    const dir = parseInt(btn.dataset.dir, 10);
+    const idx = clipState.selectedIdx;
+    if (idx < 0 || !clipState.clips[idx]) return;
+    const clip = clipState.clips[idx];
+    const newIn  = Math.max(0, Math.min(mediaState.duration - clip.duration, clip.inSec + dir));
+    clip.inSec   = newIn;
+    clip.outSec  = newIn + clip.duration;
+    renderFilmstrip();
+    const labelEl = qs('#media-filmstrip-clip-label');
+    if (labelEl) labelEl.textContent = `Clip ${idx + 1}: ${Math.round(clip.duration)}s`;
+  });
+}
+
+function bindCutClip() {
+  const cutBtn = qs('#media-cut-btn');
+  if (!cutBtn) return;
+  cutBtn.addEventListener('click', async () => {
+    const dur = mediaState.outSec - mediaState.inSec;
+    if (dur <= 0) { showMediaStatus('Set IN/OUT range first.', 'error'); return; }
+    const video = qs('#media-preview');
+    const thumbDataUrl = video ? await captureThumb(video, mediaState.inSec + dur / 2) : null;
+    clipState.clips.push({
+      inSec: mediaState.inSec,
+      outSec: mediaState.outSec,
+      duration: dur,
+      thumbDataUrl
+    });
+    clipState.selectedIdx = -1;
+    renderFilmstrip();
+    showMediaStatus(`Clip ${clipState.clips.length} added (${Math.round(dur)}s)`, 'success');
+  });
 }
 
 function showMediaStatus(msg, tone) {
@@ -651,6 +792,11 @@ function bindMediaDrop() {
 
   mediaState.ownerToken = getOrCreateOwnerToken();
 
+  // 트랜스포트 / 필름스트랩 / Cut 바인딩 (1회)
+  bindTransportControls();
+  bindFilmstripNudge();
+  bindCutClip();
+
   zone.addEventListener('click',   () => input.click());
   zone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') input.click(); });
   zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('media-drop__zone--drag-over'); });
@@ -690,6 +836,11 @@ function bindMediaDrop() {
     mediaState.uploaded = false;
     clearValidationError();
     if (mediaState.objectUrl) { URL.revokeObjectURL(mediaState.objectUrl); mediaState.objectUrl = ''; }
+    clipState.clips = [];
+    clipState.selectedIdx = -1;
+    renderFilmstrip();
+    const playBtn = qs('#media-t-play');
+    if (playBtn) playBtn.textContent = '▶';
   });
 
   async function processFile(file) {
