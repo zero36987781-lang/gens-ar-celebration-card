@@ -1868,7 +1868,7 @@
 .media-editor__timeline {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0;
 }
 .media-tl__track-wrap {
   position: relative;
@@ -1944,7 +1944,8 @@
 }
 .media-tl__ruler {
   position: relative;
-  height: 20px;
+  height: 0;
+  overflow: hidden;
 }
 .media-tl__tick {
   position: absolute;

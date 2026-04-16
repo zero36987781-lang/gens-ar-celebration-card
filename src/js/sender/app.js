@@ -44,7 +44,6 @@ function cacheDom() {
   els.templateList = qs('#template-list');
   els.form = qs('#gift-form');
   els.shareLink = qs('#share-link');
-  els.openLink = qs('#open-link');
   els.previewLink = qs('#preview-link');
   els.statusBox = qs('#status-box');
   els.copyLink = qs('#copy-link');
@@ -199,6 +198,10 @@ function saveMiniState() {
 function goPage(n) {
   if (n < 1 || n > MAX_PAGES || n === state.page) return;
   if (state.page === 1) saveMiniState();
+  // map → share: auto-submit to create link
+  if (state.page === 5 && n === 6) {
+    els.form?.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+  }
   state.page = n;
   updatePage();
   if (n !== 2) qs('.sender-shell')?.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1442,8 +1445,6 @@ function getFormData() {
 }
 
 function validate(data) {
-  if (!data.recipientName) return 'Receiver name required.';
-  if (!data.senderName) return 'Sender name required.';
   if (!Number.isFinite(data.latitude) || !Number.isFinite(data.longitude)) return 'Lat/lng required.';
   if (data.spawnHeight < 0.5 || data.spawnHeight > 5.5) return 'Height 0.5–5.5m.';
   if (data.forwardDistance < 0.5 || data.forwardDistance > 5.5) return 'Distance 0.5–5.5m.';
@@ -1464,9 +1465,7 @@ async function handleSubmit(ev) {
     const saved = await saveGift(data);
     state.lastCreatedSlug = saved.slug;
     els.shareLink.value = createRecipientUrl(saved.slug);
-    els.openLink.href = els.shareLink.value;
     els.previewLink.href = createRecipientPreviewUrl(saved.slug);
-    els.openLink.classList.remove('disabled-link');
     els.previewLink.classList.remove('disabled-link');
     setStatus(els.statusBox, `Saved. Expires ${new Date(saved.expiresAt).toLocaleString()}.`, 'success');
   } catch (e) { setStatus(els.statusBox, e.message || 'Save failed.', 'error'); }
