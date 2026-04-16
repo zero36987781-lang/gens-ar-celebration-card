@@ -60,8 +60,6 @@ function cacheDom() {
   els.videoBadge = qs('#video-badge');
   els.basicPreview = qs('#basic-preview');
   els.customPreview = qs('#custom-preview');
-  els.videoPreviewStatus = qs('#video-preview-status');
-  els.videoPreviewArea = qs('#video-preview-area');
   els.navPrev = qs('#nav-prev');
   els.navNext = qs('#nav-next');
   els.navDots = document.querySelectorAll('.nav-dots .dot');
@@ -251,7 +249,7 @@ function bindToggles() {
 function fields() {
   return {
     recipientName: qs('#recipient-name'), senderName: qs('#sender-name'),
-    videoUrl: qs('#video-url'), ctaLink: qs('#cta-link'),
+    ctaLink: qs('#cta-link'),
     mapSearch: qs('#map-search'), mapSearchButton: qs('#map-search-btn'),
     mapEl: qs('#sender-map'), mapStatus: qs('#map-status'),
     latitude: qs('#latitude'), longitude: qs('#longitude'),
@@ -283,105 +281,405 @@ function syncExpiry() {
   else if (c > mx) expiresAt.value = expiresAt.max;
 }
 
-/* ── YouTube ── */
-function parseYtId(url) {
-  try {
-    const p = new URL(url);
-    if (p.hostname.includes('youtu.be')) return p.pathname.replace('/', '').trim();
-    if (p.hostname.includes('youtube.com')) {
-      if (p.pathname === '/watch') return p.searchParams.get('v') || '';
-      if (p.pathname.startsWith('/embed/')) return p.pathname.split('/embed/')[1] || '';
-      if (p.pathname.startsWith('/shorts/')) return p.pathname.split('/shorts/')[1] || '';
-    }
-    return '';
-  } catch { return ''; }
-}
-function hmsToSec(pre) {
-  const h = Number(qs(`#${pre}-h`)?.value || 0), m = Number(qs(`#${pre}-m`)?.value || 0), s = Number(qs(`#${pre}-s`)?.value || 0);
-  return h * 3600 + m * 60 + s;
-}
 function secToHms(t) {
   const s = Math.max(0, Math.floor(Number(t) || 0));
   return [Math.floor(s / 3600), Math.floor((s % 3600) / 60), s % 60].map(v => String(v).padStart(2, '0')).join(':');
 }
 
-/* ★ YouTube Player API — enforce start/end times */
-let ytPlayer = null;
-let ytPlayerReady = false;
-let ytEndSec = 0;
-let ytCheckInterval = null;
+/* ═══════════════════════════════════════════════════
+   Media Manager — Upload, Timeline Edit, R2 Export
+   ═══════════════════════════════════════════════════ */
 
-function ensureYouTubeApi() {
-  if (window.YT && window.YT.Player) return Promise.resolve();
-  return new Promise((resolve) => {
-    if (document.querySelector('script[src*="youtube.com/iframe_api"]')) {
-      // script already loading, wait for callback
-      const prev = window.onYouTubeIframeAPIReady;
-      window.onYouTubeIframeAPIReady = () => { if (prev) prev(); resolve(); };
+const mediaState = {
+  ownerToken: '',
+  mediaId: '',
+  r2Key: '',
+  duration: 0,
+  inSec: 0,
+  outSec: 0,
+  uploaded: false,
+  objectUrl: '',
+  activeXhr: null
+};
+
+function getOrCreateOwnerToken() {
+  const KEY = 'gens-owner-id';
+  let token = localStorage.getItem(KEY);
+  if (!token) { token = generateSlug('u'); localStorage.setItem(KEY, token); }
+  return token;
+}
+
+async function validateFile(file) {
+  if (file.size > 130 * 1024 * 1024) return { ok: false, error: 'File exceeds 130 MB.' };
+  return new Promise(resolve => {
+    const url = URL.createObjectURL(file);
+    const v = document.createElement('video');
+    v.preload = 'metadata';
+    let settled = false;
+    const done = r => { if (settled) return; settled = true; URL.revokeObjectURL(url); resolve(r); };
+    v.onloadedmetadata = () => {
+      if (!isFinite(v.duration) || v.duration <= 0) done({ ok: false, error: 'Could not read video duration.' });
+      else if (v.duration > 300) done({ ok: false, error: 'Video must be 5 minutes or shorter.' });
+      else done({ ok: true, duration: v.duration });
+    };
+    v.onerror = () => done({ ok: false, error: 'Could not read video file.' });
+    setTimeout(() => done({ ok: false, error: 'Timeout reading video.' }), 12000);
+    v.src = url;
+  });
+}
+
+function uploadMediaFile(file, onProgress) {
+  return new Promise((resolve, reject) => {
+    const ownerToken = mediaState.ownerToken;
+    const mediaId = `media-${ownerToken}-${Date.now()}`;
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('mediaId', mediaId);
+    fd.append('ownerToken', ownerToken);
+
+    const xhr = new XMLHttpRequest();
+    mediaState.activeXhr = xhr;
+    xhr.upload.addEventListener('progress', e => { if (e.lengthComputable) onProgress(e.loaded / e.total); });
+    xhr.addEventListener('load', () => {
+      mediaState.activeXhr = null;
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try { resolve(JSON.parse(xhr.responseText)); }
+        catch { reject(new Error('Invalid server response')); }
+      } else { reject(new Error(`Upload failed: ${xhr.status}`)); }
+    });
+    xhr.addEventListener('error',  () => { mediaState.activeXhr = null; reject(new Error('Network error')); });
+    xhr.addEventListener('abort',  () => { mediaState.activeXhr = null; reject(new Error('Upload cancelled')); });
+    xhr.open('POST', '/api/media/upload');
+    xhr.send(fd);
+  });
+}
+
+/* ── ScrubInput: 터치 + 테두리 하이라이트 + 드래그 스크럽 ── */
+class ScrubInput {
+  constructor(el, { min = 0, max = 300, step = 1, onChange } = {}) {
+    this.el = el; this.min = min; this.max = max; this.step = step; this.onChange = onChange;
+    this.value = min; this._dragging = false; this._startX = 0; this._startVal = 0;
+    el.style.touchAction = 'none';
+    el.addEventListener('pointerdown',   this._onDown.bind(this));
+    el.addEventListener('pointermove',   this._onMove.bind(this));
+    el.addEventListener('pointerup',     this._onUp.bind(this));
+    el.addEventListener('pointercancel', this._onUp.bind(this));
+    el.addEventListener('wheel', this._onWheel.bind(this), { passive: false });
+  }
+  setValue(v) {
+    this.value = Math.max(this.min, Math.min(this.max, Math.round(v)));
+    this._updateDOM();
+  }
+  _updateDOM() {
+    const s = Math.round(this.value);
+    const m = Math.floor(s / 60);
+    this.el.textContent = m > 0 ? `${m}:${String(s % 60).padStart(2, '0')}` : `${s}s`;
+  }
+  _onDown(e) {
+    e.preventDefault();
+    this._dragging = true; this._startX = e.clientX; this._startVal = this.value;
+    this.el.setPointerCapture(e.pointerId);
+    this.el.classList.add('media-scrub__val--active');
+  }
+  _onMove(e) {
+    if (!this._dragging) return;
+    const newVal = Math.max(this.min, Math.min(this.max, Math.round(this._startVal + (e.clientX - this._startX) * this.step)));
+    this.value = newVal;
+    this._updateDOM();
+    this.onChange?.(newVal);
+  }
+  _onUp(e) {
+    if (!this._dragging) return;
+    this._dragging = false;
+    this.el.releasePointerCapture(e.pointerId);
+    this.el.classList.remove('media-scrub__val--active');
+  }
+  _onWheel(e) {
+    e.preventDefault();
+    const newVal = Math.max(this.min, Math.min(this.max, this.value + (e.deltaY > 0 ? -this.step : this.step)));
+    this.value = newVal; this._updateDOM(); this.onChange?.(newVal);
+  }
+}
+
+let scrubIn = null, scrubOut = null;
+
+function syncTimeline() {
+  const track = qs('#media-tl-track');
+  if (!track || !mediaState.duration) return;
+  const W = track.offsetWidth;
+  const dur = mediaState.duration;
+  const inX  = (mediaState.inSec  / dur) * W;
+  const outX = (mediaState.outSec / dur) * W;
+  const handleIn  = qs('#media-tl-handle-in');
+  const handleOut = qs('#media-tl-handle-out');
+  const range     = qs('#media-tl-range');
+  if (handleIn)  handleIn.style.left  = inX  + 'px';
+  if (handleOut) handleOut.style.left = outX + 'px';
+  if (range) { range.style.left = inX + 'px'; range.style.width = (outX - inX) + 'px'; }
+  if (scrubIn)  scrubIn.setValue(mediaState.inSec);
+  if (scrubOut) scrubOut.setValue(mediaState.outSec);
+  const clipLen = qs('#media-clip-len');
+  if (clipLen) {
+    const len = Math.round(mediaState.outSec - mediaState.inSec);
+    clipLen.textContent = `Clip: ${len}s / 60s max`;
+    clipLen.classList.toggle('media-scrub__clip-len--warn', len > 60);
+  }
+}
+
+function buildTimelineRuler(duration) {
+  const ruler = qs('#media-tl-ruler');
+  if (!ruler) return;
+  const step = duration <= 60 ? 5 : duration <= 120 ? 10 : duration <= 300 ? 30 : 60;
+  let html = '';
+  for (let t = 0; t <= duration; t += step) {
+    const pct = (t / duration * 100).toFixed(2);
+    const lbl = t >= 60 ? `${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}` : `${t}s`;
+    html += `<span class="media-tl__tick" style="left:${pct}%">${lbl}</span>`;
+  }
+  ruler.innerHTML = html;
+}
+
+async function drawThumbnailStrip(videoEl, canvasEl, duration) {
+  const W = canvasEl.offsetWidth || canvasEl.parentElement?.offsetWidth || 300;
+  const H = 52;
+  canvasEl.width = W; canvasEl.height = H;
+  const ctx = canvasEl.getContext('2d');
+  const FRAMES = Math.max(4, Math.min(20, Math.floor(W / 12)));
+  const fw = W / FRAMES;
+  for (let i = 0; i < FRAMES; i++) {
+    videoEl.currentTime = (i / (FRAMES - 1)) * duration;
+    await Promise.race([
+      new Promise(r => videoEl.addEventListener('seeked', r, { once: true })),
+      new Promise(r => setTimeout(r, 400))
+    ]);
+    try { ctx.drawImage(videoEl, fw * i, 0, fw, H); } catch { /* frame unavailable */ }
+  }
+}
+
+function bindTimelineHandles(trackWrap, duration) {
+  const handleIn  = qs('#media-tl-handle-in');
+  const handleOut = qs('#media-tl-handle-out');
+  const video     = qs('#media-preview');
+
+  function makeHandleDrag(handle, field) {
+    let startX, startVal;
+    const onMove = e => {
+      const W = trackWrap.offsetWidth;
+      let newVal = Math.round(startVal + ((e.clientX - startX) / W) * duration);
+      if (field === 'in') {
+        newVal = Math.max(0, Math.min(mediaState.outSec - 1, newVal));
+        mediaState.inSec = newVal;
+      } else {
+        newVal = Math.max(mediaState.inSec + 1, Math.min(Math.floor(duration), newVal));
+        mediaState.outSec = newVal;
+      }
+      syncTimeline();
+    };
+    const onUp = () => {
+      handle.removeEventListener('pointermove', onMove);
+      handle.removeEventListener('pointerup',   onUp);
+      handle.removeEventListener('pointercancel', onUp);
+    };
+    handle.addEventListener('pointerdown', e => {
+      e.stopPropagation();
+      handle.setPointerCapture(e.pointerId);
+      startX = e.clientX;
+      startVal = field === 'in' ? mediaState.inSec : mediaState.outSec;
+      handle.addEventListener('pointermove', onMove);
+      handle.addEventListener('pointerup',   onUp, { once: true });
+      handle.addEventListener('pointercancel', onUp, { once: true });
+    });
+  }
+
+  makeHandleDrag(handleIn,  'in');
+  makeHandleDrag(handleOut, 'out');
+
+  trackWrap.addEventListener('pointerdown', e => {
+    if (e.target === handleIn || e.target === handleOut) return;
+    const rect = trackWrap.getBoundingClientRect();
+    if (video) video.currentTime = Math.max(0, Math.min(duration, ((e.clientX - rect.left) / rect.width) * duration));
+  });
+
+  if (video) {
+    video.addEventListener('timeupdate', () => {
+      const playhead = qs('#media-tl-playhead');
+      if (!playhead || !mediaState.duration) return;
+      playhead.style.left = (video.currentTime / mediaState.duration * trackWrap.offsetWidth) + 'px';
+    });
+  }
+}
+
+async function activateEditor(blobUrl, duration) {
+  if (mediaState.objectUrl && mediaState.objectUrl !== blobUrl) URL.revokeObjectURL(mediaState.objectUrl);
+  mediaState.objectUrl = blobUrl;
+  mediaState.duration  = duration;
+  mediaState.inSec     = 0;
+  mediaState.outSec    = Math.min(Math.floor(duration), 60);
+
+  const video  = qs('#media-preview');
+  const canvas = qs('#media-tl-canvas');
+  const track  = qs('#media-tl-track');
+
+  if (video) { video.src = blobUrl; video.load(); }
+  if (canvas && track) await drawThumbnailStrip(video, canvas, duration);
+  buildTimelineRuler(duration);
+
+  scrubIn = new ScrubInput(qs('#media-scrub-in'), {
+    min: 0, max: Math.floor(duration) - 1, step: 1,
+    onChange: v => { mediaState.inSec = v; syncTimeline(); }
+  });
+  scrubOut = new ScrubInput(qs('#media-scrub-out'), {
+    min: 1, max: Math.floor(duration), step: 1,
+    onChange: v => { mediaState.outSec = v; syncTimeline(); }
+  });
+  scrubIn.setValue(0);
+  scrubOut.setValue(mediaState.outSec);
+
+  if (track) {
+    bindTimelineHandles(track, duration);
+    if (window.ResizeObserver) new ResizeObserver(() => syncTimeline()).observe(track);
+  }
+
+  syncTimeline();
+  const editor = qs('#media-editor');
+  if (editor) editor.hidden = false;
+}
+
+function showMediaStatus(msg, tone) {
+  const el = qs('#media-editor-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = `media-editor__status media-editor__status--${tone}`;
+  el.hidden = false;
+  clearTimeout(el._hide);
+  el._hide = setTimeout(() => { el.hidden = true; }, 4000);
+}
+
+async function onMediaExportClip() {
+  const btn = qs('#media-export-btn');
+  if (!mediaState.objectUrl || !mediaState.duration) return;
+  const clipDuration = mediaState.outSec - mediaState.inSec;
+  if (clipDuration <= 0 || clipDuration > 60) { showMediaStatus('Clip must be 1–60 seconds.', 'error'); return; }
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Loading FFmpeg…'; }
+  try {
+    const { FFmpeg }    = await import('https://unpkg.com/@ffmpeg/ffmpeg@0.12.7/dist/esm/index.js');
+    const { toBlobURL } = await import('https://unpkg.com/@ffmpeg/util@0.12.1/dist/esm/index.js');
+    if (btn) btn.textContent = 'Processing…';
+    const ffmpeg  = new FFmpeg();
+    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.4/dist/esm';
+    await ffmpeg.load({
+      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`,   'text/javascript'),
+      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm')
+    });
+    const inFile  = 'input.mp4';
+    const outFile = 'clip.mp4';
+    const buf = await fetch(mediaState.objectUrl).then(r => r.arrayBuffer());
+    await ffmpeg.writeFile(inFile, new Uint8Array(buf));
+    await ffmpeg.exec(['-i', inFile, '-ss', String(mediaState.inSec), '-t', String(clipDuration), '-c', 'copy', outFile]);
+    const data = await ffmpeg.readFile(outFile);
+    const blob = new Blob([data.buffer], { type: 'video/mp4' });
+    if (btn) btn.textContent = 'Uploading clip…';
+    const clipId = `${mediaState.mediaId}-clip`;
+    const fd = new FormData();
+    fd.append('file', blob, `${clipId}.mp4`);
+    fd.append('mediaId', clipId);
+    fd.append('ownerToken', mediaState.ownerToken);
+    const res    = await fetch('/api/media/upload', { method: 'POST', body: fd });
+    const result = await res.json();
+    mediaState.r2Key = result.key; mediaState.mediaId = clipId;
+    showMediaStatus('Clip exported and saved!', 'success');
+  } catch (err) {
+    showMediaStatus('Export failed: ' + err.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Export Clip'; }
+  }
+}
+
+function bindMediaDrop() {
+  const zone     = qs('#media-drop-zone');
+  const input    = qs('#media-file-input');
+  const progress = qs('#media-upload-progress');
+  const bar      = qs('#media-upload-bar');
+  const label    = qs('#media-upload-label');
+  const cancel   = qs('#media-upload-cancel');
+  const editor   = qs('#media-editor');
+  const savBtn   = qs('#media-save-btn');
+  const expBtn   = qs('#media-export-btn');
+  const rstBtn   = qs('#media-reset-btn');
+
+  if (!zone || !input) return;
+
+  mediaState.ownerToken = getOrCreateOwnerToken();
+
+  zone.addEventListener('click',   () => input.click());
+  zone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') input.click(); });
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('media-drop__zone--drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('media-drop__zone--drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('media-drop__zone--drag-over');
+    const file = e.dataTransfer.files?.[0];
+    if (file) processFile(file);
+  });
+
+  input.addEventListener('change', () => {
+    const file = input.files?.[0];
+    if (file) processFile(file);
+    input.value = '';
+  });
+
+  cancel?.addEventListener('click', () => {
+    mediaState.activeXhr?.abort();
+    if (progress) progress.hidden = true;
+    zone.classList.remove('media-drop__zone--has-file');
+  });
+
+  savBtn?.addEventListener('click', () => {
+    if (!mediaState.uploaded) { showMediaStatus('Upload a video first.', 'error'); return; }
+    if (mediaState.outSec - mediaState.inSec > 60) { showMediaStatus('Clip must be 60s or shorter.', 'error'); return; }
+    showMediaStatus(`Saved! IN=${mediaState.inSec}s / OUT=${mediaState.outSec}s`, 'success');
+  });
+
+  expBtn?.addEventListener('click', onMediaExportClip);
+
+  rstBtn?.addEventListener('click', () => {
+    if (editor) editor.hidden = true;
+    zone.classList.remove('media-drop__zone--has-file');
+    mediaState.uploaded = false;
+    if (mediaState.objectUrl) { URL.revokeObjectURL(mediaState.objectUrl); mediaState.objectUrl = ''; }
+  });
+
+  async function processFile(file) {
+    zone.classList.add('media-drop__zone--has-file');
+    const validation = await validateFile(file);
+    if (!validation.ok) {
+      showMediaStatus(validation.error, 'error');
+      zone.classList.remove('media-drop__zone--has-file');
       return;
     }
-    const tag = document.createElement('script');
-    tag.src = 'https://www.youtube.com/iframe_api';
-    window.onYouTubeIframeAPIReady = () => resolve();
-    document.head.appendChild(tag);
-  });
-}
-
-function destroyYtPlayer() {
-  if (ytCheckInterval) { clearInterval(ytCheckInterval); ytCheckInterval = null; }
-  if (ytPlayer) { try { ytPlayer.destroy(); } catch {} ytPlayer = null; }
-  ytPlayerReady = false;
-}
-
-function createYtPlayer(ytId, startSec, endSec) {
-  destroyYtPlayer();
-  ytEndSec = endSec;
-
-  // clear container and create a fresh div
-  els.videoPreviewArea.innerHTML = '';
-  const holder = document.createElement('div');
-  holder.id = 'yt-player-holder';
-  els.videoPreviewArea.appendChild(holder);
-
-  ytPlayer = new YT.Player('yt-player-holder', {
-    width: '100%',
-    height: '100%',
-    videoId: ytId,
-    playerVars: {
-      start: startSec,
-      end: endSec,
-      rel: 0,
-      playsinline: 1,
-      modestbranding: 1,
-      controls: 1
-    },
-    events: {
-      onReady: () => {
-        ytPlayerReady = true;
-        // seek to start when ready
-        ytPlayer.seekTo(startSec, true);
-      },
-      onStateChange: (event) => {
-        // When playing, enforce end time
-        if (event.data === YT.PlayerState.PLAYING) {
-          if (ytCheckInterval) clearInterval(ytCheckInterval);
-          ytCheckInterval = setInterval(() => {
-            if (!ytPlayer || !ytPlayerReady) return;
-            const current = ytPlayer.getCurrentTime();
-            if (current >= ytEndSec) {
-              ytPlayer.pauseVideo();
-              ytPlayer.seekTo(startSec, true);
-              clearInterval(ytCheckInterval);
-              ytCheckInterval = null;
-            }
-          }, 250);
-        }
-        if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
-          if (ytCheckInterval) { clearInterval(ytCheckInterval); ytCheckInterval = null; }
-        }
-      }
+    const blobUrl = URL.createObjectURL(file);
+    if (editor)   editor.hidden   = true;
+    if (progress) progress.hidden = false;
+    if (bar)   bar.style.width      = '0%';
+    if (label) label.textContent    = 'Uploading… 0%';
+    try {
+      const result = await uploadMediaFile(file, pct => {
+        const p = Math.round(pct * 100);
+        if (bar)   bar.style.width   = p + '%';
+        if (label) label.textContent = `Uploading… ${p}%`;
+      });
+      if (progress) progress.hidden = true;
+      mediaState.mediaId  = result.mediaId;
+      mediaState.r2Key    = result.key;
+      mediaState.uploaded = true;
+      await activateEditor(blobUrl, validation.duration);
+    } catch (err) {
+      if (progress) progress.hidden = true;
+      zone.classList.remove('media-drop__zone--has-file');
+      if (err.message !== 'Upload cancelled') showMediaStatus('Upload failed: ' + err.message, 'error');
     }
-  });
+  }
 }
 
 /* ── Mini Editor ── */
@@ -848,51 +1146,9 @@ function renderPreviewCard() {
   if(els.previewReceiver) els.previewReceiver.textContent = f.recipientName.value.trim() || 'Receiver';
   if(els.previewSender) els.previewSender.textContent = `From ${f.senderName.value.trim() || 'Sender'}`;
   if (window.CanvasEditor) window.CanvasEditor.updateSenderReceiver(f.senderName.value.trim());
-  const hasVid = Boolean(parseYtId(f.videoUrl.value.trim()));
+  const hasVid = mediaState.uploaded;
   els.videoBadgeDefault?.classList.toggle('hidden', !hasVid);
   els.videoBadge?.classList.toggle('hidden', !hasVid);
-}
-
-/* ★ renderVideoPreview — uses YouTube Player API for accurate start/end enforcement */
-async function renderVideoPreview() {
-  const url = fields().videoUrl.value.trim();
-  const ytId = parseYtId(url);
-
-  if (!url) {
-    destroyYtPlayer();
-    els.videoPreviewArea.innerHTML = '<div class="video-preview-empty">Paste a YouTube URL.</div>';
-    els.videoPreviewStatus.textContent = 'YouTube only.';
-    renderPreviewCard();
-    return;
-  }
-  if (!ytId) {
-    destroyYtPlayer();
-    els.videoPreviewArea.innerHTML = '<div class="video-preview-empty">Only YouTube URLs.</div>';
-    els.videoPreviewStatus.textContent = '';
-    renderPreviewCard();
-    return;
-  }
-
-  const vs = hmsToSec('vs'), ve = hmsToSec('ve');
-  const ss = Number.isFinite(vs) ? vs : 0;
-  const se = Number.isFinite(ve) && ve > ss ? ve : ss + 12;
-
-  els.videoPreviewStatus.textContent = `${secToHms(ss)} → ${secToHms(se)}`;
-
-  try {
-    await ensureYouTubeApi();
-    createYtPlayer(ytId, ss, se);
-  } catch {
-    // Fallback to simple iframe if API fails
-    const emb = new URL(`https://www.youtube.com/embed/${ytId}`);
-    emb.searchParams.set('start', String(ss));
-    emb.searchParams.set('end', String(se));
-    emb.searchParams.set('rel', '0');
-    emb.searchParams.set('playsinline', '1');
-    els.videoPreviewArea.innerHTML = `<iframe src="${emb.href}" title="Preview" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture;web-share" allowfullscreen></iframe>`;
-  }
-
-  renderPreviewCard();
 }
 
 /* ── Location ── */
@@ -909,7 +1165,6 @@ async function useCurrentLocation() {
 /* ── Form ── */
 function getFormData() {
   const f = fields(), tpl = getTemplateById(state.templateId);
-  const vs = hmsToSec('vs'), ve = hmsToSec('ve');
   const isBasic = state.editorMode === 'basic';
   const canvasData = window.CanvasEditor ? window.CanvasEditor.getLayers() : null;
   return {
@@ -924,8 +1179,9 @@ function getFormData() {
     backText: isBasic ? sanitize(els.previewBackMessage) : tpl.backText,
     canvasData: canvasData,
     frontColor: tpl.frontColor, accentColor: tpl.accentColor,
-    videoUrl: safeUrl(f.videoUrl.value.trim()),
-    videoStart: Number.isFinite(vs) ? vs : 0, videoEnd: Number.isFinite(ve) ? ve : 12,
+    mediaR2Key: mediaState.r2Key,
+    mediaStart: mediaState.inSec,
+    mediaEnd: mediaState.outSec,
     ctaLink: f.ctaLink.value.trim(),
     latitude: Number(f.latitude.value), longitude: Number(f.longitude.value),
     unlockRadiusM: Number(f.unlockRadius.value || 50),
@@ -943,9 +1199,8 @@ function validate(data) {
   if (data.spawnHeight < 0.5 || data.spawnHeight > 5.5) return 'Height 0.5–5.5m.';
   if (data.forwardDistance < 0.5 || data.forwardDistance > 5.5) return 'Distance 0.5–5.5m.';
   if (data.unlockRadiusM < 10 || data.unlockRadiusM > 150) return 'Radius 10–150m.';
+  if (mediaState.uploaded && data.mediaEnd - data.mediaStart > 60) return 'Clip must be 60s or shorter.';
   const f = fields();
-  if (f.videoUrl.value.trim() && !parseYtId(f.videoUrl.value.trim())) return 'YouTube URLs only.';
-  if (data.videoEnd <= data.videoStart) return 'Video end > start.';
   const s = new Date(f.startAt.value), e = new Date(f.expiresAt.value);
   if (isNaN(s)) return 'Start date required.'; if (isNaN(e)) return 'Expiry required.';
   if (e < s) return 'Expiry after start.'; if (e - s > 86400000) return 'Within 24h.';
@@ -1012,43 +1267,15 @@ async function setRuntimeStatus() {
   if (!url || !anonKey) setStatus(els.statusBox, 'Local/demo mode.', 'muted');
 }
 
-/* ── HMS inputs ── */
-function bindHmsInputs() {
-  const inputs = ['vs-h', 'vs-m', 'vs-s', 've-h', 've-m', 've-s'].map(id => qs(`#${id}`)).filter(Boolean);
-  inputs.forEach((inp, idx) => {
-    inp.addEventListener('focus', () => inp.select());
-    inp.addEventListener('input', e => {
-      inp.value = inp.value.replace(/[^\d]/g, '').slice(0, 2);
-      if (inp.value.length === 2 && e.inputType !== 'deleteContentBackward') {
-        const next = inputs[idx + 1];
-        if (next && inp.id.split('-')[0] === next.id.split('-')[0]) next.focus();
-      }
-      // Debounce video preview rebuild on time change
-      clearTimeout(inp._debounce);
-      inp._debounce = setTimeout(() => renderVideoPreview(), 600);
-    });
-    inp.addEventListener('blur', () => {
-      const v = inp.value.replace(/[^\d]/g, '').trim();
-      inp.value = (!v) ? '00' : v.length === 1 ? v.padStart(2, '0') : v.slice(0, 2);
-      renderVideoPreview();
-    });
-  });
-}
-
 /* ── Events ── */
 function bindEvents() {
   const f = fields();
-  // template list replaced by sample-carousel (click handled in renderSampleCarousel)
   f.recipientName.addEventListener('input', renderPreviewCard);
   f.senderName.addEventListener('input', renderPreviewCard);
-  f.videoUrl?.addEventListener('input', () => {
-    clearTimeout(f.videoUrl._debounce);
-    f.videoUrl._debounce = setTimeout(() => renderVideoPreview(), 400);
-  });
   [els.previewTitle, els.previewSubtitle, els.previewMessage, els.previewBackMessage].forEach(el => el?.addEventListener('input', renderPreviewCard));
-  bindHmsInputs();
   bindToggles();
   bindPanels();
+  bindMediaDrop();
   f.startAt.addEventListener('change', syncExpiry);
   f.expiresAt.addEventListener('change', syncExpiry);
   f.unlockRadius.addEventListener('input', () => state.mapPicker?.updateRadius());
@@ -1092,7 +1319,6 @@ async function init() {
   bindEvents();
   bindStudioResizer();
   applyTemplate(state.templateId);
-  renderVideoPreview();
   renderPreviewCard();
   syncEditorMode();
   syncSideToggle();

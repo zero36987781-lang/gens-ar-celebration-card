@@ -104,43 +104,79 @@
         <iframe id="editor-frame" src="./editor/?embedded=1" allow="camera;microphone" title="Design Studio"></iframe>
       </section>
 
-      <!-- ★ Step 3: Media Management (was Step 2) -->
+      <!-- ★ Step 3: Media Management — Video Upload & Editor -->
       <section class="card-panel page-view page-hidden" data-step="3">
         <div class="section-head">
-          <div><h2>Media Management</h2><p>Add a YouTube video to your AR card.</p></div>
+          <div><h2>Media</h2><p>Upload a video clip for your AR card.</p></div>
         </div>
-        <div class="stack-form aux-form">
-          <label class="glass-field">
-            <span>YouTube URL</span>
-            <input id="video-url" type="url" placeholder="https://www.youtube.com/watch?v=..." />
-          </label>
-          <div class="field-grid two-up" style="margin-top:10px">
-            <div class="glass-field">
-              <span>Start</span>
-              <div class="hms-group">
-                <input class="hms-input" id="vs-h" type="text" inputmode="numeric" maxlength="2" value="00" />
-                <span class="hms-sep">:</span>
-                <input class="hms-input" id="vs-m" type="text" inputmode="numeric" maxlength="2" value="00" />
-                <span class="hms-sep">:</span>
-                <input class="hms-input" id="vs-s" type="text" inputmode="numeric" maxlength="2" value="00" />
-              </div>
-            </div>
-            <div class="glass-field">
-              <span>End</span>
-              <div class="hms-group">
-                <input class="hms-input" id="ve-h" type="text" inputmode="numeric" maxlength="2" value="00" />
-                <span class="hms-sep">:</span>
-                <input class="hms-input" id="ve-m" type="text" inputmode="numeric" maxlength="2" value="00" />
-                <span class="hms-sep">:</span>
-                <input class="hms-input" id="ve-s" type="text" inputmode="numeric" maxlength="2" value="00" />
-              </div>
-            </div>
+
+        <!-- 업로드 드롭존 -->
+        <div class="media-uploader" id="media-uploader">
+          <div class="media-drop__zone" id="media-drop-zone" role="button" tabindex="0" aria-label="Upload video">
+            <svg class="media-drop__icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <circle cx="24" cy="24" r="22" stroke="currentColor" stroke-width="1.5" stroke-dasharray="4 3"/>
+              <path d="M24 32V20M24 20L19 25M24 20L29 25" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <rect x="16" y="34" width="16" height="2.5" rx="1.25" fill="currentColor" opacity="0.5"/>
+            </svg>
+            <span class="media-drop__label">Drop video here</span>
+            <span class="media-drop__sublabel">or tap to select</span>
+            <span class="media-drop__limits">130 MB &middot; 5 min &middot; 720p &middot; H.264</span>
           </div>
-          <div class="glass-field video-preview-block" style="margin-top:10px">
-            <span>Preview</span>
-            <div id="video-preview-status" class="field-hint">Paste a YouTube link.</div>
-            <div id="video-preview-area" class="video-preview-area"></div>
+          <input id="media-file-input" type="file" accept="video/*" hidden aria-hidden="true" />
+        </div>
+
+        <!-- 업로드 진행 -->
+        <div class="media-upload-progress" id="media-upload-progress" hidden>
+          <div class="media-upload-progress__bar-wrap">
+            <div class="media-upload-progress__bar" id="media-upload-bar"></div>
           </div>
+          <div class="media-upload-progress__footer">
+            <span class="media-upload-progress__label" id="media-upload-label">Uploading… 0%</span>
+            <button class="media-upload-progress__cancel" id="media-upload-cancel" type="button">Cancel</button>
+          </div>
+        </div>
+
+        <!-- 에디터 (업로드 완료 후) -->
+        <div class="media-editor" id="media-editor" hidden>
+          <!-- 미리보기 -->
+          <div class="media-editor__preview-wrap">
+            <video id="media-preview" playsinline preload="metadata"></video>
+          </div>
+
+          <!-- 타임라인 -->
+          <div class="media-editor__timeline">
+            <div class="media-tl__track-wrap" id="media-tl-track">
+              <canvas id="media-tl-canvas"></canvas>
+              <div class="media-tl__range" id="media-tl-range"></div>
+              <div class="media-tl__handle media-tl__handle--in" id="media-tl-handle-in" role="slider" aria-label="In point"></div>
+              <div class="media-tl__handle media-tl__handle--out" id="media-tl-handle-out" role="slider" aria-label="Out point"></div>
+              <div class="media-tl__playhead" id="media-tl-playhead"></div>
+            </div>
+            <div class="media-tl__ruler" id="media-tl-ruler"></div>
+          </div>
+
+          <!-- 스크럽 숫자 입력 -->
+          <div class="media-editor__scrubs">
+            <div class="media-scrub" data-field="in">
+              <span class="media-scrub__label">IN</span>
+              <span class="media-scrub__val" id="media-scrub-in" data-unit="s">0s</span>
+            </div>
+            <div class="media-scrub" data-field="out">
+              <span class="media-scrub__label">OUT</span>
+              <span class="media-scrub__val" id="media-scrub-out" data-unit="s">0s</span>
+            </div>
+            <span class="media-scrub__clip-len" id="media-clip-len">Clip: 0s</span>
+          </div>
+
+          <!-- 액션 버튼 -->
+          <div class="media-editor__actions">
+            <button class="media-editor__btn media-editor__btn--save" id="media-save-btn" type="button">Save</button>
+            <button class="media-editor__btn media-editor__btn--export" id="media-export-btn" type="button">Export Clip</button>
+            <button class="media-editor__btn media-editor__btn--reset" id="media-reset-btn" type="button">Replace</button>
+          </div>
+
+          <!-- 상태 메시지 -->
+          <div class="media-editor__status" id="media-editor-status" hidden></div>
         </div>
       </section>
 
