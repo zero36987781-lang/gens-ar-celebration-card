@@ -1625,21 +1625,23 @@
   background: #fff !important;
   backdrop-filter: none !important;
   box-shadow: none !important;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 /* ── Drop Zone ── */
 .media-uploader {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .media-drop__zone {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 7px;
-  padding: 12px 14px;
+  flex-direction: row;
+  align-items: center;
+  padding: 8px 12px;
   border: 2px dashed rgba(0,0,0,0.2);
   border-radius: 12px;
   background: #f8f8f8;
@@ -1673,8 +1675,8 @@
 }
 
 .media-drop__icon {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   color: #000;
   opacity: 0.75;
   flex-shrink: 0;
@@ -1682,32 +1684,23 @@
 .media-drop__text {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
   flex: 1;
   min-width: 0;
 }
 .media-drop__label {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
   color: #000;
   letter-spacing: -0.01em;
   white-space: nowrap;
 }
 .media-drop__sublabel {
   font-size: 11px;
-  color: rgba(0,0,0,0.5);
-  white-space: nowrap;
-}
-.media-drop__limits {
-  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.02em;
   color: rgba(0,0,0,0.45);
-  padding: 3px 10px;
-  border: 1px solid rgba(0,0,0,0.15);
-  border-radius: 100px;
   white-space: nowrap;
-  align-self: flex-start;
+  letter-spacing: 0.01em;
 }
 
 /* ── Validation message (uploader 영역에 표시) ── */
@@ -1802,10 +1795,10 @@
 .media-editor__preview-wrap {
   border-radius: 6px;
   overflow: hidden;
-  background: #000;
+  background: #e0e0e0;
   aspect-ratio: 16 / 9;
   position: relative;
-  border: 3px solid #000;
+  border: 3px solid #c0c0c0;
 }
 .media-editor__preview-wrap video {
   width: 100%;
@@ -1990,8 +1983,8 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  background: #111;
-  border: 2px solid #000;
+  background: #f0f0f0;
+  border: 1.5px solid #d5d5d5;
   border-radius: 8px;
   padding: 8px;
 }
@@ -2003,21 +1996,22 @@
   min-height: 64px;
   align-items: stretch;
   -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
 }
 .media-filmstrip__clips::-webkit-scrollbar {
   height: 4px;
 }
 .media-filmstrip__clips::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.2);
+  background: rgba(0,0,0,0.15);
   border-radius: 2px;
 }
 .media-filmstrip__clip {
   position: relative;
-  flex: 1;
-  min-width: 48px;
+  flex: 0 0 calc((100% - 4 * 4px) / 4.5);
   height: 64px;
-  background: #1e1e1e;
-  border: 1.5px solid #333;
+  background: #ffffff;
+  border: 1.5px solid #d0d0d0;
   border-radius: 4px;
   cursor: pointer;
   overflow: hidden;
@@ -2026,20 +2020,23 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  scroll-snap-align: start;
+  flex-shrink: 0;
 }
 .media-filmstrip__clip--active {
-  border-color: #fff;
+  border-color: #000;
+  border-width: 2px;
 }
 .media-filmstrip__clip--empty {
   cursor: default;
 }
 .media-filmstrip__clip--empty .media-filmstrip__empty-icon {
-  opacity: 0.25;
+  opacity: 0.3;
 }
 .media-filmstrip__empty-icon {
   width: 22px;
   height: 22px;
-  color: #fff;
+  color: rgba(0,0,0,0.5);
 }
 .media-filmstrip__thumb {
   position: absolute;
@@ -2060,14 +2057,14 @@
   text-align: center;
   font-size: 11px;
   font-weight: 700;
-  color: #fff;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+  color: #111;
+  text-shadow: 0 1px 2px rgba(255,255,255,0.8);
   pointer-events: none;
 }
 .media-filmstrip__total {
   font-size: 12px;
   font-weight: 700;
-  color: rgba(255,255,255,0.45);
+  color: rgba(0,0,0,0.45);
 }
 
 /* ── Filmstrip nav panel ── */
@@ -2105,10 +2102,12 @@
   background: #333;
 }
 .media-filmstrip__nav-arrow {
-  font-size: 18px;
-  font-weight: 900;
-  line-height: 1.1;
-  letter-spacing: -0.05em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 0;
+  line-height: 0;
 }
 
 /* ── Transport controls ── */
@@ -2147,17 +2146,104 @@
   background: #333;
 }
 .media-transport__arrow {
-  font-size: 20px;
-  font-weight: 900;
-  line-height: 1;
-  letter-spacing: -0.05em;
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 0;
+  line-height: 0;
 }
 .media-transport__sec {
   font-size: 13px;
   font-weight: 700;
   line-height: 1;
   display: block;
+}
+
+/* ── Arrow triangles (tall solid triangles via clip-path) ── */
+
+/* Right-pointing triangle: right, last(::before), play(default), double-right(::before) */
+.media-arrow--right::before,
+.media-arrow--last::before,
+.media-arrow--play::before,
+.media-arrow--double-right::before {
+  content: '';
+  display: block;
+  width: 9px;
+  height: 18px;
+  background: currentColor;
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+
+/* Left-pointing triangle: left, double-left(::before) */
+.media-arrow--left::before,
+.media-arrow--double-left::before {
+  content: '';
+  display: block;
+  width: 9px;
+  height: 18px;
+  background: currentColor;
+  clip-path: polygon(100% 0, 0 50%, 100% 100%);
+}
+
+/* First (|◄): ::before = vertical bar, ::after = left triangle */
+.media-arrow--first::before {
+  content: '';
+  display: block;
+  width: 3px;
+  height: 18px;
+  background: currentColor;
+}
+.media-arrow--first::after {
+  content: '';
+  display: block;
+  width: 9px;
+  height: 18px;
+  background: currentColor;
+  clip-path: polygon(100% 0, 0 50%, 100% 100%);
+}
+
+/* Last (►|): ::before = right triangle (already covered), ::after = vertical bar */
+.media-arrow--last::after {
+  content: '';
+  display: block;
+  width: 3px;
+  height: 18px;
+  background: currentColor;
+}
+
+/* Double right (▶▶): ::after = 2nd right triangle */
+.media-arrow--double-right::after {
+  content: '';
+  display: block;
+  width: 9px;
+  height: 18px;
+  background: currentColor;
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+
+/* Double left (◄◄): ::after = 2nd left triangle */
+.media-arrow--double-left::after {
+  content: '';
+  display: block;
+  width: 9px;
+  height: 18px;
+  background: currentColor;
+  clip-path: polygon(100% 0, 0 50%, 100% 100%);
+}
+
+/* Play button pause state (is-playing class on button) */
+.is-playing .media-arrow--play::before {
+  width: 3px;
+  height: 18px;
+  clip-path: none;
+}
+.is-playing .media-arrow--play::after {
+  content: '';
+  display: block;
+  width: 3px;
+  height: 18px;
+  background: currentColor;
 }
 
 /* ── Action buttons ── */

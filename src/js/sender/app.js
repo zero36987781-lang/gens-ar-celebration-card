@@ -604,8 +604,7 @@ function bindTransportControls() {
   qs('#media-t-plus5')?.addEventListener('click',  () => nudgeTime(5));
 
   const setPlay = playing => {
-    const arrow = playBtn.querySelector('.media-transport__arrow');
-    if (arrow) arrow.textContent = playing ? '⏸' : '▶';
+    playBtn.classList.toggle('is-playing', playing);
     setPlayOverlay(!playing);
   };
 
@@ -736,9 +735,8 @@ function bindFilmstripNav() {
   });
 
   const updatePlayBtn = () => {
-    const arrow = playBtn?.querySelector('.media-filmstrip__nav-arrow');
-    if (!arrow || !video) return;
-    arrow.textContent = video.paused ? '▶' : '⏸';
+    if (!playBtn || !video) return;
+    playBtn.classList.toggle('is-playing', !video.paused);
   };
   video?.addEventListener('play',  updatePlayBtn);
   video?.addEventListener('pause', updatePlayBtn);
@@ -893,8 +891,8 @@ function bindMediaDrop() {
     clipState.selectedIdx = -1;
     renderFilmstrip();
     setPlayOverlay(false);
-    const tArrow = qs('#media-t-play .media-transport__arrow');
-    if (tArrow) tArrow.textContent = '▶';
+    const tPlayBtn = qs('#media-t-play');
+    if (tPlayBtn) tPlayBtn.classList.remove('is-playing');
   });
 
   async function processFile(file) {
