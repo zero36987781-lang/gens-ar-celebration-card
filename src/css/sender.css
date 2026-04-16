@@ -2108,16 +2108,16 @@
 .media-editor__actions {
   display: flex;
   gap: 8px;
-  flex-wrap: wrap;
 }
 .media-editor__btn {
   flex: 1;
-  min-width: 80px;
-  padding: 13px 16px;
+  padding: 10px 4px;
   border: none;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
+  line-height: 1.35;
+  text-align: center;
   cursor: pointer;
   transition: opacity 0.15s ease-out, transform 0.15s ease-out;
   -webkit-tap-highlight-color: transparent;
@@ -2149,8 +2149,6 @@
   background: #fff;
   color: rgba(0,0,0,0.5);
   border: 1px solid rgba(0,0,0,0.15);
-  flex: 0;
-  min-width: 72px;
 }
 .media-editor__btn--reset:hover {
   background: #f0f0f0;
@@ -2160,8 +2158,6 @@
   background: #1a1a1a;
   color: #fff;
   border: none;
-  flex: 0;
-  min-width: 90px;
 }
 .media-editor__btn--cut:hover {
   background: #333;
