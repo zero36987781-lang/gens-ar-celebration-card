@@ -1,11 +1,9 @@
 export class MapPicker {
-  constructor({ mapEl, latInput, lngInput, radiusInput, searchInput, searchButton, statusEl }) {
+  constructor({ mapEl, latInput, lngInput, radiusInput, statusEl }) {
     this.mapEl = mapEl;
     this.latInput = latInput;
     this.lngInput = lngInput;
     this.radiusInput = radiusInput;
-    this.searchInput = searchInput;
-    this.searchButton = searchButton;
     this.statusEl = statusEl;
     this.map = null;
     this.circle = null;
@@ -30,10 +28,10 @@ export class MapPicker {
       maxZoom: 19
     }).addTo(this.map);
 
+    // 핀 tip(아래 꼭짓점)이 지도 center와 일치하도록 배치
     this.mapEl.classList.add('map-box--center-pin');
     const centerPin = document.createElement('div');
     centerPin.className = 'map-center-pin';
-    centerPin.innerHTML = '<span></span>';
     this.mapEl.appendChild(centerPin);
 
     this.circle = L.circle([defaultLat, defaultLng], {
@@ -48,27 +46,19 @@ export class MapPicker {
 
     this.map.on('moveend', () => {
       if (this.silentSync) return;
-      const center = this.map.getCenter();
-      this.updateInputs(center.lat, center.lng);
-      this.circle?.setLatLng([center.lat, center.lng]);
-      this.renderStatus(`Pinned: ${center.lat.toFixed(6)}, ${center.lng.toFixed(6)}`);
-    });
-
-    this.map.on('click', (e) => {
-      this.setPosition(e.latlng.lat, e.latlng.lng, true);
+      const c = this.map.getCenter();
+      this.updateInputs(c.lat, c.lng);
+      this.circle?.setLatLng([c.lat, c.lng]);
+      this.renderStatus(`Pinned: ${c.lat.toFixed(6)}, ${c.lng.toFixed(6)}`);
     });
 
     this.radiusInput?.addEventListener('change', () => this.updateRadius());
     this.radiusInput?.addEventListener('input', () => this.updateRadius());
-    this.searchButton?.addEventListener('click', () => this.search());
-    this.searchInput?.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); this.search(); }
-    });
     this.latInput?.addEventListener('change', () => this.syncInputsToMap());
     this.lngInput?.addEventListener('change', () => this.syncInputsToMap());
 
     this.setPosition(defaultLat, defaultLng, true);
-    this.renderStatus('Pan the map under the fixed center pin or search to place the card.');
+    this.renderStatus('지도를 드래그해 핀을 원하는 위치에 맞추세요.');
   }
 
   renderStatus(text, tone = 'success') {
@@ -109,22 +99,6 @@ export class MapPicker {
       }, 180);
     } else {
       this.renderStatus(`Pinned: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
-    }
-  }
-
-  async search() {
-    const query = this.searchInput?.value?.trim();
-    if (!query) return;
-    try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`,
-        { headers: { 'Accept-Language': 'ko,en' } }
-      );
-      const data = await res.json();
-      if (!data?.length) throw new Error('Location search failed.');
-      this.setPosition(parseFloat(data[0].lat), parseFloat(data[0].lon), true);
-    } catch (e) {
-      this.renderStatus(e.message || 'Location search failed.', 'warn');
     }
   }
 }

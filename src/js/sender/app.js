@@ -89,7 +89,7 @@ async function requestPermissions() {
   try {
     await new Promise((res, rej) => {
       navigator.geolocation.getCurrentPosition(
-        () => { gpsOk = true; res(); },
+        (pos) => { gpsOk = true; state.prefetchedPosition = pos; res(); },
         (err) => { rej(err); },
         { timeout: 8000, maximumAge: 0 }
       );
@@ -202,6 +202,10 @@ function goPage(n) {
   state.page = n;
   updatePage();
   if (n !== 2) qs('.sender-shell')?.scrollTo({ top: 0, behavior: 'smooth' });
+  if (n === 5 && !state.mapInitialized) {
+    state.mapInitialized = true;
+    initMap();
+  }
 }
 function nextPage() { goPage(state.page + 1); }
 function prevPage() { goPage(state.page - 1); }
@@ -250,7 +254,6 @@ function fields() {
   return {
     recipientName: qs('#recipient-name'), senderName: qs('#sender-name'),
     ctaLink: qs('#cta-link'),
-    mapSearch: qs('#map-search'), mapSearchButton: qs('#map-search-btn'),
     mapEl: qs('#sender-map'), mapStatus: qs('#map-status'),
     latitude: qs('#latitude'), longitude: qs('#longitude'),
     unlockRadius: qs('#unlock-radius'), startAt: qs('#start-at'), expiresAt: qs('#expires-at'),
@@ -1496,13 +1499,17 @@ async function copyLink() {
   }, 2000);
 }
 
-async function initMap() {
+function initMap() {
   const f = fields();
   try {
+    const pos = state.prefetchedPosition;
+    if (pos) {
+      f.latitude.value = pos.coords.latitude.toFixed(6);
+      f.longitude.value = pos.coords.longitude.toFixed(6);
+    }
     state.mapPicker = new MapPicker({
       mapEl: f.mapEl, latInput: f.latitude, lngInput: f.longitude,
-      radiusInput: f.unlockRadius, searchInput: f.mapSearch,
-      searchButton: f.mapSearchButton, statusEl: f.mapStatus
+      radiusInput: f.unlockRadius, statusEl: f.mapStatus
     });
     state.mapPicker.init();
   } catch (e) { setStatus(f.mapStatus, e.message || 'Map failed.', 'warn'); }
@@ -1525,7 +1532,7 @@ function bindEvents() {
   f.startAt.addEventListener('change', syncExpiry);
   f.expiresAt.addEventListener('change', syncExpiry);
   f.unlockRadius.addEventListener('input', () => state.mapPicker?.updateRadius());
-  qs('#use-current-location')?.addEventListener('click', useCurrentLocation);
+
   els.form?.addEventListener('submit', handleSubmit);
   els.copyLink?.addEventListener('click', copyLink);
   els.navPrev?.addEventListener('click', prevPage);
@@ -1569,7 +1576,6 @@ async function init() {
   syncEditorMode();
   syncSideToggle();
   await setRuntimeStatus();
-  await initMap();
 }
 
 init();
