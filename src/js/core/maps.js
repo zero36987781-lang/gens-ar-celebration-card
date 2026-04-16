@@ -64,7 +64,7 @@ export class MapPicker {
   renderStatus(text, tone = 'success') {
     if (!this.statusEl) return;
     this.statusEl.textContent = text;
-    this.statusEl.className = `status-box ${tone}`;
+    this.statusEl.className = `map-status-inline ${tone}`;
   }
 
   updateInputs(lat, lng) {

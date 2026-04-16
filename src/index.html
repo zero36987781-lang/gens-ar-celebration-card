@@ -264,14 +264,20 @@
         </div>
       </section>
 
-      <!-- Step 5: Map (unchanged) -->
-      <section class="card-panel page-view page-hidden" data-step="5">
-        <form id="gift-form" class="stack-form aux-form" novalidate>
+      <!-- Step 5: Map -->
+      <section class="card-panel page-view page-hidden map-page" data-step="5">
+        <form id="gift-form" class="map-form" novalidate>
           <div id="sender-map" class="map-box"></div>
-          <div id="map-status" class="status-box muted">Map status here.</div>
-          <div class="field-grid two-up compact-grid">
-            <label class="glass-field"><span>Latitude</span><input id="latitude" type="number" step="0.000001" placeholder="37.566500" inputmode="decimal" /></label>
-            <label class="glass-field"><span>Longitude</span><input id="longitude" type="number" step="0.000001" placeholder="126.978000" inputmode="decimal" /></label>
+          <div class="map-coords">
+            <div id="map-status" class="map-status-inline"></div>
+            <label class="map-coord-row">
+              <span>Latitude</span>
+              <input id="latitude" type="number" step="0.000001" placeholder="37.566500" inputmode="decimal" readonly />
+            </label>
+            <label class="map-coord-row">
+              <span>Longitude</span>
+              <input id="longitude" type="number" step="0.000001" placeholder="126.978000" inputmode="decimal" readonly />
+            </label>
           </div>
         </form>
       </section>
