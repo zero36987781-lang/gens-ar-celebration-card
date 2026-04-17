@@ -1450,7 +1450,6 @@
 .map-page {
   padding: 10px !important;
   overflow: hidden !important;
-  display: flex !important;
   flex-direction: column !important;
   box-sizing: border-box !important;
 }
