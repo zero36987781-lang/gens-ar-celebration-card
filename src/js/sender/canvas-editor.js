@@ -2198,6 +2198,7 @@ window.CanvasEditor = (() => {
         offsetX: pos.x - el.x,
         offsetY: pos.y - el.y
       };
+      try { e.target.setPointerCapture(e.pointerId); } catch(_){}
       window.addEventListener('pointermove', onPointerMove);
       window.addEventListener('pointerup', onPointerUp);
     }
@@ -2216,6 +2217,7 @@ window.CanvasEditor = (() => {
         startX:e.clientX, startY:e.clientY,
         origW:el.w, origH:el.h, origX:el.x, origY:el.y
       };
+      try { e.target.setPointerCapture(e.pointerId); } catch(_){}
       window.addEventListener('pointermove', onPointerMove);
       window.addEventListener('pointerup', onPointerUp);
     }
@@ -2240,6 +2242,7 @@ window.CanvasEditor = (() => {
         startAngle: Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI,
         origRotation: el.rotation || 0
       };
+      try { e.target.setPointerCapture(e.pointerId); } catch(_){}
       window.addEventListener('pointermove', onPointerMove);
       window.addEventListener('pointerup', onPointerUp);
     }

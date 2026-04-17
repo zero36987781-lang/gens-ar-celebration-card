@@ -910,7 +910,7 @@ document.addEventListener('DOMContentLoaded',function(){
   const _tplId=new URLSearchParams(location.search).get('template');
   if(_tplId)loadTemplate(_tplId);
   const _embedded=new URLSearchParams(location.search).get('embedded')==='1';
-  if(_embedded){document.getElementById('studioHeader').style.display='none';document.getElementById('headerExpandHint').style.display='none';document.getElementById('bottom-nav').style.display='none';}
+  if(_embedded){const _br=document.querySelector('.studio-brand-row');if(_br)_br.style.display='none';document.getElementById('bottom-nav').style.display='none';}
   window.addEventListener('message',function(e){
     if(!e.data)return;
     if(e.data.type==='loadTemplate'&&e.data.id)loadTemplate(e.data.id);
