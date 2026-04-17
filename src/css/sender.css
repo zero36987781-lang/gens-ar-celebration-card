@@ -114,9 +114,7 @@
 .me-btn:active{opacity:.65;}.me-btn:disabled{opacity:.3;cursor:default;}
 .me-del-btn{border-color:rgba(255,80,80,0.3);color:rgba(255,120,120,0.9);}
 .me-btn--confirm{border-color:rgba(0,122,255,0.4);color:#007AFF;background:rgba(0,122,255,0.1);}
-.me-btn--confirm:disabled{opacity:.6;cursor:default;}
-.me-btn--preview{border-color:rgba(52,199,89,0.4);color:#34C759;background:rgba(52,199,89,0.1);text-decoration:none;}
-.me-controls--hidden{display:none;}
+.me-btn--confirm:disabled{opacity:.6;cursor:default;}.me-controls--hidden{display:none;}
 .me-ctrl-row{display:flex;align-items:center;gap:8px;}
 .me-ctrl-label{font-size:11px;font-weight:800;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:.3px;min-width:34px;}
 .me-size-btn{width:36px;height:36px;border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;background:rgba(255,255,255,0.08);color:#fff;font-size:20px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;}
