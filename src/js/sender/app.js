@@ -250,14 +250,17 @@ function applySplitHeight() {
 }
 
 /* ── Mode & Side toggle ── */
+function postToEditor(msg) {
+  const frame = qs('#editor-frame');
+  if (frame?.contentWindow) frame.contentWindow.postMessage(msg, '*');
+}
+
 function syncEditorMode() {
-  document.querySelectorAll('#mode-toggle .toggle-pill').forEach(p => p.classList.toggle('active', p.dataset.value === state.editorMode));
-  if (window.CanvasEditor) window.CanvasEditor.setMode(state.editorMode);
+  postToEditor({ type: 'setMode', mode: state.editorMode });
 }
 
 function syncSideToggle() {
-  document.querySelectorAll('#side-toggle .toggle-pill').forEach(p => p.classList.toggle('active', p.dataset.value === state.activeSide));
-  if (window.CanvasEditor) window.CanvasEditor.switchSide(state.activeSide);
+  postToEditor({ type: 'setSide', side: state.activeSide });
 }
 
 /* ── Panel management ── */
@@ -1472,6 +1475,7 @@ function applyTemplate(id) {
     window.CanvasEditor.setCurrentTemplate(id);
     window.CanvasEditor.applyTemplateToLayers(tpl);
   }
+  postToEditor({ type: 'loadTemplate', id });
   renderPreviewCard();
 }
 
@@ -1505,7 +1509,7 @@ function renderPreviewCard() {
 function getFormData() {
   const f = fields(), tpl = getTemplateById(state.templateId);
   const isBasic = state.editorMode === 'basic';
-  const canvasData = window.CanvasEditor ? window.CanvasEditor.getLayers() : null;
+  const canvasData = state.editorData || (window.CanvasEditor ? window.CanvasEditor.getLayers() : null);
   return {
     slug: state.lastCreatedSlug || generateSlug('gift'),
     templateId: state.templateId, templateName: tpl.name,
@@ -1551,9 +1555,7 @@ async function handleSubmit(ev) {
     const saved = await saveGift(data);
     state.lastCreatedSlug = saved.slug;
     els.shareLink.value = createRecipientUrl(saved.slug);
-    const previewUrl = createRecipientPreviewUrl(saved.slug)
-      + (state.savedTemplateKey ? `&r2key=${encodeURIComponent(state.savedTemplateKey)}` : '');
-    els.previewLink.href = previewUrl;
+    els.previewLink.href = createRecipientPreviewUrl(saved.slug);
     els.previewLink.classList.remove('disabled-link');
     setStatus(els.statusBox, `Saved. Expires ${new Date(saved.expiresAt).toLocaleString()}.`, 'success');
   } catch (e) { setStatus(els.statusBox, e.message || 'Save failed.', 'error'); }
