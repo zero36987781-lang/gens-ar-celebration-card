@@ -662,8 +662,8 @@ async function activateEditor(blobUrl, duration) {
 
   syncTimeline();
 
-  // 클립 상태 초기화
-  clipState.clips = [];
+  // 클립 상태 초기화 (card/stop 클립 유지, video 클립만 제거)
+  clipState.clips = clipState.clips.filter(c => c.type === 'card' || c.type === 'stop');
   clipState.selectedIdx = -1;
   renderFilmstrip();
   setPlayOverlay(true);

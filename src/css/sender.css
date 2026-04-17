@@ -2014,10 +2014,10 @@
 }
 .media-tl__handle--in {
   border-radius: 4px 0 0 4px;
-  transform: translateX(-100%);
 }
 .media-tl__handle--out {
   border-radius: 0 4px 4px 0;
+  transform: translateX(-100%);
 }
 .media-tl__handle--dragging,
 .media-tl__handle--active {
@@ -2251,6 +2251,8 @@
   background: #333;
 }
 .media-filmstrip__nav-btn--dur {
+  flex: none;
+  width: 72px;
   cursor: default;
   pointer-events: none;
   background: #e8e8e8;
