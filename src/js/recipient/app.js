@@ -57,7 +57,11 @@ const els = {
   giftVideo: qs('#gift-video'),
   toggleCameraAr: qs('#toggle-camera-ar'),
   cameraFeed: qs('#camera-feed'),
-  showVideoBtn: qs('#show-video-btn')
+  showVideoBtn: qs('#show-video-btn'),
+  stopPageOverlay: qs('#stop-page-overlay'),
+  stopPageMsg: qs('#stop-page-msg'),
+  stopPageYes: qs('#stop-page-yes'),
+  stopPageNo: qs('#stop-page-no')
 };
 
 let gift = null;
@@ -195,6 +199,74 @@ function revealThanksPanel() {
   if (!previewMode) {
     els.thanksPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
+}
+
+// 클립 순서대로 비디오 재생 후 → thanks
+let _clipQueue = [];
+let _clipQueueIdx = 0;
+
+function buildClipQueue() {
+  if (!gift?.clips?.length) return [];
+  return gift.clips.filter(c => c.type === 'video' && c.r2Key);
+}
+
+async function playNextClip() {
+  if (_clipQueueIdx >= _clipQueue.length) {
+    revealThanksPanel();
+    return;
+  }
+  const clip = _clipQueue[_clipQueueIdx++];
+  const video = els.giftVideo;
+  if (!video) { revealThanksPanel(); return; }
+
+  try {
+    const res = await fetch(`/api/media/stream?key=${encodeURIComponent(clip.r2Key)}`);
+    if (!res.ok) throw new Error('stream failed');
+    const blob = await res.blob();
+    video.src = URL.createObjectURL(blob);
+  } catch {
+    video.src = `/api/media/stream?key=${encodeURIComponent(clip.r2Key)}`;
+  }
+
+  video.classList.remove('hidden');
+  video.onended = () => {
+    video.classList.add('hidden');
+    playNextClip();
+  };
+  try {
+    if (video.requestFullscreen) await video.requestFullscreen();
+    else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
+  } catch { /* fullscreen optional */ }
+  video.play().catch(() => {});
+}
+
+function showStopPage() {
+  const stopClip = gift?.clips?.find(c => c.type === 'stop');
+  if (els.stopPageMsg && stopClip?.message) {
+    els.stopPageMsg.textContent = stopClip.message;
+  }
+  els.stopPageOverlay?.classList.remove('hidden');
+}
+
+function onSequenceComplete() {
+  _clipQueue = buildClipQueue();
+  _clipQueueIdx = 0;
+  if (_clipQueue.length > 0) {
+    showStopPage();
+  } else {
+    revealThanksPanel();
+  }
+}
+
+function bindStopPage() {
+  els.stopPageYes?.addEventListener('click', () => {
+    els.stopPageOverlay?.classList.add('hidden');
+    playNextClip();
+  });
+  els.stopPageNo?.addEventListener('click', () => {
+    els.stopPageOverlay?.classList.add('hidden');
+    revealThanksPanel();
+  });
 }
 
 async function copyThanksMessage() {
@@ -418,9 +490,10 @@ async function init() {
       await engine.replay();
     });
     els.toggleCameraAr?.addEventListener('click', toggleCameraAr);
+    bindStopPage();
     window.addEventListener('ar-session-started', () => setArLiveMode(true));
     window.addEventListener('ar-session-ended', () => setArLiveMode(false));
-    window.addEventListener('ar-sequence-complete', revealThanksPanel);
+    window.addEventListener('ar-sequence-complete', onSequenceComplete);
     await startPreviewAutomation();
     return;
   }
@@ -466,8 +539,9 @@ async function init() {
 
   // Camera AR toggle event
   els.toggleCameraAr?.addEventListener('click', toggleCameraAr);
+  bindStopPage();
 
-  // Video view button event
+  // Video view button event (legacy: gift.videoUrl 방식)
   els.showVideoBtn?.addEventListener('click', async () => {
     if (!els.giftVideo) return;
     try {
@@ -484,7 +558,7 @@ async function init() {
 
   window.addEventListener('ar-session-started', () => setArLiveMode(true));
   window.addEventListener('ar-session-ended', () => setArLiveMode(false));
-  window.addEventListener('ar-sequence-complete', revealThanksPanel);
+  window.addEventListener('ar-sequence-complete', onSequenceComplete);
   if (previewMode) {
     await startPreviewAutomation();
   }

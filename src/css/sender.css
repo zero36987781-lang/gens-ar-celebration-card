@@ -2161,6 +2161,31 @@
 .media-filmstrip__clip--empty .media-filmstrip__empty-icon {
   opacity: 0.3;
 }
+.media-filmstrip__clip--card {
+  background: linear-gradient(135deg, #ede9fe, #dbeafe);
+  border-color: #a78bfa;
+  flex-direction: column;
+  gap: 3px;
+}
+.media-filmstrip__clip--card:hover { border-color: #7c3aed; }
+.media-filmstrip__clip--stop {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border-color: #f59e0b;
+  flex-direction: column;
+  gap: 3px;
+}
+.media-filmstrip__clip--stop:hover { border-color: #d97706; }
+.media-filmstrip__type-icon {
+  width: 20px;
+  height: 20px;
+  color: rgba(0,0,0,0.6);
+}
+.media-filmstrip__type-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(0,0,0,0.55);
+  letter-spacing: 0.02em;
+}
 .media-filmstrip__empty-icon {
   width: 22px;
   height: 22px;

@@ -124,6 +124,16 @@
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
         <span>영상보기</span>
       </button>
+      <!-- 스톱페이지 오버레이 -->
+      <div id="stop-page-overlay" class="stop-page-overlay hidden">
+        <div class="stop-page-overlay__box">
+          <p id="stop-page-msg" class="stop-page-overlay__msg">준비된 영상을 시청하시겠어요?</p>
+          <div class="stop-page-overlay__actions">
+            <button id="stop-page-yes" class="btn btn-primary" type="button">예, 시청할게요</button>
+            <button id="stop-page-no" class="btn btn-secondary" type="button">나중에</button>
+          </div>
+        </div>
+      </div>
     </section>
 
     <section id="thanks-panel" class="card-panel thanks-panel hidden">

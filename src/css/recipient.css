@@ -222,3 +222,38 @@ body.ar-live-mode { background: transparent !important; }
   background: rgba(255,255,255,0.97) !important;
   border-bottom: 1px solid #e5e7eb !important;
 }
+
+/* ══ Stop page overlay ══ */
+.stop-page-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.62);
+  backdrop-filter: blur(6px);
+  border-radius: 24px;
+}
+.stop-page-overlay.hidden { display: none; }
+.stop-page-overlay__box {
+  background: #fff;
+  border-radius: 20px;
+  padding: 28px 24px;
+  max-width: 300px;
+  width: calc(100% - 48px);
+  text-align: center;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.28);
+}
+.stop-page-overlay__msg {
+  font-size: 17px;
+  font-weight: 700;
+  color: #111;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+.stop-page-overlay__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}

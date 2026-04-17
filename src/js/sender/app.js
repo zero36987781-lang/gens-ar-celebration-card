@@ -234,6 +234,7 @@ function goPage(n) {
   }
   state.page = n;
   updatePage();
+  if (n === 3) insertCardClip();
   if (n !== 2) qs('.sender-shell')?.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function nextPage() { goPage(state.page + 1); }
@@ -339,7 +340,7 @@ const mediaState = {
 };
 
 const clipState = {
-  clips: [],       // [{inSec, outSec, duration, thumbDataUrl}]
+  clips: [],       // [{type:'card'|'stop'|'video', ...}]
   selectedIdx: -1
 };
 
@@ -679,6 +680,27 @@ async function captureThumb(videoEl, timeSec) {
   });
 }
 
+function insertCardClip() {
+  if (clipState.clips.some(c => c.type === 'card')) return;
+  clipState.clips.unshift({
+    type: 'card',
+    templateId: state.templateId,
+    canvasData: state.editorData || null
+  });
+  renderFilmstrip();
+}
+
+function autoInsertStopPage() {
+  const clips = clipState.clips;
+  if (!clips.length) return;
+  const last = clips[clips.length - 1];
+  if (last.type === 'card' || last.type === 'stop') {
+    if (last.type !== 'stop') {
+      clips.push({ type: 'stop', message: '준비된 영상을 시청하시겠어요?' });
+    }
+  }
+}
+
 const FILMSTRIP_SLOTS = 5;
 
 function makeEmptyClipEl() {
@@ -696,22 +718,39 @@ function renderFilmstrip() {
   const totalEl = qs('#media-filmstrip-total');
   if (!clipsEl) return;
 
-  const total = clipState.clips.reduce((s, c) => s + c.duration, 0);
-  if (totalEl) totalEl.textContent = `Total: ${Math.round(total)}s`;
+  const videoDur = clipState.clips.filter(c => c.type === 'video').reduce((s, c) => s + (c.duration || 0), 0);
+  if (totalEl) totalEl.textContent = `Total: ${Math.round(videoDur)}s`;
 
   clipsEl.innerHTML = '';
 
-  // 실제 클립
   clipState.clips.forEach((clip, idx) => {
     const el = document.createElement('div');
-    el.className = 'media-filmstrip__clip' + (idx === clipState.selectedIdx ? ' media-filmstrip__clip--active' : '');
+    const activeClass = idx === clipState.selectedIdx ? ' media-filmstrip__clip--active' : '';
+
+    if (clip.type === 'card') {
+      el.className = `media-filmstrip__clip media-filmstrip__clip--card${activeClass}`;
+      el.title = '카드 이미지';
+      el.innerHTML = `<svg class="media-filmstrip__type-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+        <rect x="4" y="3" width="16" height="18" rx="2"/>
+        <path d="M8 7h8M8 11h8M8 15h4" stroke-linecap="round"/>
+      </svg><span class="media-filmstrip__type-label">카드</span>`;
+    } else if (clip.type === 'stop') {
+      el.className = `media-filmstrip__clip media-filmstrip__clip--stop${activeClass}`;
+      el.title = clip.message;
+      el.innerHTML = `<svg class="media-filmstrip__type-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+        <circle cx="12" cy="12" r="9"/>
+        <rect x="9" y="9" width="6" height="6" rx="1" fill="currentColor" stroke="none"/>
+      </svg><span class="media-filmstrip__type-label">중단</span>`;
+    } else {
+      el.className = `media-filmstrip__clip${activeClass}`;
+      el.innerHTML = `<svg class="media-filmstrip__empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3V9z" stroke-width="1.5"/></svg>`;
+      const dur = document.createElement('span');
+      dur.className = 'media-filmstrip__dur';
+      dur.textContent = Math.round(clip.duration || 0) + 's';
+      el.appendChild(dur);
+    }
+
     el.dataset.index = idx;
-
-    const dur = document.createElement('span');
-    dur.className = 'media-filmstrip__dur';
-    dur.textContent = Math.round(clip.duration) + 's';
-    el.appendChild(dur);
-
     el.addEventListener('click', () => {
       clipState.selectedIdx = idx;
       renderFilmstrip();
@@ -776,15 +815,19 @@ function bindCutClip() {
   cutBtn.addEventListener('click', async () => {
     const dur = mediaState.outSec - mediaState.inSec;
     if (dur <= 0) { showMediaStatus('Set IN/OUT range first.', 'error'); return; }
+    autoInsertStopPage();
     clipState.clips.push({
+      type: 'video',
       inSec: mediaState.inSec,
       outSec: mediaState.outSec,
       duration: dur,
-      thumbDataUrl: null
+      thumbDataUrl: null,
+      r2Key: null
     });
-    clipState.selectedIdx = -1;
+    clipState.selectedIdx = clipState.clips.length - 1;
     renderFilmstrip();
-    showMediaStatus(`Clip ${clipState.clips.length} added (${Math.round(dur)}s)`, 'success');
+    const videoCount = clipState.clips.filter(c => c.type === 'video').length;
+    showMediaStatus(`Clip ${videoCount} added (${Math.round(dur)}s)`, 'success');
   });
 }
 
@@ -846,6 +889,24 @@ async function onMediaExportClip() {
     const res    = await fetch('/api/media/upload', { method: 'POST', body: fd });
     const result = await res.json();
     mediaState.r2Key = result.key;
+    // 선택된 video 클립에 r2Key 저장
+    const selClip = clipState.clips[clipState.selectedIdx];
+    if (selClip && selClip.type === 'video') {
+      selClip.r2Key = result.key;
+    } else {
+      // 선택된 클립이 없으면 새 video 클립 추가
+      autoInsertStopPage();
+      clipState.clips.push({
+        type: 'video',
+        inSec: mediaState.inSec,
+        outSec: mediaState.outSec,
+        duration: clipDuration,
+        thumbDataUrl: null,
+        r2Key: result.key
+      });
+      clipState.selectedIdx = clipState.clips.length - 1;
+    }
+    renderFilmstrip();
     showMediaStatus('Clip exported and saved!', 'success');
   } catch (err) {
     showMediaStatus('Export failed: ' + err.message, 'error');
@@ -1531,6 +1592,11 @@ function getFormData() {
     mediaR2Key: mediaState.r2Key,
     mediaStart: mediaState.inSec,
     mediaEnd: mediaState.outSec,
+    clips: clipState.clips.map(c => {
+      if (c.type === 'video') return { type: 'video', inSec: c.inSec, outSec: c.outSec, duration: c.duration, r2Key: c.r2Key };
+      if (c.type === 'stop') return { type: 'stop', message: c.message };
+      return { type: 'card', templateId: c.templateId };
+    }),
     ctaLink: f.ctaLink.value.trim(),
     latitude: Number(f.latitude.value), longitude: Number(f.longitude.value),
     unlockRadiusM: Number(f.unlockRadius.value || 50),
