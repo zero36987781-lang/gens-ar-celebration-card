@@ -943,7 +943,7 @@ const MINI_PALETTE = [
   '#FF2D55','#FFD700','#FF6B6B','#4D96FF','#6BCB77'
 ];
 
-const miniState = { id: null, els: [], bg: null, sel: null, drag: null, resize: null, scale: 1, nextId: 9000 };
+const miniState = { id: null, els: [], bg: null, sel: null, drag: null, resize: null, scale: 1, nextId: 9000, wasDragged: false, wasResized: false };
 
 function meScale() {
   const wrap = qs('#me-preview-wrap');
@@ -991,7 +991,12 @@ function meRender() {
       rh.addEventListener('pointerdown', ev => meResizeStart(ev, e.id));
       div.appendChild(rh);
       div.addEventListener('pointerdown', ev => meDragStart(ev, e.id));
-      div.addEventListener('click', ev => { ev.stopPropagation(); meSel(e.id); });
+      div.addEventListener('click', ev => {
+        ev.stopPropagation();
+        if (miniState.wasDragged) { miniState.wasDragged = false; return; }
+        if (miniState.wasResized) { miniState.wasResized = false; return; }
+        meSel(e.id);
+      });
     } else if (e.type === 'text') {
       const clr = e.clr && e.clr !== 'transparent' ? e.clr : '#fff';
       div.classList.add('me-txt');
@@ -1009,6 +1014,7 @@ function meRender() {
       div.addEventListener('click', ev => {
         ev.stopPropagation();
         if (miniState.wasDragged) { miniState.wasDragged = false; return; }
+        if (miniState.wasResized) { miniState.wasResized = false; return; }
         if (miniState.sel === e.id) {
           meStartEdit(qs('#me-card').querySelector(`[data-eid="${e.id}"]`), e.id);
         } else {
@@ -1045,7 +1051,6 @@ function meUpdCtrl() {
 function meDragStart(ev, id) {
   ev.stopPropagation();
   if (ev.currentTarget.contentEditable === 'true') return;
-  // 선택 상태만 업데이트 — meRender() 호출 금지 (DOM 재생성 시 currentTarget 무효화됨)
   if (miniState.sel !== id) {
     qs('#me-card').querySelectorAll('.me-sel').forEach(el => el.classList.remove('me-sel'));
     ev.currentTarget.classList.add('me-sel');
@@ -1055,10 +1060,9 @@ function meDragStart(ev, id) {
   const el = miniState.els.find(e => e.id === id);
   if (!el) return;
   miniState.drag = { id, sx: ev.clientX, sy: ev.clientY, ex: el.x, ey: el.y, moved: false };
-  ev.currentTarget.setPointerCapture(ev.pointerId);
-  ev.currentTarget.addEventListener('pointermove', meDragMove);
-  ev.currentTarget.addEventListener('pointerup', meDragEnd);
-  ev.currentTarget.addEventListener('pointercancel', meDragEnd);
+  document.addEventListener('pointermove', meDragMove);
+  document.addEventListener('pointerup', meDragEnd);
+  document.addEventListener('pointercancel', meDragEnd);
 }
 function meDragMove(ev) {
   const d = miniState.drag; if (!d) return;
@@ -1071,21 +1075,21 @@ function meDragMove(ev) {
   const div = qs('#me-card').querySelector(`[data-eid="${d.id}"]`);
   if (div) { div.style.left = nx + 'px'; div.style.top = ny + 'px'; }
 }
-function meDragEnd(ev) {
-  miniState.wasDragged = miniState.drag?.moved || false;
+function meDragEnd() {
+  if (!miniState.drag) return;
+  miniState.wasDragged = miniState.drag.moved;
   miniState.drag = null;
-  ev.currentTarget.removeEventListener('pointermove', meDragMove);
-  ev.currentTarget.removeEventListener('pointerup', meDragEnd);
-  ev.currentTarget.removeEventListener('pointercancel', meDragEnd);
+  document.removeEventListener('pointermove', meDragMove);
+  document.removeEventListener('pointerup', meDragEnd);
+  document.removeEventListener('pointercancel', meDragEnd);
 }
 function meResizeStart(ev, id) {
   ev.stopPropagation();
   const el = miniState.els.find(e => e.id === id); if (!el) return;
   miniState.resize = { id, sx: ev.clientX, sy: ev.clientY, ew: el.w, eh: el.h };
-  ev.currentTarget.setPointerCapture(ev.pointerId);
-  ev.currentTarget.addEventListener('pointermove', meResizeMove);
-  ev.currentTarget.addEventListener('pointerup', meResizeEnd);
-  ev.currentTarget.addEventListener('pointercancel', meResizeEnd);
+  document.addEventListener('pointermove', meResizeMove);
+  document.addEventListener('pointerup', meResizeEnd);
+  document.addEventListener('pointercancel', meResizeEnd);
 }
 function meResizeMove(ev) {
   const d = miniState.resize; if (!d) return;
@@ -1096,11 +1100,13 @@ function meResizeMove(ev) {
   const div = qs('#me-card').querySelector(`[data-eid="${d.id}"]`);
   if (div) { div.style.width = el.w + 'px'; div.style.height = el.h + 'px'; }
 }
-function meResizeEnd(ev) {
+function meResizeEnd() {
+  if (!miniState.resize) return;
+  miniState.wasResized = true;
   miniState.resize = null;
-  ev.currentTarget.removeEventListener('pointermove', meResizeMove);
-  ev.currentTarget.removeEventListener('pointerup', meResizeEnd);
-  ev.currentTarget.removeEventListener('pointercancel', meResizeEnd);
+  document.removeEventListener('pointermove', meResizeMove);
+  document.removeEventListener('pointerup', meResizeEnd);
+  document.removeEventListener('pointercancel', meResizeEnd);
 }
 
 function meAdd() {
@@ -1130,6 +1136,18 @@ function meDel() {
   miniState.els = miniState.els.filter(e => e.id !== miniState.sel);
   miniState.sel = null;
   meRender(); meUpdCtrl();
+}
+
+function meConfirm() {
+  const btn = qs('#me-confirm-btn');
+  if (!btn || btn.disabled) return;
+  // TODO: R2 업로드 연결 시 여기서 처리
+  btn.textContent = '확정됨';
+  btn.disabled = true;
+  setTimeout(() => {
+    btn.textContent = '확정';
+    btn.disabled = false;
+  }, 2000);
 }
 
 function meStartEdit(div, id) {
@@ -1240,6 +1258,7 @@ function meInitControls() {
   bindSizeBtn('#me-size-plus', 1);
   qs('#me-add-btn')?.addEventListener('click', meAdd);
   qs('#me-del-btn')?.addEventListener('click', meDel);
+  qs('#me-confirm-btn')?.addEventListener('click', meConfirm);
   qs('#me-card')?.addEventListener('click', () => meDesel());
   const imgFile = qs('#me-img-file');
   qs('#me-img-replace-btn')?.addEventListener('click', () => imgFile?.click());

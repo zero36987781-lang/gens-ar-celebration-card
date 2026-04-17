@@ -101,7 +101,7 @@
 .me-controls{display:flex;flex-direction:column;gap:10px;padding:0 16px 16px;}
 .me-bg{position:absolute;inset:0;background-size:cover;background-position:center;}
 .me-el{position:absolute;touch-action:none;user-select:none;white-space:pre-wrap;word-break:break-word;will-change:transform;backface-visibility:hidden;}
-.me-el.me-sel{box-shadow:0 0 0 2px #007AFF;}
+.me-el.me-sel{box-shadow:inset 0 0 0 2px #007AFF;}
 .me-el.me-txt{cursor:move;}
 .me-el.me-img{cursor:move;}
 .me-el::selection,.me-el *::selection{background:transparent;color:inherit;}
@@ -112,6 +112,8 @@
 .me-btn{height:38px;padding:0 16px;border:1.5px solid rgba(255,255,255,0.2);border-radius:10px;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.85);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;}
 .me-btn:active{opacity:.65;}.me-btn:disabled{opacity:.3;cursor:default;}
 .me-del-btn{border-color:rgba(255,80,80,0.3);color:rgba(255,120,120,0.9);}
+.me-btn--confirm{border-color:rgba(0,122,255,0.4);color:#007AFF;background:rgba(0,122,255,0.1);}
+.me-btn--confirm:disabled{opacity:.6;cursor:default;}
 .me-controls--hidden{display:none;}
 .me-ctrl-row{display:flex;align-items:center;gap:8px;}
 .me-ctrl-label{font-size:11px;font-weight:800;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:.3px;min-width:34px;}
