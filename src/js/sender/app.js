@@ -943,7 +943,7 @@ const MINI_PALETTE = [
   '#FF2D55','#FFD700','#FF6B6B','#4D96FF','#6BCB77'
 ];
 
-const miniState = { id: null, els: [], bg: null, sel: null, drag: null, resize: null, scale: 1, nextId: 9000, wasDragged: false, wasResized: false };
+const miniState = { id: null, els: [], bg: null, sel: null, drag: null, resize: null, scale: 1, nextId: 9000, wasDragged: false, wasResized: false, selectionJustMade: false };
 
 function meScale() {
   const wrap = qs('#me-preview-wrap');
@@ -958,12 +958,27 @@ function meScale() {
 }
 
 function meLoad(id) {
+  if (miniState.drag) {
+    miniState.drag = null;
+    document.removeEventListener('pointermove', meDragMove);
+    document.removeEventListener('pointerup', meDragEnd);
+    document.removeEventListener('pointercancel', meDragEnd);
+  }
+  if (miniState.resize) {
+    miniState.resize = null;
+    document.removeEventListener('pointermove', meResizeMove);
+    document.removeEventListener('pointerup', meResizeEnd);
+    document.removeEventListener('pointercancel', meResizeEnd);
+  }
   const sample = CARD_SAMPLES.find(s => s.id === id);
   if (!sample?.data) return;
   miniState.id = id;
   miniState.els = JSON.parse(JSON.stringify(sample.data.els));
   miniState.bg = sample.data.bg ? JSON.parse(JSON.stringify(sample.data.bg)) : null;
   miniState.sel = null;
+  miniState.wasDragged = false;
+  miniState.wasResized = false;
+  miniState.selectionJustMade = false;
   meRender();
   meUpdCtrl();
 }
@@ -995,6 +1010,7 @@ function meRender() {
         ev.stopPropagation();
         if (miniState.wasDragged) { miniState.wasDragged = false; return; }
         if (miniState.wasResized) { miniState.wasResized = false; return; }
+        if (miniState.selectionJustMade) { miniState.selectionJustMade = false; return; }
         meSel(e.id);
       });
     } else if (e.type === 'text') {
@@ -1015,6 +1031,7 @@ function meRender() {
         ev.stopPropagation();
         if (miniState.wasDragged) { miniState.wasDragged = false; return; }
         if (miniState.wasResized) { miniState.wasResized = false; return; }
+        if (miniState.selectionJustMade) { miniState.selectionJustMade = false; return; }
         if (miniState.sel === e.id) {
           meStartEdit(qs('#me-card').querySelector(`[data-eid="${e.id}"]`), e.id);
         } else {
@@ -1055,7 +1072,10 @@ function meDragStart(ev, id) {
     qs('#me-card').querySelectorAll('.me-sel').forEach(el => el.classList.remove('me-sel'));
     ev.currentTarget.classList.add('me-sel');
     miniState.sel = id;
+    miniState.selectionJustMade = true;
     meUpdCtrl();
+  } else {
+    miniState.selectionJustMade = false;
   }
   const el = miniState.els.find(e => e.id === id);
   if (!el) return;
