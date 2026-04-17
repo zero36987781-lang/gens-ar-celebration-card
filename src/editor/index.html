@@ -120,7 +120,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:Inter,ui-sans-serif
 .hsb-chip-container{width:100%;overflow:hidden;}
 .hsb-chip-scroll{width:100%;overflow-x:auto;scrollbar-width:none;display:flex;padding:4px 0;scroll-behavior:auto;-webkit-overflow-scrolling:touch;touch-action:pan-x;}
 .hsb-chip-scroll::-webkit-scrollbar{display:none;}
-.hsb-color-grid{display:grid;grid-template-rows:repeat(3,44px);grid-auto-flow:column;gap:8px;}
+.hsb-color-grid{display:grid;grid-template-rows:repeat(2,44px);grid-auto-flow:column;gap:8px;}
 .hsb-harmony-grid{display:flex;gap:8px;}
 
 .hsb-pal-item,.hsb-harmony-item{width:44px;height:44px;border-radius:8px;border:1.5px solid #444;box-shadow:inset 0 0 0 1px rgba(255,255,255,0.15);transition:all 0.2s;flex-shrink:0;cursor:pointer;}
@@ -134,6 +134,8 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:Inter,ui-sans-serif
 .hsb-color-target-bar strong{font-size:10px;font-weight:700;color:var(--clr-active);pointer-events:none;}
 
 #hsbPanel .grad-section{margin:0 10px 10px;padding-top:8px;border-top:1px solid #333;}
+#hsb-collapse-hdr .collapse-arrow svg{stroke:#888;}
+#hsb-collapse-wrap{border-top:1px solid #333;margin-top:4px;}
 #hsbPanel .grad-label{color:#ccc;}
 #hsbPanel .grad-toggle-btn{border-color:#555;color:#ccc;background:#222;}
 #hsbPanel .grad-toggle-btn.on{background:#fff;color:#000;}
@@ -377,18 +379,6 @@ input:checked+.sw-sl{background:#000;}input:checked+.sw-sl::before{transform:tra
     <div id="hsbPanel" class="panel">
       <div class="hsb-dark-wrap">
         <div class="hsb-color-target-bar"><span>Target:</span><strong id="colorTargetLabel"></strong></div>
-        <div class="hsb-section" id="hsb-sec-h">
-          <div class="hsb-section-label"><span>HUE</span><span class="hsb-val-badge" id="hsb-val-h">0</span></div>
-          <div class="hsb-scrub-box" id="hsb-scrub-h"><div class="hsb-track-wrap"><div class="hsb-track-bar" id="hsb-track-h" style="background:linear-gradient(to right,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)"></div><div class="hsb-v-handle"></div></div></div>
-        </div>
-        <div class="hsb-section" id="hsb-sec-s">
-          <div class="hsb-section-label"><span>SATURATION</span><span class="hsb-val-badge" id="hsb-val-s">100%</span></div>
-          <div class="hsb-scrub-box" id="hsb-scrub-s"><div class="hsb-track-wrap"><div class="hsb-track-bar" id="hsb-track-s"></div><div class="hsb-v-handle"></div></div></div>
-        </div>
-        <div class="hsb-section" id="hsb-sec-b">
-          <div class="hsb-section-label"><span>BRIGHTNESS</span><span class="hsb-val-badge" id="hsb-val-b">100%</span></div>
-          <div class="hsb-scrub-box" id="hsb-scrub-b"><div class="hsb-track-wrap"><div class="hsb-track-bar" id="hsb-track-b"></div><div class="hsb-v-handle"></div></div></div>
-        </div>
         <div class="hsb-section" id="hsb-sec-pal">
           <div class="hsb-section-label"><span>QUICK COLORS</span></div>
           <div class="hsb-chip-container"><div class="hsb-chip-scroll" id="hsb-wheel-pal"><div class="hsb-color-grid" id="hsb-quick-pal"></div></div></div>
@@ -401,6 +391,26 @@ input:checked+.sw-sl{background:#000;}input:checked+.sw-sl::before{transform:tra
           <div class="grad-label-row"><div class="grad-label">Gradient</div><button class="grad-toggle-btn" id="gradToggleBtn">OFF</button></div>
           <div class="grad-bar-wrap" id="gradBarWrap"><div class="grad-bar-preview" id="gradBarPreview"></div><div class="grad-stop-overlay" id="gradStopOverlay"></div></div>
           <div class="grad-ctrl-row"><button class="grad-icon-btn" id="gradAddBtn"><svg><use href="#ic-plus"/></svg></button><button class="grad-icon-btn" id="gradRemoveBtn"><svg><use href="#ic-minus"/></svg></button><div class="grad-angle-scrub" id="gradAngleScrub"><span>Angle</span><span id="gradAngleVal">90</span></div></div>
+        </div>
+        <div class="hsb-section" id="hsb-collapse-wrap" style="padding:0;">
+          <div id="hsb-collapse-hdr" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:10px;min-height:40px;">
+            <span class="hsb-section-label" style="margin-bottom:0;pointer-events:none;">HSB</span>
+            <div class="collapse-arrow" id="hsb-collapse-arr" style="width:18px;height:18px;display:flex;align-items:center;justify-content:center;"><svg width="14" height="14" fill="none" stroke="#888" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-chevdown"/></svg></div>
+          </div>
+          <div class="collapse-body hidden" id="hsb-collapse-body">
+            <div class="hsb-section" id="hsb-sec-h">
+              <div class="hsb-section-label"><span>HUE</span><span class="hsb-val-badge" id="hsb-val-h">0</span></div>
+              <div class="hsb-scrub-box" id="hsb-scrub-h"><div class="hsb-track-wrap"><div class="hsb-track-bar" id="hsb-track-h" style="background:linear-gradient(to right,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)"></div><div class="hsb-v-handle"></div></div></div>
+            </div>
+            <div class="hsb-section" id="hsb-sec-s">
+              <div class="hsb-section-label"><span>SATURATION</span><span class="hsb-val-badge" id="hsb-val-s">100%</span></div>
+              <div class="hsb-scrub-box" id="hsb-scrub-s"><div class="hsb-track-wrap"><div class="hsb-track-bar" id="hsb-track-s"></div><div class="hsb-v-handle"></div></div></div>
+            </div>
+            <div class="hsb-section" id="hsb-sec-b">
+              <div class="hsb-section-label"><span>BRIGHTNESS</span><span class="hsb-val-badge" id="hsb-val-b">100%</span></div>
+              <div class="hsb-scrub-box" id="hsb-scrub-b"><div class="hsb-track-wrap"><div class="hsb-track-bar" id="hsb-track-b"></div><div class="hsb-v-handle"></div></div></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -438,7 +448,7 @@ const PALETTE=['#FF0000','#FF7F00','#FFFF00','#00FF00','#00FFFF','#0000FF','#8B0
 const FILTS=[{v:'none',l:'None'},{v:'brightness(1.2)',l:'Bright'},{v:'contrast(1.5)',l:'Contrast'},{v:'grayscale(1)',l:'B&W'},{v:'sepia(1)',l:'Sepia'}];
 const CLR_LABELS={textClr:'Text',bgClr:'Background',elBgClr:'Box Fill',elBorderClr:'Border',imgBorderClr:'Border',elFill:'Fill',strokeClr:'Stroke',shadowClr:'Box Shadow Color',txtShadowClr:'Text Shadow Color',innerFeatherClr:'Inner Feather Color',boxFeatherClr:'Box Feather Color'};
 const GRAD_TARGETS=['textClr','elBgClr','elFill','elBorderClr','imgBorderClr','bgClr','strokeClr'];
-const HARMONY_FIXED=[{hex:'#000000',label:'Black'},{hex:'#808080',label:'Gray'},{hex:'#ffffff',label:'White'}];
+const HARMONY_FIXED=[];
 const $=id=>document.getElementById(id);
 
 /* ===== Scroll highlight system ===== */
@@ -496,7 +506,7 @@ function updateHSBTrackColors(){const hex=hsbToHex(S.mainClr.h,S.mainClr.s,S.mai
 function applyHSBToTarget(){const hex=hsbToHex(S.mainClr.h,S.mainClr.s,S.mainClr.b);$('mainColorBox').style.background=hex;const g=GRAD_TARGETS.includes(S.colorTarget)?curGrad():null;if(g&&g.on&&g.selIdx>=0&&g.selIdx<g.stops.length){g.stops[g.selIdx].clr=hex;renderGradBar();applyGradToTarget();return;}applyColorToTarget(hex);}
 function syncHSBSliders(){if(S.hsbSliders.h)S.hsbSliders.h.sync();if(S.hsbSliders.s)S.hsbSliders.s.sync();if(S.hsbSliders.b)S.hsbSliders.b.sync();}
 function initHSBSliders(){S.hsbSliders.h=new HSBSlider('hsb-sec-h','h',0,360,'');S.hsbSliders.s=new HSBSlider('hsb-sec-s','s',0,100,'%');S.hsbSliders.b=new HSBSlider('hsb-sec-b','b',0,100,'%');}
-function initHSBPalette(){const pal=$('hsb-quick-pal');PALETTE.forEach(clr=>{const c=document.createElement('div');c.className='hsb-pal-item';c.style.background=clr;c.onclick=()=>{document.querySelectorAll('.hsb-pal-item,.hsb-harmony-item').forEach(i=>i.classList.remove('selected'));c.classList.add('selected');S.mainClr=hexToHSB(clr);syncHSBSliders();updateHarmonyChips();$('mainColorBox').style.background=clr;const g=GRAD_TARGETS.includes(S.colorTarget)?curGrad():null;if(g&&g.on&&g.selIdx>=0&&g.selIdx<g.stops.length){g.stops[g.selIdx].clr=clr;renderGradBar();applyGradToTarget();return;}applyColorToTarget(clr);hsbFocusSection('hsb-sec-pal');};pal.appendChild(c);});}
+function initHSBPalette(){const pal=$('hsb-quick-pal');const nf=document.createElement('div');nf.className='hsb-nofill-chip';nf.textContent='∅';nf.title='Transparent';nf.onclick=()=>applyTransparent();pal.appendChild(nf);PALETTE.forEach(clr=>{const c=document.createElement('div');c.className='hsb-pal-item';c.style.background=clr;c.onclick=()=>{document.querySelectorAll('.hsb-pal-item,.hsb-harmony-item').forEach(i=>i.classList.remove('selected'));c.classList.add('selected');S.mainClr=hexToHSB(clr);syncHSBSliders();updateHarmonyChips();$('mainColorBox').style.background=clr;const g=GRAD_TARGETS.includes(S.colorTarget)?curGrad():null;if(g&&g.on&&g.selIdx>=0&&g.selIdx<g.stops.length){g.stops[g.selIdx].clr=clr;renderGradBar();applyGradToTarget();return;}applyColorToTarget(clr);hsbFocusSection('hsb-sec-pal');};pal.appendChild(c);});}
 function updateHarmonyChips(){const row=$('hsb-harmony-pal');row.innerHTML='';const{h,s,b}=S.mainClr;HARMONY_FIXED.forEach(({hex,label})=>{const c=document.createElement('div');c.className='hsb-harmony-item';c.style.background=hex;c.title=label;if(hex==='#ffffff')c.style.borderColor='#666';c.onclick=()=>{document.querySelectorAll('.hsb-pal-item,.hsb-harmony-item').forEach(i=>i.classList.remove('selected'));c.classList.add('selected');const g=GRAD_TARGETS.includes(S.colorTarget)?curGrad():null;if(g&&g.on&&g.selIdx>=0&&g.selIdx<g.stops.length){g.stops[g.selIdx].clr=hex;renderGradBar();applyGradToTarget();return;}S.mainClr=hexToHSB(hex);syncHSBSliders();applyColorToTarget(hex);hsbFocusSection('hsb-sec-har');};row.appendChild(c);});[30,60,120,180,240,300].forEach(off=>{const hh=(h+off)%360,hex=hsbToHex(hh,s,b);const c=document.createElement('div');c.className='hsb-harmony-item';c.style.background=hex;c.onclick=()=>{document.querySelectorAll('.hsb-pal-item,.hsb-harmony-item').forEach(i=>i.classList.remove('selected'));c.classList.add('selected');const g=GRAD_TARGETS.includes(S.colorTarget)?curGrad():null;if(g&&g.on&&g.selIdx>=0&&g.selIdx<g.stops.length){g.stops[g.selIdx].clr=hex;renderGradBar();applyGradToTarget();return;}S.mainClr=hexToHSB(hex);syncHSBSliders();applyColorToTarget(hex);hsbFocusSection('hsb-sec-har');};row.appendChild(c);});const nf=document.createElement('div');nf.className='hsb-nofill-chip';nf.textContent='∅';nf.title='Transparent';nf.onclick=()=>applyTransparent();row.appendChild(nf);}
 
 /* ===== Horizontal scroll: instant, no delay ===== */
@@ -517,7 +527,7 @@ function setupHSBHorizontalWheel(id){
   },{passive:false});
 }
 
-function init(){loadPrefs();$('addBtn').onclick=()=>{if(S.sel){desel();}toggleAddSub();};$('delBtn').onclick=confirmDel;$('editBtn').onclick=()=>{if(!S.sel)return;navPush('editPanel','Edit');};$('toolbarBackBtn').onclick=navBack;$('undoBtn').onclick=undo;$('redoBtn').onclick=redo;$('subText').onclick=()=>{addTxt();hideAddSub();};$('subImage').onclick=()=>activateAddSub('image');$('subBg').onclick=()=>activateAddSub('bg');$('subEmoji').onclick=()=>activateAddSub('emoji');$('imgUploadBtn').onclick=()=>{addImg();closeMenus();hideAddSub();};$('imgColorBtn').onclick=()=>{addColorBlock();closeMenus();hideAddSub();};$('bgUploadBtn').onclick=()=>{addBgImg();closeMenus();hideAddSub();};$('bgColorBtn').onclick=()=>{S.colorTarget='bgClr';resetMainClr();navPush('hsbPanel','Bg Color');hideAddSub();updateCTL();updateGradSection();};$('bgNoneBtn').onclick=()=>{S.bg=null;draw();saveHist();closeMenus();hideAddSub();};$('lyrFrontBtn').onclick=()=>{moveLyr('front');hideLyrOv();};$('lyrUpBtn').onclick=()=>{moveLyr('up');hideLyrOv();};$('lyrDownBtn').onclick=()=>{moveLyr('down');hideLyrOv();};$('lyrBackBtn').onclick=()=>{moveLyr('back');hideLyrOv();};$('gradAddBtn').onclick=gradAdd;$('gradRemoveBtn').onclick=gradRemove;$('gradToggleBtn').onclick=gradToggle;$('gradBarWrap').onpointerdown=gradBarDown;$('gradAngleScrub').onpointerdown=e=>{e.stopPropagation();focusLock($('gradAngleScrub'));S.gradAngleDrag={sx:e.clientX,sv:curGrad().angle};};$('canvas').onpointerdown=cvDown;$('zoomBtn').onpointerdown=zoomScrubDown;$('divider').onpointerdown=e=>{e.preventDefault();e.stopPropagation();S.divDrag={sy:e.clientY,h:$('bottomArea').offsetHeight,_raf:null};};const vp=$('canvasViewport');vp.addEventListener('touchstart',vpTouchStart,{passive:false});vp.addEventListener('touchmove',vpTouchMove,{passive:false});vp.addEventListener('touchend',vpTouchEnd,{passive:false});document.onpointermove=e=>{if(e.target.closest('.toolbar'))return;onMove(e);};document.onpointerup=onUp;document.addEventListener('pointerdown',e=>{if($('layerOverlay').classList.contains('show')&&!$('layerOverlay').contains(e.target))hideLyrOv();const gs=$('gradSection');if(gs&&!gs.contains(e.target)&&!$('hsbPanel').contains(e.target)){const g=curGrad();if(g&&g.selIdx>=0){g.selIdx=-1;renderGradBar();}}},true);applyPrefs();initHSBSliders();initHSBPalette();setupHSBHorizontalWheel('hsb-wheel-pal');setupHSBHorizontalWheel('hsb-wheel-har');setupHSBHorizontalWheel('toolbar');setupHSBHorizontalWheel('toolbar');setupHSBHorizontalWheel('toolbar');setupHSBHorizontalWheel('toolbar');resetMainClr();S.colorTarget=null;updateCTL();saveHist();updBackBtn();initEmojiPanel();applyCanvasZoom();
+function init(){loadPrefs();$('addBtn').onclick=()=>{if(S.sel){desel();}toggleAddSub();};$('delBtn').onclick=confirmDel;$('editBtn').onclick=()=>{if(!S.sel)return;navPush('editPanel','Edit');};$('toolbarBackBtn').onclick=navBack;$('undoBtn').onclick=undo;$('redoBtn').onclick=redo;$('subText').onclick=()=>{addTxt();hideAddSub();};$('subImage').onclick=()=>activateAddSub('image');$('subBg').onclick=()=>activateAddSub('bg');$('subEmoji').onclick=()=>activateAddSub('emoji');$('imgUploadBtn').onclick=()=>{addImg();closeMenus();hideAddSub();};$('imgColorBtn').onclick=()=>{addColorBlock();closeMenus();hideAddSub();};$('bgUploadBtn').onclick=()=>{addBgImg();closeMenus();hideAddSub();};$('bgColorBtn').onclick=()=>{S.colorTarget='bgClr';resetMainClr();navPush('hsbPanel','Bg Color');hideAddSub();updateCTL();updateGradSection();};$('bgNoneBtn').onclick=()=>{S.bg=null;draw();saveHist();closeMenus();hideAddSub();};$('lyrFrontBtn').onclick=()=>{moveLyr('front');hideLyrOv();};$('lyrUpBtn').onclick=()=>{moveLyr('up');hideLyrOv();};$('lyrDownBtn').onclick=()=>{moveLyr('down');hideLyrOv();};$('lyrBackBtn').onclick=()=>{moveLyr('back');hideLyrOv();};$('gradAddBtn').onclick=gradAdd;$('gradRemoveBtn').onclick=gradRemove;$('gradToggleBtn').onclick=gradToggle;$('gradBarWrap').onpointerdown=gradBarDown;$('gradAngleScrub').onpointerdown=e=>{e.stopPropagation();focusLock($('gradAngleScrub'));S.gradAngleDrag={sx:e.clientX,sv:curGrad().angle};};$('canvas').onpointerdown=cvDown;$('zoomBtn').onpointerdown=zoomScrubDown;$('divider').onpointerdown=e=>{e.preventDefault();e.stopPropagation();S.divDrag={sy:e.clientY,h:$('bottomArea').offsetHeight,_raf:null};};const vp=$('canvasViewport');vp.addEventListener('touchstart',vpTouchStart,{passive:false});vp.addEventListener('touchmove',vpTouchMove,{passive:false});vp.addEventListener('touchend',vpTouchEnd,{passive:false});document.onpointermove=e=>{if(!S.zoomDrag&&e.target.closest('.toolbar'))return;onMove(e);};document.onpointerup=onUp;document.addEventListener('pointerdown',e=>{if($('layerOverlay').classList.contains('show')&&!$('layerOverlay').contains(e.target))hideLyrOv();const gs=$('gradSection');if(gs&&!gs.contains(e.target)&&!$('hsbPanel').contains(e.target)){const g=curGrad();if(g&&g.selIdx>=0){g.selIdx=-1;renderGradBar();}}},true);applyPrefs();initHSBSliders();initHSBPalette();setupHSBHorizontalWheel('hsb-wheel-pal');setupHSBHorizontalWheel('hsb-wheel-har');setupHSBHorizontalWheel('toolbar');setupHSBHorizontalWheel('toolbar');setupHSBHorizontalWheel('toolbar');setupHSBHorizontalWheel('toolbar');resetMainClr();S.colorTarget=null;updateCTL();saveHist();updBackBtn();initEmojiPanel();applyCanvasZoom();const hsbColHdr=$('hsb-collapse-hdr');if(hsbColHdr)hsbColHdr.onclick=()=>{const body=$('hsb-collapse-body');const arr=$('hsb-collapse-arr');const isOpen=!body.classList.contains('hidden');body.classList.toggle('hidden',isOpen);arr.classList.toggle('open',!isOpen);};
 // Init scroll highlight on scrollable panels
 initScrollHighlight($('editPanel'));$('editPanel').addEventListener('wheel',e=>{e.stopPropagation();$('editPanel').scrollTop+=e.deltaY;},{passive:false});
 initScrollHighlight($('hsbPanel'));$('hsbPanel').addEventListener('wheel',e=>{e.stopPropagation();$('hsbPanel').scrollTop+=e.deltaY;},{passive:false});
@@ -525,7 +535,7 @@ if(document.fonts&&document.fonts.ready){document.fonts.ready.then(()=>draw());}
 
 function applyCanvasZoom(){const card=$('cardEl');card.style.width=CARD_W+'px';card.style.height=CARD_H+'px';card.style.transform=`scale(${S.canvasZoom}) translate(${S.panX}px,${S.panY}px)`;card.style.transformOrigin='center center';draw();}
 function setCanvasZoom(z){S.canvasZoom=Math.max(0.5,Math.min(3.0,z));applyCanvasZoom();}
-function zoomScrubDown(e){e.stopPropagation();e.preventDefault();S.zoomDrag={sx:e.clientX,sv:S.canvasZoom};focusLock($('zoomBtn'));$('zoomBtn').innerHTML='<span style="font-size:11px;font-weight:700;">'+Math.round(S.canvasZoom*100)+'%</span>';}
+function zoomScrubDown(e){e.stopPropagation();e.preventDefault();S.zoomDrag={sx:e.clientX,sv:S.canvasZoom};$('zoomBtn').setPointerCapture(e.pointerId);focusLock($('zoomBtn'));$('zoomBtn').innerHTML='<span style="font-size:11px;font-weight:700;">'+Math.round(S.canvasZoom*100)+'%</span>';}
 function zoomScrubMove(e){if(!S.zoomDrag)return;setCanvasZoom(S.zoomDrag.sv+(e.clientX-S.zoomDrag.sx)/200);$('zoomBtn').innerHTML='<span style="font-size:11px;font-weight:700;">'+Math.round(S.canvasZoom*100)+'%</span>';}
 function zoomScrubUp(){if(!S.zoomDrag)return;S.zoomDrag=null;focusUnlock();$('zoomBtn').innerHTML='<svg><use href="#ic-zoom"/></svg>';}
 function vpTouchStart(e){if(e.touches.length===2){e.preventDefault();e.stopPropagation();const t0=e.touches[0],t1=e.touches[1];const dist=Math.hypot(t1.clientX-t0.clientX,t1.clientY-t0.clientY);const mx=(t0.clientX+t1.clientX)/2,my=(t0.clientY+t1.clientY)/2;const cv=$('canvas'),cr=cv.getBoundingClientRect();const onEl=S.sel&&(()=>{const e2=S.els.find(x=>x.id===S.sel);if(!e2)return false;const ex=cr.left+e2.x*S.canvasZoom,ey=cr.top+e2.y*S.canvasZoom;return t0.clientX>=ex&&t0.clientX<=ex+e2.w*S.canvasZoom&&t0.clientY>=ey&&t0.clientY<=ey+e2.h*S.canvasZoom;})();if(S.sel&&onEl){const ed=S.els.find(x=>x.id===S.sel);S.pinch={type:'el',id:S.sel,startDist:dist,startW:ed.w,startH:ed.h,aspect:ed.w/ed.h};}else{S.pinch={type:'canvas',startDist:dist,startZoom:S.canvasZoom,startPanX:S.panX,startPanY:S.panY,mx,my};S.twoFingerScroll={startMx:mx,startMy:my,startPanX:S.panX,startPanY:S.panY};}}}

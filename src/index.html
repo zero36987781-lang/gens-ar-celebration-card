@@ -11,8 +11,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Gothic+A1:wght@400;700;800&family=Gowun+Dodum&family=Hahmlet:wght@400;700;800&family=IBM+Plex+Sans+KR:wght@400;700&family=Jua&family=Nanum+Gothic:wght@400;700;800&family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Sans+KR:wght@400;700;900&family=Noto+Serif+KR:wght@400;700;900&family=Song+Myung&family=Gaegu:wght@400;700&family=Poor+Story&family=Stylish&family=Hi+Melody&family=Black+And+White+Picture&family=Dokdo&family=Sunflower:wght@300;500;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
 
@@ -21,13 +19,13 @@
     <div class="permission-card">
       <div class="brand-mark perm-logo">C</div>
       <h1>CHARIEL</h1>
-      <p>To place your AR card on the map, we need a few permissions.</p>
+      <p>We need a few permissions to enable AR features.</p>
      <div class="perm-list">
   <div class="perm-item">
     <input type="checkbox" id="chk-gps" disabled />
     <label for="chk-gps">
       <div class="perm-name">GPS Location</div>
-      <div class="perm-desc">Pin the card on the map.</div>
+      <div class="perm-desc">For AR placement.</div>
     </label>
     <div id="perm-gps-status" class="perm-status pending">Pending</div>
   </div>
@@ -265,28 +263,9 @@
         </div>
       </section>
 
-      <!-- Step 5: Map -->
-      <section class="card-panel page-view page-hidden map-page" data-step="5">
-        <form id="gift-form" class="map-form" novalidate>
-          <div id="sender-map" class="map-box"></div>
-          <div class="map-bottom">
-            <div class="map-coord-row">
-              <span>위도</span><span id="lat-display">—</span>
-              <span>경도</span><span id="lng-display">—</span>
-            </div>
-            <div class="map-action-row">
-              <button type="button" id="btn-geolocate" class="map-action-btn">현위치로 핀 이동</button>
-              <button type="button" id="btn-confirm-loc" class="map-action-btn">위치확정</button>
-            </div>
-          </div>
-          <input id="latitude" type="hidden" />
-          <input id="longitude" type="hidden" />
-          <div id="map-status" class="map-status-inline" style="display:none"></div>
-        </form>
-      </section>
-
-      <!-- Step 6: Share -->
-      <section class="card-panel page-view page-hidden" data-step="6">
+      <!-- Step 5: Share -->
+      <section class="card-panel page-view page-hidden" data-step="5">
+        <form id="gift-form" novalidate style="display:none"><input id="latitude" type="hidden" value="0"/><input id="longitude" type="hidden" value="0"/></form>
         <div class="share-stack">
           <label class="glass-field"><span>Link to send to recipient</span><input id="share-link" type="text" readonly placeholder="Not created yet" /></label>
           <div class="inline-actions share-actions">
@@ -301,7 +280,7 @@
     <nav class="bottom-nav" id="bottom-nav">
       <button id="nav-prev" class="btn btn-secondary nav-btn" type="button" disabled>◀ Prev</button>
       <div class="nav-dots" id="nav-dots">
-        <div class="dot active"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <div class="dot active"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
       </div>
       <button id="nav-next" class="btn btn-primary nav-btn" type="button">Next ▶</button>
     </nav>

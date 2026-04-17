@@ -5,7 +5,6 @@ let CARD_SAMPLES = [];
 import { createRecipientPreviewUrl, createRecipientUrl, generateSlug, getCurrentPosition, qs, readFileAsDataURL, safeUrl, setStatus } from '../core/utils.js';
 import { saveGift } from '../core/data-service.js';
 import { getSupabaseConfig } from '../core/auth.js';
-import { MapPicker } from '../core/maps.js';
 import { applyPageLanguage } from '../core/i18n.js';
 
 const state = {
@@ -14,11 +13,10 @@ const state = {
   editorMode: 'basic',
   activeSide: 'front',
   lastCreatedSlug: '',
-  mapPicker: null,
   studioCanvasH: 0
 };
 
-const MAX_PAGES = 6;
+const MAX_PAGES = 5;
 const PERM_KEY = 'chariel:perm-done';
 
 /* ── Utility functions ── */
@@ -128,6 +126,11 @@ function finishPermissions() {
   sessionStorage.setItem(PERM_KEY, '1');
   els.permGate.classList.add('hidden');
   els.appShell.classList.remove('hidden');
+  if (state.prefetchedPosition) {
+    const f = fields();
+    if (f.latitude) f.latitude.value = state.prefetchedPosition.coords.latitude.toFixed(6);
+    if (f.longitude) f.longitude.value = state.prefetchedPosition.coords.longitude.toFixed(6);
+  }
   state.page = 1;
   updatePage();
   requestAnimationFrame(() => requestAnimationFrame(() => meScale()));
@@ -151,8 +154,7 @@ const PAGE_TITLES = {
   2: 'Design Studio',
   3: 'Media Management',
   4: 'Delivery Rules',
-  5: 'Map Placement',
-  6: 'Share',
+  5: 'Share',
 };
 
 function updatePage() {
@@ -198,19 +200,13 @@ function saveMiniState() {
 function goPage(n) {
   if (n < 1 || n > MAX_PAGES || n === state.page) return;
   if (state.page === 1) saveMiniState();
-  // map → share: auto-submit to create link
-  if (state.page === 5 && n === 6) {
+  // delivery rules → share: auto-submit to create link
+  if (state.page === 4 && n === 5) {
     els.form?.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
   }
   state.page = n;
   updatePage();
   if (n !== 2) qs('.sender-shell')?.scrollTo({ top: 0, behavior: 'smooth' });
-  if (n === 5 && !state.mapInitialized) {
-    state.mapInitialized = true;
-    requestAnimationFrame(() => requestAnimationFrame(() => initMap()));
-  } else if (n === 5 && state.mapPicker?.map) {
-    requestAnimationFrame(() => state.mapPicker.map.invalidateSize());
-  }
 }
 function nextPage() { goPage(state.page + 1); }
 function prevPage() { goPage(state.page - 1); }
@@ -259,7 +255,6 @@ function fields() {
   return {
     recipientName: qs('#recipient-name'), senderName: qs('#sender-name'),
     ctaLink: qs('#cta-link'),
-    mapEl: qs('#sender-map'), mapStatus: qs('#map-status'),
     latitude: qs('#latitude'), longitude: qs('#longitude'),
     unlockRadius: qs('#unlock-radius'), startAt: qs('#start-at'), expiresAt: qs('#expires-at'),
     spawnHeight: qs('#spawn-height'), forwardDistance: qs('#forward-distance')
@@ -1444,16 +1439,6 @@ function renderPreviewCard() {
   els.videoBadge?.classList.toggle('hidden', !hasVid);
 }
 
-/* ── Location ── */
-async function useCurrentLocation() {
-  try {
-    const pos = await getCurrentPosition();
-    fields().latitude.value = pos.coords.latitude.toFixed(6);
-    fields().longitude.value = pos.coords.longitude.toFixed(6);
-    state.mapPicker?.setPosition(pos.coords.latitude, pos.coords.longitude, true);
-    setStatus(fields().mapStatus, 'Location pinned.', 'success');
-  } catch (err) { setStatus(fields().mapStatus, err.message || 'Failed.', 'error'); }
-}
 
 /* ── Form ── */
 function getFormData() {
@@ -1486,7 +1471,6 @@ function getFormData() {
 }
 
 function validate(data) {
-  if (!Number.isFinite(data.latitude) || !Number.isFinite(data.longitude)) return 'Lat/lng required.';
   if (data.spawnHeight < 0.5 || data.spawnHeight > 5.5) return 'Height 0.5–5.5m.';
   if (data.forwardDistance < 0.5 || data.forwardDistance > 5.5) return 'Distance 0.5–5.5m.';
   if (data.unlockRadiusM < 10 || data.unlockRadiusM > 150) return 'Radius 10–150m.';
@@ -1539,21 +1523,6 @@ async function copyLink() {
   }, 2000);
 }
 
-function initMap() {
-  const f = fields();
-  try {
-    const pos = state.prefetchedPosition;
-    if (pos) {
-      f.latitude.value = pos.coords.latitude.toFixed(6);
-      f.longitude.value = pos.coords.longitude.toFixed(6);
-    }
-    state.mapPicker = new MapPicker({
-      mapEl: f.mapEl, latInput: f.latitude, lngInput: f.longitude,
-      radiusInput: f.unlockRadius, statusEl: f.mapStatus
-    });
-    state.mapPicker.init();
-  } catch (e) { setStatus(f.mapStatus, e.message || 'Map failed.', 'warn'); }
-}
 
 async function setRuntimeStatus() {
   const { url, anonKey } = await getSupabaseConfig();
@@ -1571,30 +1540,6 @@ function bindEvents() {
   bindMediaDrop();
   f.startAt.addEventListener('change', syncExpiry);
   f.expiresAt.addEventListener('change', syncExpiry);
-  f.unlockRadius.addEventListener('input', () => state.mapPicker?.updateRadius());
-
-  qs('#btn-geolocate')?.addEventListener('click', async () => {
-    const btn = qs('#btn-geolocate');
-    try {
-      const pos = await getCurrentPosition();
-      fields().latitude.value = pos.coords.latitude.toFixed(6);
-      fields().longitude.value = pos.coords.longitude.toFixed(6);
-      state.mapPicker?.setPosition(pos.coords.latitude, pos.coords.longitude, true);
-      btn.textContent = '이동 완료';
-      btn.classList.add('done');
-      setTimeout(() => { btn.textContent = '현위치로 핀 이동'; btn.classList.remove('done'); }, 2000);
-    } catch (err) {
-      btn.textContent = '위치 오류';
-      setTimeout(() => { btn.textContent = '현위치로 핀 이동'; }, 2000);
-    }
-  });
-
-  qs('#btn-confirm-loc')?.addEventListener('click', () => {
-    const btn = qs('#btn-confirm-loc');
-    btn.textContent = '위치 확정됨';
-    btn.classList.add('done');
-    setTimeout(() => { btn.textContent = '위치확정'; btn.classList.remove('done'); }, 2000);
-  });
 
   els.form?.addEventListener('submit', handleSubmit);
   els.copyLink?.addEventListener('click', copyLink);
