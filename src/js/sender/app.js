@@ -702,15 +702,6 @@ function renderFilmstrip() {
     el.className = 'media-filmstrip__clip' + (idx === clipState.selectedIdx ? ' media-filmstrip__clip--active' : '');
     el.dataset.index = idx;
 
-    if (clip.thumbDataUrl) {
-      const thumb = document.createElement('div');
-      thumb.className = 'media-filmstrip__thumb';
-      const img = document.createElement('img');
-      img.src = clip.thumbDataUrl;
-      thumb.appendChild(img);
-      el.appendChild(thumb);
-    }
-
     const dur = document.createElement('span');
     dur.className = 'media-filmstrip__dur';
     dur.textContent = Math.round(clip.duration) + 's';
@@ -780,13 +771,11 @@ function bindCutClip() {
   cutBtn.addEventListener('click', async () => {
     const dur = mediaState.outSec - mediaState.inSec;
     if (dur <= 0) { showMediaStatus('Set IN/OUT range first.', 'error'); return; }
-    const video = qs('#media-preview');
-    const thumbDataUrl = video ? await captureThumb(video, mediaState.inSec + dur / 2) : null;
     clipState.clips.push({
       inSec: mediaState.inSec,
       outSec: mediaState.outSec,
       duration: dur,
-      thumbDataUrl
+      thumbDataUrl: null
     });
     clipState.selectedIdx = -1;
     renderFilmstrip();
