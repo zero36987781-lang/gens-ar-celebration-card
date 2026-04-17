@@ -3,6 +3,7 @@ import { loadAllTemplates } from '../core/template-loader.js';
 
 let CARD_SAMPLES = [];
 import { createRecipientPreviewUrl, createRecipientUrl, generateSlug, getCurrentPosition, qs, readFileAsDataURL, safeUrl, setStatus } from '../core/utils.js';
+import { MapPicker } from '../core/maps.js';
 import { saveGift } from '../core/data-service.js';
 import { getSupabaseConfig } from '../core/auth.js';
 import { applyPageLanguage } from '../core/i18n.js';
@@ -16,7 +17,8 @@ const state = {
   studioCanvasH: 0
 };
 
-const MAX_PAGES = 5;
+const MAX_PAGES = 6;
+let mapPicker = null;
 const PERM_KEY = 'chariel:perm-done';
 
 /* ── Utility functions ── */
@@ -154,7 +156,8 @@ const PAGE_TITLES = {
   2: 'Design Studio',
   3: 'Media Management',
   4: 'Delivery Rules',
-  5: 'Share',
+  5: 'Location',
+  6: 'Share',
 };
 
 function updatePage() {
@@ -168,6 +171,7 @@ function updatePage() {
   if (shell) {
     shell.style.overflowY = 'auto'; // Always allow scroll to secure workspace
     shell.classList.toggle('studio-active', state.page === 2);
+    shell.classList.toggle('map-active', state.page === 5);
   }
 
   if (els.bottomNav) els.bottomNav.style.display = '';
@@ -188,6 +192,30 @@ function updatePage() {
       }
     }, 50);
   }
+
+  if (state.page === 5) {
+    if (!mapPicker) {
+      mapPicker = new MapPicker({
+        mapEl: qs('#location-map'),
+        latInput: qs('#latitude'),
+        lngInput: qs('#longitude'),
+        radiusInput: qs('#unlock-radius'),
+        statusEl: null
+      });
+      requestAnimationFrame(() => {
+        mapPicker.init();
+        if (state.prefetchedPosition) {
+          mapPicker.setPosition(
+            state.prefetchedPosition.coords.latitude,
+            state.prefetchedPosition.coords.longitude,
+            true
+          );
+        }
+      });
+    } else {
+      requestAnimationFrame(() => mapPicker.map?.invalidateSize());
+    }
+  }
 }
 
 function saveMiniState() {
@@ -200,8 +228,8 @@ function saveMiniState() {
 function goPage(n) {
   if (n < 1 || n > MAX_PAGES || n === state.page) return;
   if (state.page === 1) saveMiniState();
-  // delivery rules → share: auto-submit to create link
-  if (state.page === 4 && n === 5) {
+  // location → share: auto-submit to create link
+  if (state.page === 5 && n === 6) {
     els.form?.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
   }
   state.page = n;
@@ -1546,6 +1574,21 @@ function bindEvents() {
   els.navPrev?.addEventListener('click', prevPage);
   els.navNext?.addEventListener('click', nextPage);
   els.navDots.forEach((d, i) => d.addEventListener('click', () => goPage(i + 1)));
+
+  qs('#map-locate-btn')?.addEventListener('click', () => {
+    navigator.geolocation.getCurrentPosition(
+      pos => mapPicker?.setPosition(pos.coords.latitude, pos.coords.longitude, true),
+      () => {}
+    );
+  });
+
+  qs('#map-confirm-btn')?.addEventListener('click', () => {
+    const btn = qs('#map-confirm-btn');
+    const orig = btn.textContent;
+    btn.textContent = 'Confirmed!';
+    btn.disabled = true;
+    setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 1500);
+  });
 
   window.addEventListener('message', (e) => {
     if (!e.data) return;
