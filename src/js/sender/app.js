@@ -499,6 +499,19 @@ function _mediaToggleActiveField(field) {
   if (scrubIn)  scrubIn.buttonActive  = (mediaState.activeField === 'in');
   if (scrubOut) scrubOut.buttonActive = (mediaState.activeField === 'out');
   _mediaSetArrowHighlight(mediaState.activeField !== null);
+  qs('#media-tl-handle-in')?.classList.toggle('media-tl__handle--active', mediaState.activeField === 'in');
+  qs('#media-tl-handle-out')?.classList.toggle('media-tl__handle--active', mediaState.activeField === 'out');
+}
+
+function _mediaDeactivate() {
+  mediaState.activeField = null;
+  qs('.media-editor__scrubs [data-field="in"]')?.classList.remove('media-scrub--active');
+  qs('.media-editor__scrubs [data-field="out"]')?.classList.remove('media-scrub--active');
+  if (scrubIn)  scrubIn.buttonActive = false;
+  if (scrubOut) scrubOut.buttonActive = false;
+  _mediaSetArrowHighlight(false);
+  qs('#media-tl-handle-in')?.classList.remove('media-tl__handle--active');
+  qs('#media-tl-handle-out')?.classList.remove('media-tl__handle--active');
 }
 
 function syncTimeline() {
@@ -554,9 +567,10 @@ function bindTimelineHandles(trackWrap, duration) {
   const video     = qs('#media-preview');
 
   function makeHandleDrag(handle, field) {
-    let startX, startVal;
+    let startX, startVal, moved;
     const scrubCt = qs(`.media-editor__scrubs [data-field="${field}"]`);
     const onMove = e => {
+      if (!moved) moved = true;
       const W = trackWrap.offsetWidth;
       let newVal = Math.round(startVal + ((e.clientX - startX) / W) * duration);
       if (field === 'in') {
@@ -571,13 +585,19 @@ function bindTimelineHandles(trackWrap, duration) {
     const onUp = () => {
       handle.classList.remove('media-tl__handle--dragging');
       scrubCt?.classList.remove('media-scrub--scrubbing');
-      _mediaSetArrowHighlight(mediaState.activeField !== null);
+      if (!moved) {
+        _mediaToggleActiveField(field);
+      } else {
+        _mediaSetArrowHighlight(mediaState.activeField !== null);
+      }
+      moved = false;
       handle.removeEventListener('pointermove', onMove);
       handle.removeEventListener('pointerup',   onUp);
       handle.removeEventListener('pointercancel', onUp);
     };
     handle.addEventListener('pointerdown', e => {
       e.stopPropagation();
+      moved = false;
       handle.setPointerCapture(e.pointerId);
       startX = e.clientX;
       startVal = field === 'in' ? mediaState.inSec : mediaState.outSec;
@@ -613,7 +633,7 @@ async function activateEditor(blobUrl, duration) {
   mediaState.objectUrl = blobUrl;
   mediaState.duration  = duration;
   mediaState.inSec     = 0;
-  mediaState.outSec    = Math.min(Math.floor(duration), 60);
+  mediaState.outSec    = Math.floor(duration);
   mediaState.activeField = null;
 
   const video  = qs('#media-preview');
@@ -1029,6 +1049,16 @@ function bindMediaDrop() {
   bindTransportControls();
   bindFilmstripNav();
   bindCutClip();
+
+  // 여백 탭 시 IN/OUT 활성화 해제
+  qs('#media-editor')?.addEventListener('pointerdown', e => {
+    const keep = e.target.closest(
+      '#media-tl-handle-in, #media-tl-handle-out,' +
+      ' .media-scrub[data-field="in"], .media-scrub[data-field="out"],' +
+      ' #media-t-minus5, #media-t-minus1, #media-t-plus1, #media-t-plus5'
+    );
+    if (!keep && mediaState.activeField !== null) _mediaDeactivate();
+  }, true);
 
   zone.addEventListener('click',   () => input.click());
   zone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') input.click(); });

@@ -2019,10 +2019,12 @@
 .media-tl__handle--out {
   border-radius: 0 4px 4px 0;
 }
-.media-tl__handle--dragging {
+.media-tl__handle--dragging,
+.media-tl__handle--active {
   background: #e02020 !important;
 }
-.media-tl__handle--dragging::after {
+.media-tl__handle--dragging::after,
+.media-tl__handle--active::after {
   background: rgba(255,255,255,0.7);
 }
 .media-tl__playhead {
