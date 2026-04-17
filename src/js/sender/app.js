@@ -1170,16 +1170,59 @@ function meDel() {
   meRender(); meUpdCtrl();
 }
 
-function meConfirm() {
+function sanitizeEmail(email) {
+  return email.replace('@', '_at_').replace(/\./g, '-');
+}
+
+function getR2Key(email, cardId, asset) {
+  return `users/${sanitizeEmail(email)}/cards/${cardId}/${asset}`;
+}
+
+async function uploadTemplateToR2(templateData) {
+  const email = 'test@test.com'; // TODO: 로그인 구현 후 실제 이메일로 교체
+  const cardId = Math.floor(Date.now() / 1000);
+  const key = getR2Key(email, cardId, 'template.json');
+
+  const res = await fetch('/api/template/save', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key, data: templateData })
+  });
+  if (!res.ok) throw new Error(`Save failed: ${res.status}`);
+  const result = await res.json();
+  return { cardId, key, ...result };
+}
+
+async function meConfirm() {
   const btn = qs('#me-confirm-btn');
   if (!btn || btn.disabled) return;
-  // TODO: R2 업로드 연결 시 여기서 처리
-  btn.textContent = '확정됨';
+
+  btn.textContent = '저장 중…';
   btn.disabled = true;
-  setTimeout(() => {
-    btn.textContent = '확정';
-    btn.disabled = false;
-  }, 2000);
+
+  try {
+    const templateData = {
+      templateId: miniState.id,
+      els: miniState.els,
+      bg: miniState.bg,
+      savedAt: Date.now()
+    };
+    const { cardId, key } = await uploadTemplateToR2(templateData);
+    state.savedCardId = cardId;
+    state.savedTemplateKey = key;
+    btn.textContent = '확정됨';
+    setTimeout(() => {
+      btn.textContent = '확정';
+      btn.disabled = false;
+    }, 2000);
+  } catch (err) {
+    console.error('Template save error:', err);
+    btn.textContent = '저장 실패';
+    setTimeout(() => {
+      btn.textContent = '확정';
+      btn.disabled = false;
+    }, 2000);
+  }
 }
 
 function meStartEdit(div, id) {
