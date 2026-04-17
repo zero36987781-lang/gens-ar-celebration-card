@@ -1465,31 +1465,6 @@
 .map-status-inline.success { color: #059669; }
 .map-status-inline.warn    { color: #d97706; }
 .map-status-inline.error   { color: #dc2626; }
-.map-coord-row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: #111827;
-}
-.map-coord-row span {
-  font-size: 13px;
-  color: #111827;
-  font-weight: 600;
-  width: 72px;
-  flex-shrink: 0;
-}
-.map-coord-row input {
-  flex: 1;
-  border: 1px solid #111827 !important;
-  border-radius: 6px !important;
-  color: #111827 !important;
-  font-size: 13px !important;
-  padding: 5px 8px !important;
-  background: #fff !important;
-  font-weight: 400;
-}
 
 /* map box */
 .map-box {
