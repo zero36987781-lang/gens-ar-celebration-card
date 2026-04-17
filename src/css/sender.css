@@ -31,6 +31,7 @@
 }
 .sender-shell > .page-view{
   width:100%;max-width:1180px;margin:0 auto;
+  flex-shrink:0;
 }
 .bottom-nav .btn-secondary,
 .bottom-nav .btn-primary {
