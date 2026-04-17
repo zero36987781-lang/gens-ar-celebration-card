@@ -336,7 +336,8 @@ const mediaState = {
   objectUrl: '',
   activeXhr: null,
   cardId: '',
-  exportCount: 0
+  exportCount: 0,
+  activeField: null
 };
 
 const clipState = {
@@ -420,11 +421,15 @@ function uploadMediaFile(file, onProgress) {
   });
 }
 
-/* ── ScrubInput: 터치 + 테두리 하이라이트 + 드래그 스크럽 ── */
+/* ── ScrubInput: 클릭 토글 + 드래그 스크럽 + 하이라이트 ── */
 class ScrubInput {
-  constructor(el, { min = 0, max = 300, step = 1, onChange } = {}) {
-    this.el = el; this.min = min; this.max = max; this.step = step; this.onChange = onChange;
-    this.value = min; this._dragging = false; this._startX = 0; this._startVal = 0;
+  constructor(el, { min = 0, max = 300, step = 1, onChange, field = null } = {}) {
+    this.el = el;
+    this.container = el.closest?.('.media-scrub') || el;
+    this.field = field;
+    this.min = min; this.max = max; this.step = step; this.onChange = onChange;
+    this.value = min; this._dragging = false; this._startX = 0; this._startVal = 0; this._moved = false;
+    this.buttonActive = false;
     el.style.touchAction = 'none';
     el.addEventListener('pointerdown',   this._onDown.bind(this));
     el.addEventListener('pointermove',   this._onMove.bind(this));
@@ -443,22 +448,31 @@ class ScrubInput {
   }
   _onDown(e) {
     e.preventDefault();
-    this._dragging = true; this._startX = e.clientX; this._startVal = this.value;
+    this._dragging = true; this._startX = e.clientX; this._startVal = this.value; this._moved = false;
     this.el.setPointerCapture(e.pointerId);
-    this.el.classList.add('media-scrub__val--active');
   }
   _onMove(e) {
     if (!this._dragging) return;
-    const newVal = Math.max(this.min, Math.min(this.max, Math.round(this._startVal + (e.clientX - this._startX) * this.step)));
-    this.value = newVal;
-    this._updateDOM();
-    this.onChange?.(newVal);
+    if (!this._moved && Math.abs(e.clientX - this._startX) > 4) {
+      this._moved = true;
+      this.container.classList.add('media-scrub--scrubbing');
+      _mediaSetArrowHighlight(true);
+    }
+    if (this._moved) {
+      const newVal = Math.max(this.min, Math.min(this.max, Math.round(this._startVal + (e.clientX - this._startX) * this.step)));
+      this.value = newVal; this._updateDOM(); this.onChange?.(newVal);
+    }
   }
   _onUp(e) {
     if (!this._dragging) return;
     this._dragging = false;
     this.el.releasePointerCapture(e.pointerId);
-    this.el.classList.remove('media-scrub__val--active');
+    if (this._moved) {
+      this.container.classList.remove('media-scrub--scrubbing');
+      _mediaSetArrowHighlight(this.buttonActive);
+    } else {
+      _mediaToggleActiveField(this.field);
+    }
   }
   _onWheel(e) {
     e.preventDefault();
@@ -468,6 +482,24 @@ class ScrubInput {
 }
 
 let scrubIn = null, scrubOut = null;
+
+function _mediaSetArrowHighlight(active) {
+  ['#media-t-minus5','#media-t-minus1','#media-t-plus1','#media-t-plus5'].forEach(id => {
+    qs(id)?.classList.toggle('media-transport__btn--highlight', active);
+  });
+}
+
+function _mediaToggleActiveField(field) {
+  const isActive = mediaState.activeField === field;
+  mediaState.activeField = isActive ? null : field;
+  const inCt  = qs('.media-editor__scrubs [data-field="in"]');
+  const outCt = qs('.media-editor__scrubs [data-field="out"]');
+  inCt?.classList.toggle('media-scrub--active', mediaState.activeField === 'in');
+  outCt?.classList.toggle('media-scrub--active', mediaState.activeField === 'out');
+  if (scrubIn)  scrubIn.buttonActive  = (mediaState.activeField === 'in');
+  if (scrubOut) scrubOut.buttonActive = (mediaState.activeField === 'out');
+  _mediaSetArrowHighlight(mediaState.activeField !== null);
+}
 
 function syncTimeline() {
   const track = qs('#media-tl-track');
@@ -484,12 +516,6 @@ function syncTimeline() {
   if (range) { range.style.left = inX + 'px'; range.style.width = (outX - inX) + 'px'; }
   if (scrubIn)  scrubIn.setValue(mediaState.inSec);
   if (scrubOut) scrubOut.setValue(mediaState.outSec);
-  const clipLen = qs('#media-clip-len');
-  if (clipLen) {
-    const len = Math.round(mediaState.outSec - mediaState.inSec);
-    clipLen.textContent = `Clip: ${len}s / 60s max`;
-    clipLen.classList.toggle('media-scrub__clip-len--warn', len > 60);
-  }
 }
 
 function buildTimelineRuler(duration) {
@@ -529,6 +555,7 @@ function bindTimelineHandles(trackWrap, duration) {
 
   function makeHandleDrag(handle, field) {
     let startX, startVal;
+    const scrubCt = qs(`.media-editor__scrubs [data-field="${field}"]`);
     const onMove = e => {
       const W = trackWrap.offsetWidth;
       let newVal = Math.round(startVal + ((e.clientX - startX) / W) * duration);
@@ -542,6 +569,9 @@ function bindTimelineHandles(trackWrap, duration) {
       syncTimeline();
     };
     const onUp = () => {
+      handle.classList.remove('media-tl__handle--dragging');
+      scrubCt?.classList.remove('media-scrub--scrubbing');
+      _mediaSetArrowHighlight(mediaState.activeField !== null);
       handle.removeEventListener('pointermove', onMove);
       handle.removeEventListener('pointerup',   onUp);
       handle.removeEventListener('pointercancel', onUp);
@@ -551,6 +581,9 @@ function bindTimelineHandles(trackWrap, duration) {
       handle.setPointerCapture(e.pointerId);
       startX = e.clientX;
       startVal = field === 'in' ? mediaState.inSec : mediaState.outSec;
+      handle.classList.add('media-tl__handle--dragging');
+      scrubCt?.classList.add('media-scrub--scrubbing');
+      _mediaSetArrowHighlight(true);
       handle.addEventListener('pointermove', onMove);
       handle.addEventListener('pointerup',   onUp, { once: true });
       handle.addEventListener('pointercancel', onUp, { once: true });
@@ -581,6 +614,7 @@ async function activateEditor(blobUrl, duration) {
   mediaState.duration  = duration;
   mediaState.inSec     = 0;
   mediaState.outSec    = Math.min(Math.floor(duration), 60);
+  mediaState.activeField = null;
 
   const video  = qs('#media-preview');
   const canvas = qs('#media-tl-canvas');
@@ -591,11 +625,11 @@ async function activateEditor(blobUrl, duration) {
   buildTimelineRuler(duration);
 
   scrubIn = new ScrubInput(qs('#media-scrub-in'), {
-    min: 0, max: Math.floor(duration) - 1, step: 1,
+    min: 0, max: Math.floor(duration) - 1, step: 1, field: 'in',
     onChange: v => { mediaState.inSec = v; syncTimeline(); }
   });
   scrubOut = new ScrubInput(qs('#media-scrub-out'), {
-    min: 1, max: Math.floor(duration), step: 1,
+    min: 1, max: Math.floor(duration), step: 1, field: 'out',
     onChange: v => { mediaState.outSec = v; syncTimeline(); }
   });
   scrubIn.setValue(0);
@@ -632,6 +666,14 @@ function bindTransportControls() {
   if (!video || !playBtn) return;
 
   const nudgeTime = delta => {
+    if (mediaState.activeField === 'in') {
+      mediaState.inSec = Math.max(0, Math.min(mediaState.outSec - 1, mediaState.inSec + delta));
+      syncTimeline(); return;
+    }
+    if (mediaState.activeField === 'out') {
+      mediaState.outSec = Math.max(mediaState.inSec + 1, Math.min(Math.floor(mediaState.duration || 0), mediaState.outSec + delta));
+      syncTimeline(); return;
+    }
     video.currentTime = Math.max(0, Math.min(mediaState.duration || video.duration || 0, video.currentTime + delta));
   };
 
@@ -646,7 +688,19 @@ function bindTransportControls() {
   };
 
   playBtn.addEventListener('click', () => {
-    if (video.paused) { video.play(); } else { video.pause(); }
+    if (video.paused) {
+      video.currentTime = mediaState.inSec || 0;
+      video.play();
+    } else {
+      video.pause();
+    }
+  });
+
+  video.addEventListener('timeupdate', () => {
+    if (!video.paused && mediaState.outSec && video.currentTime >= mediaState.outSec) {
+      video.pause();
+      video.currentTime = mediaState.outSec;
+    }
   });
 
   video.addEventListener('play',  () => setPlay(true));

@@ -2019,6 +2019,12 @@
 .media-tl__handle--out {
   border-radius: 0 4px 4px 0;
 }
+.media-tl__handle--dragging {
+  background: #e02020 !important;
+}
+.media-tl__handle--dragging::after {
+  background: rgba(255,255,255,0.7);
+}
 .media-tl__playhead {
   position: absolute;
   top: -3px;
@@ -2070,7 +2076,7 @@
   flex-shrink: 0;
 }
 .media-scrub__val {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   cursor: ew-resize;
@@ -2090,20 +2096,14 @@
   border-color: rgba(0,0,0,0.3);
   background: rgba(0,0,0,0.04);
 }
-.media-scrub__val--active {
-  border-color: #000 !important;
-  background: rgba(0,0,0,0.06) !important;
-  box-shadow: 0 0 0 3px rgba(0,0,0,0.08);
+.media-scrub--active,
+.media-scrub--scrubbing {
+  border-color: #e02020 !important;
+  box-shadow: 0 0 0 2px rgba(224,32,32,0.18);
 }
-.media-scrub__clip-len {
-  margin-left: auto;
-  font-size: 13px;
-  font-weight: 700;
-  color: rgba(0,0,0,0.45);
-  flex-shrink: 0;
-}
-.media-scrub__clip-len--warn {
-  color: #d97706;
+.media-scrub--active .media-scrub__label,
+.media-scrub--scrubbing .media-scrub__label {
+  color: #e02020;
 }
 
 /* ── Filmstrip ── */
@@ -2290,6 +2290,10 @@
 }
 .media-transport__btn:active {
   transform: scale(0.95);
+}
+.media-transport__btn--highlight {
+  border-color: #e02020 !important;
+  color: #e02020;
 }
 .media-transport__btn--play {
   background: #000;
