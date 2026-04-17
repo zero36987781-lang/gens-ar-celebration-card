@@ -201,71 +201,81 @@ function revealThanksPanel() {
   }
 }
 
-// 클립 순서대로 비디오 재생 후 → thanks
-let _clipQueue = [];
-let _clipQueueIdx = 0;
+// ── 클립 순서 기반 시퀀스 플레이어 ──
+let _seqIdx = 0;
 
-function buildClipQueue() {
-  if (!gift?.clips?.length) return [];
-  return gift.clips.filter(c => c.type === 'video' && c.r2Key);
+function getSeqClips() {
+  return gift?.clips?.length ? gift.clips : [{ type: 'card' }];
 }
 
-async function playNextClip() {
-  if (_clipQueueIdx >= _clipQueue.length) {
-    revealThanksPanel();
-    return;
-  }
-  const clip = _clipQueue[_clipQueueIdx++];
-  const video = els.giftVideo;
-  if (!video) { revealThanksPanel(); return; }
-
-  try {
-    const res = await fetch(`/api/media/stream?key=${encodeURIComponent(clip.r2Key)}`);
-    if (!res.ok) throw new Error('stream failed');
-    const blob = await res.blob();
-    video.src = URL.createObjectURL(blob);
-  } catch {
-    video.src = `/api/media/stream?key=${encodeURIComponent(clip.r2Key)}`;
-  }
-
-  video.classList.remove('hidden');
-  video.onended = () => {
-    video.classList.add('hidden');
-    playNextClip();
-  };
-  try {
-    if (video.requestFullscreen) await video.requestFullscreen();
-    else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
-  } catch { /* fullscreen optional */ }
-  video.play().catch(() => {});
+async function startClipSequence() {
+  showPanel(els.arPanel);
+  if (els.toggleCameraAr) els.toggleCameraAr.classList.remove('hidden');
+  _seqIdx = 0;
+  processNextClip();
 }
 
-function showStopPage() {
-  const stopClip = gift?.clips?.find(c => c.type === 'stop');
-  if (els.stopPageMsg && stopClip?.message) {
-    els.stopPageMsg.textContent = stopClip.message;
-  }
-  els.stopPageOverlay?.classList.remove('hidden');
-}
+function processNextClip() {
+  const clips = getSeqClips();
+  if (_seqIdx >= clips.length) { revealThanksPanel(); return; }
+  const clip = clips[_seqIdx++];
 
-function onSequenceComplete() {
-  _clipQueue = buildClipQueue();
-  _clipQueueIdx = 0;
-  if (_clipQueue.length > 0) {
-    showStopPage();
+  if (clip.type === 'card') {
+    runCardClip();
+  } else if (clip.type === 'stop') {
+    runStopClip(clip);
+  } else if (clip.type === 'video' && clip.r2Key) {
+    runVideoClip(clip).then(processNextClip);
   } else {
-    revealThanksPanel();
+    processNextClip();
   }
 }
 
-function bindStopPage() {
+async function runCardClip() {
+  setStatus(els.arStatus, 'Preparing the card stage. Tap empty space to bring the gesture hint back.', 'muted');
+  if (!engine) {
+    engine = new WebXREngine({
+      mountEl: els.arStage, statusEl: els.arStatus,
+      overlayEl: els.xrOverlay, videoEl: els.giftVideo, gift, previewMode
+    });
+    await engine.init();
+  }
+  await engine.prepareMedia();
+  try { await engine.enterAR(); }
+  catch (error) {
+    if (!engine.placed) { engine.placeNow(); await engine.startSequence(); engine.showHintTemporarily(); }
+    setStatus(els.arStatus, error.message || 'Immersive AR could not start, so the interactive 3D card remains available.', 'warn');
+  }
+  window.addEventListener('ar-sequence-complete', processNextClip, { once: true });
+}
+
+function runStopClip(clip) {
+  if (els.stopPageMsg) els.stopPageMsg.textContent = clip.message || '준비된 영상을 시청하시겠어요?';
+  els.stopPageOverlay?.classList.remove('hidden');
   els.stopPageYes?.addEventListener('click', () => {
     els.stopPageOverlay?.classList.add('hidden');
-    playNextClip();
-  });
+    processNextClip();
+  }, { once: true });
   els.stopPageNo?.addEventListener('click', () => {
     els.stopPageOverlay?.classList.add('hidden');
     revealThanksPanel();
+  }, { once: true });
+}
+
+function runVideoClip(clip) {
+  return new Promise(resolve => {
+    const video = els.giftVideo;
+    if (!video) { resolve(); return; }
+    video.src = `/api/media/stream?key=${encodeURIComponent(clip.r2Key)}`;
+    video.classList.remove('hidden');
+    video.onended = () => { video.classList.add('hidden'); resolve(); };
+    (async () => {
+      try {
+        if (video.requestFullscreen) await video.requestFullscreen();
+        else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
+      } catch {}
+      video.play().catch(() => {});
+    })();
   });
 }
 
@@ -351,43 +361,6 @@ async function checkDistance() {
   }
 }
 
-async function launchCardStage() {
-  showPanel(els.arPanel);
-
-  // ★ Always show Camera AR button when ar-panel is visible
-  if (els.toggleCameraAr) {
-    els.toggleCameraAr.classList.remove('hidden');
-  }
-
-  // ★ Show premium video button if video is configured
-  if (els.showVideoBtn && gift && gift.videoUrl) {
-    els.showVideoBtn.classList.remove('hidden');
-  }
-
-  setStatus(els.arStatus, 'Preparing the card stage. Tap empty space to bring the gesture hint back.', 'muted');
-  if (!engine) {
-    engine = new WebXREngine({
-      mountEl: els.arStage,
-      statusEl: els.arStatus,
-      overlayEl: els.xrOverlay,
-      videoEl: els.giftVideo,
-      gift,
-      previewMode
-    });
-    await engine.init();
-  }
-  await engine.prepareMedia();
-  try {
-    await engine.enterAR();
-  } catch (error) {
-    if (!engine.placed) {
-      engine.placeNow();
-      await engine.startSequence();
-      engine.showHintTemporarily();
-    }
-    setStatus(els.arStatus, error.message || 'Immersive AR could not start, so the interactive 3D card remains available.', 'warn');
-  }
-}
 
 /* ══════════════════════════════════════════
    ★ Camera AR — toggle the rear camera as
@@ -441,11 +414,8 @@ async function startPreviewAutomation() {
   previewAutomationStarted = true;
   document.body.classList.add('preview-direct-ar');
   [qs('#recipient-card'), els.envPanel, els.distancePanel].forEach((el) => el?.classList.add('hidden'));
-  showPanel(els.arPanel);
-
-  // Camera AR button is shown via launchCardStage
   setStatus(els.arStatus, 'Buyer preview — 3D stage ready. Tap "📷 Camera AR" to overlay the card on your camera feed.', 'success');
-  await launchCardStage();
+  await startClipSequence();
 }
 
 async function loadGiftFromR2(r2key) {
@@ -484,16 +454,15 @@ async function init() {
     }
     renderGift();
     els.begin.addEventListener('click', handleBegin);
-    els.launchAr.addEventListener('click', launchCardStage);
+    els.launchAr.addEventListener('click', startClipSequence);
     els.replaySequence.addEventListener('click', async () => {
-      if (!engine) { await launchCardStage(); return; }
+      if (!engine) { await startClipSequence(); return; }
       await engine.replay();
+      window.addEventListener('ar-sequence-complete', processNextClip, { once: true });
     });
     els.toggleCameraAr?.addEventListener('click', toggleCameraAr);
-    bindStopPage();
     window.addEventListener('ar-session-started', () => setArLiveMode(true));
     window.addEventListener('ar-session-ended', () => setArLiveMode(false));
-    window.addEventListener('ar-sequence-complete', onSequenceComplete);
     await startPreviewAutomation();
     return;
   }
@@ -526,39 +495,20 @@ async function init() {
   els.refreshDistance.addEventListener('click', checkDistance);
   els.btnEnvCheck?.addEventListener('click', runEnvironmentCheck);
   els.btnEnvContinue?.addEventListener('click', checkDistance);
-  els.launchAr.addEventListener('click', launchCardStage);
+  els.launchAr.addEventListener('click', startClipSequence);
   els.replaySequence.addEventListener('click', async () => {
-    if (!engine) {
-      await launchCardStage();
-      return;
-    }
+    if (!engine) { await startClipSequence(); return; }
     await engine.replay();
+    window.addEventListener('ar-sequence-complete', processNextClip, { once: true });
   });
   els.copyThanks.addEventListener('click', copyThanksMessage);
   els.shareThanks.addEventListener('click', shareThanksMessage);
 
   // Camera AR toggle event
   els.toggleCameraAr?.addEventListener('click', toggleCameraAr);
-  bindStopPage();
-
-  // Video view button event (legacy: gift.videoUrl 방식)
-  els.showVideoBtn?.addEventListener('click', async () => {
-    if (!els.giftVideo) return;
-    try {
-      if (els.giftVideo.requestFullscreen) {
-        await els.giftVideo.requestFullscreen();
-      } else if (els.giftVideo.webkitEnterFullscreen) {
-        els.giftVideo.webkitEnterFullscreen();
-      }
-      await els.giftVideo.play();
-    } catch (e) {
-      console.warn('Video fullscreen playback failed:', e);
-    }
-  });
 
   window.addEventListener('ar-session-started', () => setArLiveMode(true));
   window.addEventListener('ar-session-ended', () => setArLiveMode(false));
-  window.addEventListener('ar-sequence-complete', onSequenceComplete);
   if (previewMode) {
     await startPreviewAutomation();
   }
