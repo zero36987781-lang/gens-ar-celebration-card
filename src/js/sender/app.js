@@ -735,12 +735,19 @@ async function captureThumb(videoEl, timeSec) {
 }
 
 function insertCardClip() {
-  if (clipState.clips.some(c => c.type === 'card')) return;
-  clipState.clips.unshift({
+  const thumbDataUrl = miniState.bg?.src || null;
+  const cardClip = {
     type: 'card',
     templateId: state.templateId,
-    canvasData: state.editorData || null
-  });
+    canvasData: state.editorData || null,
+    thumbDataUrl
+  };
+  const existing = clipState.clips.findIndex(c => c.type === 'card');
+  if (existing >= 0) {
+    Object.assign(clipState.clips[existing], cardClip);
+  } else {
+    clipState.clips.unshift(cardClip);
+  }
   renderFilmstrip();
 }
 
@@ -756,6 +763,7 @@ function autoInsertStopPage() {
 }
 
 const FILMSTRIP_SLOTS = 5;
+const FILMSTRIP_MAX_DURATION = 60;
 
 function makeEmptyClipEl() {
   const el = document.createElement('div');
@@ -769,11 +777,14 @@ function makeEmptyClipEl() {
 
 function renderFilmstrip() {
   const clipsEl = qs('#media-filmstrip-clips');
-  const totalEl = qs('#media-filmstrip-total');
+  const durTextEl = qs('#media-fs-dur-text');
+  const durBtn = qs('#media-fs-dur');
   if (!clipsEl) return;
 
   const videoDur = clipState.clips.filter(c => c.type === 'video').reduce((s, c) => s + (c.duration || 0), 0);
-  if (totalEl) totalEl.textContent = `Total: ${Math.round(videoDur)}s`;
+  const totalSec = Math.round(videoDur);
+  if (durTextEl) durTextEl.textContent = `${totalSec}/${FILMSTRIP_MAX_DURATION}s`;
+  if (durBtn) durBtn.classList.toggle('media-filmstrip__nav-btn--dur-warn', totalSec >= FILMSTRIP_MAX_DURATION);
 
   clipsEl.innerHTML = '';
 
@@ -784,10 +795,14 @@ function renderFilmstrip() {
     if (clip.type === 'card') {
       el.className = `media-filmstrip__clip media-filmstrip__clip--card${activeClass}`;
       el.title = '카드 이미지';
-      el.innerHTML = `<svg class="media-filmstrip__type-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-        <rect x="4" y="3" width="16" height="18" rx="2"/>
-        <path d="M8 7h8M8 11h8M8 15h4" stroke-linecap="round"/>
-      </svg><span class="media-filmstrip__type-label">카드</span>`;
+      if (clip.thumbDataUrl) {
+        el.innerHTML = `<div class="media-filmstrip__thumb"><img src="${clip.thumbDataUrl}" alt=""/></div><span class="media-filmstrip__dur">카드</span>`;
+      } else {
+        el.innerHTML = `<svg class="media-filmstrip__type-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+          <rect x="4" y="3" width="16" height="18" rx="2"/>
+          <path d="M8 7h8M8 11h8M8 15h4" stroke-linecap="round"/>
+        </svg><span class="media-filmstrip__type-label">카드</span>`;
+      }
     } else if (clip.type === 'stop') {
       el.className = `media-filmstrip__clip media-filmstrip__clip--stop${activeClass}`;
       el.title = clip.message;
@@ -797,7 +812,11 @@ function renderFilmstrip() {
       </svg><span class="media-filmstrip__type-label">중단</span>`;
     } else {
       el.className = `media-filmstrip__clip${activeClass}`;
-      el.innerHTML = `<svg class="media-filmstrip__empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3V9z" stroke-width="1.5"/></svg>`;
+      if (clip.thumbDataUrl) {
+        el.innerHTML = `<div class="media-filmstrip__thumb"><img src="${clip.thumbDataUrl}" alt=""/></div>`;
+      } else {
+        el.innerHTML = `<svg class="media-filmstrip__empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3V9z" stroke-width="1.5"/></svg>`;
+      }
       const dur = document.createElement('span');
       dur.className = 'media-filmstrip__dur';
       dur.textContent = Math.round(clip.duration || 0) + 's';
@@ -812,7 +831,6 @@ function renderFilmstrip() {
     clipsEl.appendChild(el);
   });
 
-  // 빈 슬롯 (5개 기준 나머지)
   const emptyCount = Math.max(0, FILMSTRIP_SLOTS - clipState.clips.length);
   for (let i = 0; i < emptyCount; i++) {
     clipsEl.appendChild(makeEmptyClipEl());
@@ -823,16 +841,29 @@ function bindFilmstripNav() {
   const video = qs('#media-preview');
   const playBtn = qs('#media-fs-play');
 
-  const selectClip = idx => {
-    if (clipState.clips.length === 0) return;
-    clipState.selectedIdx = Math.max(0, Math.min(clipState.clips.length - 1, idx));
+  qs('#media-fs-prev')?.addEventListener('click', () => {
+    const idx = clipState.selectedIdx;
+    if (idx <= 0 || clipState.clips.length === 0) return;
+    [clipState.clips[idx], clipState.clips[idx - 1]] = [clipState.clips[idx - 1], clipState.clips[idx]];
+    clipState.selectedIdx = idx - 1;
     renderFilmstrip();
-  };
+  });
 
-  qs('#media-fs-first')?.addEventListener('click', () => selectClip(0));
-  qs('#media-fs-last')?.addEventListener('click',  () => selectClip(clipState.clips.length - 1));
-  qs('#media-fs-prev')?.addEventListener('click',  () => selectClip(clipState.selectedIdx - 1));
-  qs('#media-fs-next')?.addEventListener('click',  () => selectClip(clipState.selectedIdx + 1));
+  qs('#media-fs-next')?.addEventListener('click', () => {
+    const idx = clipState.selectedIdx;
+    if (idx < 0 || idx >= clipState.clips.length - 1) return;
+    [clipState.clips[idx], clipState.clips[idx + 1]] = [clipState.clips[idx + 1], clipState.clips[idx]];
+    clipState.selectedIdx = idx + 1;
+    renderFilmstrip();
+  });
+
+  qs('#media-fs-last')?.addEventListener('click', () => {
+    const idx = clipState.selectedIdx;
+    if (idx < 0 || idx >= clipState.clips.length) return;
+    clipState.clips.splice(idx, 1);
+    clipState.selectedIdx = clipState.clips.length === 0 ? -1 : Math.min(idx, clipState.clips.length - 1);
+    renderFilmstrip();
+  });
 
   playBtn?.addEventListener('click', () => {
     if (!video || clipState.selectedIdx < 0) return;
@@ -870,18 +901,26 @@ function bindCutClip() {
     const dur = mediaState.outSec - mediaState.inSec;
     if (dur <= 0) { showMediaStatus('Set IN/OUT range first.', 'error'); return; }
     autoInsertStopPage();
-    clipState.clips.push({
+    const newClip = {
       type: 'video',
       inSec: mediaState.inSec,
       outSec: mediaState.outSec,
       duration: dur,
       thumbDataUrl: null,
       r2Key: null
-    });
+    };
+    clipState.clips.push(newClip);
     clipState.selectedIdx = clipState.clips.length - 1;
     renderFilmstrip();
     const videoCount = clipState.clips.filter(c => c.type === 'video').length;
     showMediaStatus(`Clip ${videoCount} added (${Math.round(dur)}s)`, 'success');
+    const videoEl = qs('#media-preview');
+    if (videoEl) {
+      captureThumb(videoEl, mediaState.inSec).then(url => {
+        newClip.thumbDataUrl = url;
+        renderFilmstrip();
+      });
+    }
   });
 }
 

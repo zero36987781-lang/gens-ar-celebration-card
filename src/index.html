@@ -148,25 +148,24 @@
             <div class="media-filmstrip__clip media-filmstrip__clip--empty"><svg class="media-filmstrip__empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3V9z" stroke-width="1.5"/></svg></div>
             <div class="media-filmstrip__clip media-filmstrip__clip--empty"><svg class="media-filmstrip__empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3V9z" stroke-width="1.5"/></svg></div>
           </div>
-          <span class="media-filmstrip__total" id="media-filmstrip-total">Total: 0s</span>
         </div>
 
         <!-- 클립스트랩 네비게이션 -->
         <div class="media-filmstrip__nav" id="media-filmstrip-nav">
-          <button class="media-filmstrip__nav-btn" id="media-fs-first" type="button" title="First clip">
-            <span class="media-filmstrip__nav-arrow media-arrow--first"></span>
-          </button>
-          <button class="media-filmstrip__nav-btn" id="media-fs-prev" type="button" title="Previous clip">
+          <div class="media-filmstrip__nav-btn media-filmstrip__nav-btn--dur" id="media-fs-dur">
+            <span id="media-fs-dur-text">0/60s</span>
+          </div>
+          <button class="media-filmstrip__nav-btn" id="media-fs-prev" type="button" title="Move clip left">
             <span class="media-filmstrip__nav-arrow media-arrow--left"></span>
           </button>
           <button class="media-filmstrip__nav-btn media-filmstrip__nav-btn--play" id="media-fs-play" type="button" title="Play selected clip">
             <span class="media-filmstrip__nav-arrow media-arrow--play"></span>
           </button>
-          <button class="media-filmstrip__nav-btn" id="media-fs-next" type="button" title="Next clip">
+          <button class="media-filmstrip__nav-btn" id="media-fs-next" type="button" title="Move clip right">
             <span class="media-filmstrip__nav-arrow media-arrow--right"></span>
           </button>
-          <button class="media-filmstrip__nav-btn" id="media-fs-last" type="button" title="Last clip">
-            <span class="media-filmstrip__nav-arrow media-arrow--last"></span>
+          <button class="media-filmstrip__nav-btn media-filmstrip__nav-btn--del" id="media-fs-last" type="button" title="Delete selected clip">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
           </button>
         </div>
 
