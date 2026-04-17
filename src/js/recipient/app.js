@@ -376,8 +376,55 @@ async function startPreviewAutomation() {
   await launchCardStage();
 }
 
+async function loadGiftFromR2(r2key) {
+  const res = await fetch(`/api/template/load?key=${encodeURIComponent(r2key)}`);
+  if (!res.ok) throw new Error(`R2 load failed: ${res.status}`);
+  const data = await res.json();
+  return {
+    templateId: data.templateId,
+    templateName: data.templateId,
+    recipientName: '',
+    senderName: '',
+    message: '',
+    status: 'active',
+    expiresAt: null,
+    latitude: 0,
+    longitude: 0,
+    unlockRadiusM: 0,
+    spawnHeight: 3,
+    forwardDistance: 2,
+    canvasData: { els: data.els, bg: data.bg }
+  };
+}
+
 async function init() {
   applyPageLanguage();
+
+  const urlParams = new URLSearchParams(location.search);
+  const r2key = urlParams.get('r2key');
+
+  if (r2key && previewMode) {
+    try {
+      gift = await loadGiftFromR2(r2key);
+    } catch (error) {
+      showUnavailable(error.message || 'R2에서 카드를 불러올 수 없습니다.');
+      return;
+    }
+    renderGift();
+    els.begin.addEventListener('click', handleBegin);
+    els.launchAr.addEventListener('click', launchCardStage);
+    els.replaySequence.addEventListener('click', async () => {
+      if (!engine) { await launchCardStage(); return; }
+      await engine.replay();
+    });
+    els.toggleCameraAr?.addEventListener('click', toggleCameraAr);
+    window.addEventListener('ar-session-started', () => setArLiveMode(true));
+    window.addEventListener('ar-session-ended', () => setArLiveMode(false));
+    window.addEventListener('ar-sequence-complete', revealThanksPanel);
+    await startPreviewAutomation();
+    return;
+  }
+
   const slug = parseSlugFromLocation();
   try {
     gift = await getGiftBySlug(slug);

@@ -1211,6 +1211,7 @@ async function meConfirm() {
     state.savedCardId = cardId;
     state.savedTemplateKey = key;
     btn.textContent = '확정됨';
+    showPreviewButton(key);
     setTimeout(() => {
       btn.textContent = '확정';
       btn.disabled = false;
@@ -1223,6 +1224,21 @@ async function meConfirm() {
       btn.disabled = false;
     }, 2000);
   }
+}
+
+function showPreviewButton(r2key) {
+  let previewBtn = qs('#me-preview-link-btn');
+  if (!previewBtn) {
+    previewBtn = document.createElement('a');
+    previewBtn.id = 'me-preview-link-btn';
+    previewBtn.className = 'me-btn me-btn--preview';
+    previewBtn.target = '_blank';
+    previewBtn.rel = 'noopener';
+    previewBtn.textContent = '프리뷰 열기';
+    qs('#me-confirm-btn')?.insertAdjacentElement('afterend', previewBtn);
+  }
+  previewBtn.href = `/recipient.html?preview=1&r2key=${encodeURIComponent(r2key)}`;
+  previewBtn.style.display = '';
 }
 
 function meStartEdit(div, id) {

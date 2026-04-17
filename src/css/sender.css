@@ -115,6 +115,7 @@
 .me-del-btn{border-color:rgba(255,80,80,0.3);color:rgba(255,120,120,0.9);}
 .me-btn--confirm{border-color:rgba(0,122,255,0.4);color:#007AFF;background:rgba(0,122,255,0.1);}
 .me-btn--confirm:disabled{opacity:.6;cursor:default;}
+.me-btn--preview{border-color:rgba(52,199,89,0.4);color:#34C759;background:rgba(52,199,89,0.1);text-decoration:none;}
 .me-controls--hidden{display:none;}
 .me-ctrl-row{display:flex;align-items:center;gap:8px;}
 .me-ctrl-label{font-size:11px;font-weight:800;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:.3px;min-width:34px;}
