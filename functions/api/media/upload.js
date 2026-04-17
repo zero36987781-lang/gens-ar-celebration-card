@@ -24,10 +24,11 @@ export async function onRequestPost({ request, env }) {
 
   const mediaId    = formData.get('mediaId');
   const ownerToken = formData.get('ownerToken');
+  const customKey  = formData.get('key');
   const file       = formData.get('file');
 
-  if (!mediaId || !ownerToken) {
-    return Response.json({ error: 'mediaId and ownerToken are required' }, {
+  if (!ownerToken) {
+    return Response.json({ error: 'ownerToken is required' }, {
       status: 400,
       headers: corsHeaders()
     });
@@ -39,15 +40,18 @@ export async function onRequestPost({ request, env }) {
     });
   }
 
-  // mediaId 형식 검증: media-{ownerToken}-{timestamp} 패턴
-  if (!mediaId.startsWith('media-')) {
-    return Response.json({ error: 'Invalid mediaId format' }, {
-      status: 400,
-      headers: corsHeaders()
-    });
+  let key;
+  if (customKey) {
+    key = customKey;
+  } else {
+    if (!mediaId || !mediaId.startsWith('media-')) {
+      return Response.json({ error: 'Invalid mediaId format' }, {
+        status: 400,
+        headers: corsHeaders()
+      });
+    }
+    key = `media/${ownerToken}/${mediaId}`;
   }
-
-  const key = `media/${ownerToken}/${mediaId}`;
 
   try {
     await env.R2_CARDS.put(key, file.stream(), {

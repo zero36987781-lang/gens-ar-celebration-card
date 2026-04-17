@@ -333,7 +333,9 @@ const mediaState = {
   outSec: 0,
   uploaded: false,
   objectUrl: '',
-  activeXhr: null
+  activeXhr: null,
+  cardId: '',
+  exportCount: 0
 };
 
 const clipState = {
@@ -833,14 +835,17 @@ async function onMediaExportClip() {
     const data = await ffmpeg.readFile(outFile);
     const blob = new Blob([data.buffer], { type: 'video/mp4' });
     if (btn) btn.textContent = 'Uploading clip…';
-    const clipId = `${mediaState.mediaId}-clip`;
+    const email = 'test@test.com';
+    if (!mediaState.cardId) mediaState.cardId = Math.floor(Date.now() / 1000);
+    const order = ++mediaState.exportCount;
+    const r2Key = getR2Key(email, mediaState.cardId, `video_${order}.mp4`);
     const fd = new FormData();
-    fd.append('file', blob, `${clipId}.mp4`);
-    fd.append('mediaId', clipId);
+    fd.append('file', blob, `video_${order}.mp4`);
+    fd.append('key', r2Key);
     fd.append('ownerToken', mediaState.ownerToken);
     const res    = await fetch('/api/media/upload', { method: 'POST', body: fd });
     const result = await res.json();
-    mediaState.r2Key = result.key; mediaState.mediaId = clipId;
+    mediaState.r2Key = result.key;
     showMediaStatus('Clip exported and saved!', 'success');
   } catch (err) {
     showMediaStatus('Export failed: ' + err.message, 'error');
@@ -1183,7 +1188,8 @@ function getR2Key(email, cardId, asset) {
 
 async function uploadTemplateToR2(templateData) {
   const email = 'test@test.com'; // TODO: 로그인 구현 후 실제 이메일로 교체
-  const cardId = Math.floor(Date.now() / 1000);
+  const cardId = mediaState.cardId || Math.floor(Date.now() / 1000);
+  if (!mediaState.cardId) mediaState.cardId = cardId;
   const key = getR2Key(email, cardId, 'template.json');
 
   const res = await fetch('/api/template/save', {
