@@ -59,6 +59,7 @@ export class MapPicker {
 
     this.setPosition(defaultLat, defaultLng, true);
     this.renderStatus('지도를 드래그해 핀을 원하는 위치에 맞추세요.');
+    requestAnimationFrame(() => this.map?.invalidateSize());
   }
 
   renderStatus(text, tone = 'success') {
@@ -70,6 +71,10 @@ export class MapPicker {
   updateInputs(lat, lng) {
     if (this.latInput) this.latInput.value = Number(lat).toFixed(6);
     if (this.lngInput) this.lngInput.value = Number(lng).toFixed(6);
+    const latD = document.getElementById('lat-display');
+    const lngD = document.getElementById('lng-display');
+    if (latD) latD.textContent = Number(lat).toFixed(6);
+    if (lngD) lngD.textContent = Number(lng).toFixed(6);
   }
 
   updateRadius() {

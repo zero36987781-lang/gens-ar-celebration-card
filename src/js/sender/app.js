@@ -207,7 +207,9 @@ function goPage(n) {
   if (n !== 2) qs('.sender-shell')?.scrollTo({ top: 0, behavior: 'smooth' });
   if (n === 5 && !state.mapInitialized) {
     state.mapInitialized = true;
-    initMap();
+    requestAnimationFrame(() => requestAnimationFrame(() => initMap()));
+  } else if (n === 5 && state.mapPicker?.map) {
+    requestAnimationFrame(() => state.mapPicker.map.invalidateSize());
   }
 }
 function nextPage() { goPage(state.page + 1); }
@@ -1531,6 +1533,29 @@ function bindEvents() {
   f.startAt.addEventListener('change', syncExpiry);
   f.expiresAt.addEventListener('change', syncExpiry);
   f.unlockRadius.addEventListener('input', () => state.mapPicker?.updateRadius());
+
+  qs('#btn-geolocate')?.addEventListener('click', async () => {
+    const btn = qs('#btn-geolocate');
+    try {
+      const pos = await getCurrentPosition();
+      fields().latitude.value = pos.coords.latitude.toFixed(6);
+      fields().longitude.value = pos.coords.longitude.toFixed(6);
+      state.mapPicker?.setPosition(pos.coords.latitude, pos.coords.longitude, true);
+      btn.textContent = '이동 완료';
+      btn.classList.add('done');
+      setTimeout(() => { btn.textContent = '현위치로 핀 이동'; btn.classList.remove('done'); }, 2000);
+    } catch (err) {
+      btn.textContent = '위치 오류';
+      setTimeout(() => { btn.textContent = '현위치로 핀 이동'; }, 2000);
+    }
+  });
+
+  qs('#btn-confirm-loc')?.addEventListener('click', () => {
+    const btn = qs('#btn-confirm-loc');
+    btn.textContent = '위치 확정됨';
+    btn.classList.add('done');
+    setTimeout(() => { btn.textContent = '위치확정'; btn.classList.remove('done'); }, 2000);
+  });
 
   els.form?.addEventListener('submit', handleSubmit);
   els.copyLink?.addEventListener('click', copyLink);
