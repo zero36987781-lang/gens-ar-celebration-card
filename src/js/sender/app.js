@@ -803,7 +803,7 @@ function renderFilmstrip() {
 
   const videoDur = clipState.clips.filter(c => c.type === 'video').reduce((s, c) => s + (c.duration || 0), 0);
   const totalSec = Math.round(videoDur);
-  if (durTextEl) durTextEl.textContent = `${totalSec}/${FILMSTRIP_MAX_DURATION}s`;
+  if (durTextEl) durTextEl.textContent = `${String(totalSec).padStart(2)}/${FILMSTRIP_MAX_DURATION}s`;
   if (durBtn) durBtn.classList.toggle('media-filmstrip__nav-btn--dur-warn', totalSec >= FILMSTRIP_MAX_DURATION);
 
   clipsEl.innerHTML = '';
@@ -974,10 +974,20 @@ async function onMediaExportClip() {
 
   if (btn) { btn.disabled = true; btn.textContent = 'Loading FFmpeg…'; }
   try {
-    const { FFmpeg }    = await import('https://unpkg.com/@ffmpeg/ffmpeg@0.12.7/dist/esm/index.js');
     const { toBlobURL } = await import('https://unpkg.com/@ffmpeg/util@0.12.1/dist/esm/index.js');
+    const ffmpegPkgBase = 'https://unpkg.com/@ffmpeg/ffmpeg@0.12.7/dist/esm';
+    const workerBlobURL = await toBlobURL(`${ffmpegPkgBase}/worker.js`, 'text/javascript');
+
+    // cross-origin worker 제한 우회: FFmpeg 생성자 내부의 Worker 호출을 blob URL로 교체
+    const OrigWorker = self.Worker;
+    self.Worker = class extends OrigWorker {
+      constructor(url, opts) { super(workerBlobURL, opts); }
+    };
+    const { FFmpeg } = await import(`${ffmpegPkgBase}/index.js`);
+    const ffmpeg = new FFmpeg();
+    self.Worker = OrigWorker;
+
     if (btn) btn.textContent = 'Processing…';
-    const ffmpeg  = new FFmpeg();
     const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.4/dist/esm';
     await ffmpeg.load({
       coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`,   'text/javascript'),
@@ -1099,12 +1109,16 @@ function bindMediaDrop() {
     mediaState.uploaded = false;
     clearValidationError();
     if (mediaState.objectUrl) { URL.revokeObjectURL(mediaState.objectUrl); mediaState.objectUrl = ''; }
-    clipState.clips = [];
-    clipState.selectedIdx = -1;
-    renderFilmstrip();
+    mediaState.objectUrl = '';
+    mediaState.duration  = 0;
+    mediaState.inSec     = 0;
+    mediaState.outSec    = 0;
     setPlayOverlay(false);
     const tPlayBtn = qs('#media-t-play');
     if (tPlayBtn) tPlayBtn.classList.remove('is-playing');
+    const video = qs('#media-preview');
+    if (video) { video.pause(); video.src = ''; }
+    _mediaDeactivate();
   });
 
   async function processFile(file) {

@@ -2253,6 +2253,7 @@
 .media-filmstrip__nav-btn--dur {
   flex: none;
   width: 72px;
+  padding: 10px 2px;
   cursor: default;
   pointer-events: none;
   background: #e8e8e8;
@@ -2262,6 +2263,8 @@
   color: rgba(0,0,0,0.6);
   letter-spacing: -0.02em;
   line-height: 1;
+  font-variant-numeric: tabular-nums;
+  white-space: pre;
 }
 .media-filmstrip__nav-btn--dur:hover {
   background: #e8e8e8;
