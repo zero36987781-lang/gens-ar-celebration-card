@@ -1,2 +1,3 @@
 reference temp/
 .dev.vars
+.wrangler/
