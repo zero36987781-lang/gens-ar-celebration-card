@@ -2171,8 +2171,10 @@
   flex-shrink: 0;
 }
 .media-filmstrip__clip--active {
-  border-color: #000;
-  border-width: 2px;
+  border-color: #111;
+  border-width: 2.5px;
+  box-shadow: 0 0 0 2px rgba(0,0,0,0.18);
+  z-index: 1;
 }
 .media-filmstrip__clip--empty {
   cursor: default;
@@ -2491,10 +2493,15 @@
   background: #fff;
   color: rgba(0,0,0,0.5);
   border: 1px solid rgba(0,0,0,0.15);
+  flex: 0 0 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .media-editor__btn--reset:hover {
-  background: #f0f0f0;
-  color: #000;
+  background: #fff0f0;
+  color: #dc2626;
+  border-color: rgba(220,38,38,0.3);
 }
 .media-editor__btn--cut {
   background: #1a1a1a;

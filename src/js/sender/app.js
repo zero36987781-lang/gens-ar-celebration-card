@@ -692,8 +692,6 @@ async function activateEditor(blobUrl, duration) {
 
   syncTimeline();
 
-  // 클립 상태 초기화 (card/stop 클립 유지, video 클립만 제거)
-  clipState.clips = clipState.clips.filter(c => c.type === 'card' || c.type === 'stop');
   clipState.selectedIdx = -1;
   renderFilmstrip();
   setPlayOverlay(true);
@@ -846,12 +844,12 @@ function renderFilmstrip() {
       el.className = `media-filmstrip__clip media-filmstrip__clip--card${activeClass}`;
       el.title = '카드 이미지';
       if (clip.thumbDataUrl) {
-        el.innerHTML = `<div class="media-filmstrip__thumb"><img src="${clip.thumbDataUrl}" alt=""/></div><span class="media-filmstrip__dur">카드</span>`;
+        el.innerHTML = `<div class="media-filmstrip__thumb"><img src="${clip.thumbDataUrl}" alt=""/></div><span class="media-filmstrip__dur">Card</span>`;
       } else {
         el.innerHTML = `<svg class="media-filmstrip__type-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
           <rect x="4" y="3" width="16" height="18" rx="2"/>
           <path d="M8 7h8M8 11h8M8 15h4" stroke-linecap="round"/>
-        </svg><span class="media-filmstrip__type-label">카드</span>`;
+        </svg><span class="media-filmstrip__type-label">Card</span>`;
       }
     } else if (clip.type === 'stop') {
       el.className = `media-filmstrip__clip media-filmstrip__clip--stop${activeClass}`;
@@ -859,7 +857,7 @@ function renderFilmstrip() {
       el.innerHTML = `<svg class="media-filmstrip__type-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
         <circle cx="12" cy="12" r="9"/>
         <rect x="9" y="9" width="6" height="6" rx="1" fill="currentColor" stroke="none"/>
-      </svg><span class="media-filmstrip__type-label">중단</span>`;
+      </svg><span class="media-filmstrip__type-label">Stop</span>`;
     } else {
       el.className = `media-filmstrip__clip${activeClass}`;
       if (clip.thumbDataUrl) {
@@ -1122,6 +1120,13 @@ function bindMediaDrop() {
   });
 
   rstBtn?.addEventListener('click', () => {
+    // 선택된 video 클립을 filmstrip에서 제거
+    const idx = clipState.selectedIdx;
+    if (idx >= 0 && clipState.clips[idx]?.type === 'video') {
+      clipState.clips.splice(idx, 1);
+      clipState.selectedIdx = clipState.clips.length === 0 ? -1 : Math.min(idx, clipState.clips.length - 1);
+      renderFilmstrip();
+    }
     if (editor)   editor.hidden   = true;
     if (uploader) uploader.hidden = false;
     if (progress) progress.hidden = true;
