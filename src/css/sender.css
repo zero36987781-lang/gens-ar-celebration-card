@@ -93,7 +93,7 @@
 .me-divider span{font-size:10px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.35);}
 
 /* 미니 편집 캔바스 영역 */
-.me-preview-wrap{display:flex;justify-content:center;background:#070b16;padding:16px 16px 20px;border-bottom:1px solid rgba(255,255,255,0.08);}
+.me-preview-wrap{display:flex;justify-content:center;align-items:flex-start;background:#070b16;padding:16px 16px 20px;border-bottom:10px solid rgba(255,255,255,0.06);}
 .me-card-outer{transform-origin:top center;}
 .me-card{width:270px;height:338px;position:relative;overflow:hidden;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.55);background:#111;touch-action:none;}
 

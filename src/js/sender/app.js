@@ -1230,6 +1230,7 @@ function meScale() {
   const outer = qs('.me-card-outer');
   if (!wrap || !outer) return;
   const avail = wrap.offsetWidth;
+  if (avail <= 0) return;
   const factor = Math.min(1, avail / 270);
   outer.style.transform = `scale(${factor})`;
   outer.style.width = '270px';
@@ -1621,7 +1622,7 @@ function meInitControls() {
     ev.target.value = '';
   });
   window.addEventListener('resize', meScale);
-  meScale();
+  requestAnimationFrame(() => requestAnimationFrame(() => meScale()));
 }
 
 /* ── Sample Carousel ── */

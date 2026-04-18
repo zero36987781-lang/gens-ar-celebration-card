@@ -1,5 +1,4 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
-import { RoundedBoxGeometry } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { clamp, hexToRgb, safeUrl } from '../core/utils.js';
 
 function parseYouTubeId(url) {
@@ -343,14 +342,11 @@ export class WebXREngine {
         });
 
     this.frontTexture = makeCanvasTexture(frontCanvas);
-    this.frontMaterial = new THREE.MeshBasicMaterial({ map: this.frontTexture });
-    const edgeColor = new THREE.Color(this.gift.frontColor || '#7c3aed').multiplyScalar(0.76);
-    const edgeMaterial = new THREE.MeshStandardMaterial({ color: edgeColor, roughness: 0.62, metalness: 0.08 });
+    this.frontMaterial = new THREE.MeshBasicMaterial({ map: this.frontTexture, side: THREE.DoubleSide });
     this.cardMesh = new THREE.Mesh(
-      new RoundedBoxGeometry(0.62, 0.88, 0.04, 8, 0.02),
-      [edgeMaterial, edgeMaterial, edgeMaterial, edgeMaterial, this.frontMaterial, this.frontMaterial]
+      new THREE.PlaneGeometry(0.62, 0.88),
+      this.frontMaterial
     );
-    this.cardMesh.rotation.y = Math.PI;
 
     const glowTexture = createGlowTexture();
     const glowMaterial = new THREE.MeshBasicMaterial({
@@ -543,7 +539,7 @@ export class WebXREngine {
   flipCard() {
     this.isCardBack = !this.isCardBack;
     this.flipProgress = this.isCardBack ? Math.PI : 0;
-    this.cardMesh.rotation.y = Math.PI + this.flipProgress;
+    this.cardMesh.rotation.y = this.flipProgress;
     this.setStatus(this.isCardBack ? 'Back side shown.' : 'Front side shown.', 'success');
   }
 
