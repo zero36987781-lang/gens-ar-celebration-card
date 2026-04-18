@@ -212,6 +212,32 @@ body.ar-live-mode { background: transparent !important; }
   border-color: rgba(255,255,255,0.12) !important;
 }
 
+/* ══ Video floating button ══ */
+.video-floating-btn {
+  position: fixed;
+  bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+  right: 24px;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 22px;
+  background: rgba(124, 58, 237, 0.92);
+  color: #fff;
+  border: none;
+  border-radius: 50px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 24px rgba(124, 58, 237, 0.45);
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  will-change: transform;
+}
+.video-floating-btn:hover,
+.video-floating-btn:active { transform: scale(1.07); box-shadow: 0 6px 32px rgba(124, 58, 237, 0.6); }
+.video-floating-btn.hidden { display: none !important; }
+
 /* thanks panel */
 .thanks-panel {
   border-color: #e9d5ff !important;

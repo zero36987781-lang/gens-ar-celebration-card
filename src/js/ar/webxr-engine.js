@@ -342,23 +342,13 @@ export class WebXREngine {
           photoData: this.gift.photoData || ''
         });
 
-    const backCanvas = buildTextCanvas({
-      background: '#0b1224',
-      accent: this.gift.accentColor || '#f59e0b',
-      title: 'Back side',
-      subtitle: this.gift.recipientName ? `For ${this.gift.recipientName}` : '',
-      body: this.gift.backText || this.gift.message || 'Open your card in AR.',
-      footer: 'CHARIEL',
-      photoData: this.gift.backPhotoData || ''
-    });
-
-    const frontTexture = makeCanvasTexture(frontCanvas);
-    const backTexture = makeCanvasTexture(backCanvas);
+    this.frontTexture = makeCanvasTexture(frontCanvas);
+    this.frontMaterial = new THREE.MeshBasicMaterial({ map: this.frontTexture });
     const edgeColor = new THREE.Color(this.gift.frontColor || '#7c3aed').multiplyScalar(0.76);
     const edgeMaterial = new THREE.MeshStandardMaterial({ color: edgeColor, roughness: 0.62, metalness: 0.08 });
     this.cardMesh = new THREE.Mesh(
       new RoundedBoxGeometry(0.62, 0.88, 0.04, 8, 0.02),
-      [edgeMaterial, edgeMaterial, edgeMaterial, edgeMaterial, new THREE.MeshBasicMaterial({ map: frontTexture }), new THREE.MeshBasicMaterial({ map: backTexture })]
+      [edgeMaterial, edgeMaterial, edgeMaterial, edgeMaterial, this.frontMaterial, this.frontMaterial]
     );
     this.cardMesh.rotation.y = Math.PI;
 
@@ -399,11 +389,6 @@ export class WebXREngine {
       this.videoEl.preload = 'auto';
       this.videoTexture = new THREE.VideoTexture(this.videoEl);
       this.videoTexture.colorSpace = THREE.SRGBColorSpace;
-      const videoMaterial = new THREE.MeshBasicMaterial({ map: this.videoTexture, toneMapped: false, transparent: true, opacity: 0.995 });
-      this.videoPlane = new THREE.Mesh(new THREE.PlaneGeometry(0.98, 0.551), videoMaterial);
-      this.videoPlane.position.set(0, -0.88, 0.01);
-      this.videoPlane.visible = false;
-      this.contentGroup.add(this.videoPlane);
     }
   }
 
@@ -609,8 +594,33 @@ export class WebXREngine {
     this.contentGroup.rotateX(this.pitchOffset);
   }
 
+  _applyVideoToCard() {
+    if (!this.frontMaterial || !this.videoTexture) return;
+    this.frontMaterial.map = this.videoTexture;
+    this.frontMaterial.needsUpdate = true;
+  }
+
+  _restoreCardTexture() {
+    if (!this.frontMaterial || !this.frontTexture) return;
+    this.frontMaterial.map = this.frontTexture;
+    this.frontMaterial.needsUpdate = true;
+  }
+
+  get hasVideo() {
+    return Boolean(this.videoTexture && this.videoEl?.src);
+  }
+
+  async playVideoOnCard() {
+    if (!this.hasVideo) return;
+    const start = clamp(Number(this.gift.mediaStart ?? this.gift.videoStart ?? 0), 0, 36000);
+    this.videoEl.currentTime = start;
+    this._applyVideoToCard();
+    try { await this.videoEl.play(); } catch {}
+    this.videoEl.addEventListener('ended', () => this._restoreCardTexture(), { once: true });
+  }
+
   async playVideoSegment() {
-    if (!this.videoPlane || !this.videoEl?.src) {
+    if (!this.videoTexture || !this.videoEl?.src) {
       if (!resolveMediaUrl(this.gift)) {
         this.setStatus('재생할 미디어가 없습니다.', 'muted');
       }
@@ -622,7 +632,7 @@ export class WebXREngine {
     const start = clamp(Number(this.gift.mediaStart ?? this.gift.videoStart ?? 0), 0, 36000);
     const rawEnd = Number(this.gift.mediaEnd ?? this.gift.videoEnd ?? start + 12);
     const end = Math.max(start + 1, rawEnd);
-    this.videoPlane.visible = true;
+    this._applyVideoToCard();
     this.videoEl.currentTime = start;
 
     try {
@@ -641,6 +651,7 @@ export class WebXREngine {
         this.videoEl.pause();
         this.videoEl.removeEventListener('timeupdate', this.videoEndHandler);
         this.videoEndHandler = null;
+        this._restoreCardTexture();
         this.sequenceComplete = true;
         window.dispatchEvent(new CustomEvent('ar-sequence-complete'));
         this.setStatus('Card sequence completed. The thank-you block is now ready.', 'success');
@@ -652,7 +663,6 @@ export class WebXREngine {
   async startSequence() {
     this.sequenceComplete = false;
     this.cardGroup.visible = true;
-    if (this.videoPlane) this.videoPlane.visible = false;
     await this.playVideoSegment();
   }
 

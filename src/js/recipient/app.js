@@ -247,6 +247,10 @@ async function runCardClip() {
       overlayEl: els.xrOverlay, videoEl: els.giftVideo, gift, previewMode
     });
     await engine.init();
+    if (engine.hasVideo && els.showVideoBtn) {
+      els.showVideoBtn.classList.remove('hidden');
+      els.showVideoBtn.onclick = () => engine.playVideoOnCard();
+    }
   }
   await engine.prepareMedia();
   try { await engine.enterAR(); }
