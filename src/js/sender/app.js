@@ -1310,7 +1310,7 @@ function meUpdCtrl() {
   if (!ctrl) return;
   const sel = miniState.els.find(e => e.id === miniState.sel && e.type === 'text');
   const imgSel = miniState.els.find(e => e.id === miniState.sel && e.type === 'img');
-  ctrl.classList.toggle('me-controls--hidden', !sel);
+  ctrl.classList.remove('me-controls--hidden');
   if (delBtn) delBtn.disabled = !miniState.sel;
   if (replaceBtn) replaceBtn.style.display = imgSel ? '' : 'none';
   if (sel && sizeVal) sizeVal.textContent = sel.size;
@@ -1442,7 +1442,7 @@ async function meConfirm() {
   const btn = qs('#me-confirm-btn');
   if (!btn || btn.disabled) return;
 
-  btn.textContent = '저장 중…';
+  btn.textContent = 'Confirming…';
   btn.disabled = true;
 
   try {
@@ -1455,16 +1455,16 @@ async function meConfirm() {
     const { cardId, key } = await uploadTemplateToR2(templateData);
     state.savedCardId = cardId;
     state.savedTemplateKey = key;
-    btn.textContent = '확정됨';
+    btn.textContent = 'Confirmed';
     setTimeout(() => {
-      btn.textContent = '확정';
+      btn.textContent = 'Confirm';
       btn.disabled = false;
     }, 2000);
   } catch (err) {
     console.error('Template save error:', err);
-    btn.textContent = '저장 실패';
+    btn.textContent = 'Failed';
     setTimeout(() => {
-      btn.textContent = '확정';
+      btn.textContent = 'Confirm';
       btn.disabled = false;
     }, 2000);
   }
