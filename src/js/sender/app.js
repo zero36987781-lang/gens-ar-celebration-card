@@ -237,7 +237,37 @@ function goPage(n) {
   if (n === 3) insertCardClip();
   if (n !== 2) qs('.sender-shell')?.scrollTo({ top: 0, behavior: 'smooth' });
 }
-function nextPage() { goPage(state.page + 1); }
+function nextPage() {
+  if (state.page === 3) { handleStep3Complete(); return; }
+  goPage(state.page + 1);
+}
+
+function setNavNextEnabled(enabled) {
+  const btn = qs('#nav-next');
+  if (btn) btn.disabled = !enabled;
+}
+
+async function handleStep3Complete() {
+  if (!mediaState.objectUrl) { goPage(4); return; }
+
+  const alreadyExported = clipState.clips.some(
+    c => c.type === 'video' && c.inSec === mediaState.inSec && c.outSec === mediaState.outSec
+  );
+  if (alreadyExported) { goPage(4); return; }
+
+  setNavNextEnabled(false);
+  const btn = qs('#nav-next');
+  if (btn) btn.textContent = '처리 중…';
+  try {
+    await onMediaExportClip();
+    goPage(4);
+  } catch (e) {
+    // 에러는 onMediaExportClip 내부 showMediaStatus로 표시
+  } finally {
+    setNavNextEnabled(true);
+    if (btn) btn.textContent = 'Next ▶';
+  }
+}
 function prevPage() { goPage(state.page - 1); }
 
 /* ── Studio split resizer ── */
@@ -1047,8 +1077,6 @@ function bindMediaDrop() {
   const label    = qs('#media-upload-label');
   const cancel   = qs('#media-upload-cancel');
   const editor   = qs('#media-editor');
-  const savBtn   = qs('#media-save-btn');
-  const expBtn   = qs('#media-export-btn');
   const rstBtn   = qs('#media-reset-btn');
 
   if (!zone || !input) return;
@@ -1092,14 +1120,6 @@ function bindMediaDrop() {
     if (progress) progress.hidden = true;
     zone.classList.remove('media-drop__zone--has-file');
   });
-
-  savBtn?.addEventListener('click', () => {
-    if (!mediaState.uploaded) { showMediaStatus('Upload a video first.', 'error'); return; }
-    if (mediaState.outSec - mediaState.inSec > 60) { showMediaStatus('Clip must be 60s or shorter.', 'error'); return; }
-    showMediaStatus(`Saved! IN=${mediaState.inSec}s / OUT=${mediaState.outSec}s`, 'success');
-  });
-
-  expBtn?.addEventListener('click', onMediaExportClip);
 
   rstBtn?.addEventListener('click', () => {
     if (editor)   editor.hidden   = true;
