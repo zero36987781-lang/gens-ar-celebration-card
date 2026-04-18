@@ -247,6 +247,13 @@ function setNavNextEnabled(enabled) {
   if (btn) btn.disabled = !enabled;
 }
 
+function withTimeout(promise, ms, msg) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(msg)), ms))
+  ]);
+}
+
 function showMediaProgress(label, pct) {
   const wrap = qs('#media-progress');
   const bar  = qs('#media-progress-bar');
@@ -1048,8 +1055,15 @@ async function onMediaExportClip(onProgress) {
       const CDN_PKG    = 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.7/dist/esm';
       const CDN_CORE   = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.4/dist/esm';
       onProgress?.('FFmpeg 불러오는 중…', 20);
-      const { toBlobURL } = await import(CDN_UTIL);
-      const workerBlobURL = await toBlobURL(`${CDN_PKG}/worker.js`, 'text/javascript');
+      const { toBlobURL } = await withTimeout(import(CDN_UTIL), 15000, 'FFmpeg 유틸 로드 시간 초과');
+      const [coreJS, coreWasm, workerBlobURL] = await withTimeout(
+        Promise.all([
+          toBlobURL(`${CDN_CORE}/ffmpeg-core.js`,   'text/javascript'),
+          toBlobURL(`${CDN_CORE}/ffmpeg-core.wasm`, 'application/wasm'),
+          toBlobURL(`${CDN_PKG}/worker.js`,          'text/javascript'),
+        ]),
+        25000, 'FFmpeg WASM 다운로드 시간 초과 (네트워크를 확인하세요)'
+      );
 
       const OrigWorker = self.Worker;
       self.Worker = class extends OrigWorker {
@@ -1057,10 +1071,10 @@ async function onMediaExportClip(onProgress) {
       };
       const { FFmpeg } = await import(`${CDN_PKG}/index.js`);
       ffmpeg = new FFmpeg();
-      await ffmpeg.load({
-        coreURL: await toBlobURL(`${CDN_CORE}/ffmpeg-core.js`,   'text/javascript'),
-        wasmURL: await toBlobURL(`${CDN_CORE}/ffmpeg-core.wasm`, 'application/wasm')
-      });
+      await withTimeout(
+        ffmpeg.load({ coreURL: coreJS, wasmURL: coreWasm }),
+        20000, 'FFmpeg 초기화 시간 초과'
+      );
       self.Worker = OrigWorker;
       _ffmpegInstance = ffmpeg;
     }
@@ -1108,6 +1122,7 @@ async function onMediaExportClip(onProgress) {
     renderFilmstrip();
     showMediaStatus('Clip exported and saved!', 'success');
   } catch (err) {
+    hideMediaProgress();
     showMediaStatus('Export failed: ' + err.message, 'error');
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = 'Export Clip'; }
