@@ -142,6 +142,78 @@ function makeCanvasTexture(canvas) {
   return texture;
 }
 
+async function buildMiniCardCanvas(cardFace) {
+  const W = 1024, H = 1536;
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  const sx = W / 270, sy = H / 338;
+
+  if (cardFace.bg?.src) {
+    await new Promise(resolve => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => { ctx.drawImage(img, 0, 0, W, H); resolve(); };
+      img.onerror = () => { ctx.fillStyle = '#1a1a2e'; ctx.fillRect(0, 0, W, H); resolve(); };
+      img.src = cardFace.bg.src;
+    });
+  } else {
+    ctx.fillStyle = '#1a1a2e';
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  for (const el of [...(cardFace.els || [])].sort((a, b) => (a.z || 0) - (b.z || 0))) {
+    if (el.type === 'img' && el.src) {
+      await new Promise(resolve => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          ctx.save();
+          ctx.globalAlpha = (el.opa ?? 100) / 100;
+          const x = el.x * sx, y = el.y * sy, w = el.w * sx, h = el.h * sy;
+          if (el.rot) {
+            ctx.translate(x + w / 2, y + h / 2);
+            ctx.rotate(el.rot * Math.PI / 180);
+            ctx.drawImage(img, -w / 2, -h / 2, w, h);
+          } else {
+            ctx.drawImage(img, x, y, w, h);
+          }
+          ctx.restore();
+          resolve();
+        };
+        img.onerror = () => resolve();
+        img.src = el.src;
+      });
+    } else if (el.type === 'text' && el.txt) {
+      ctx.save();
+      ctx.globalAlpha = (el.opa ?? 100) / 100;
+      const fs = el.size * Math.min(sx, sy);
+      ctx.font = `${fs}px '${el.font || 'sans-serif'}', sans-serif`;
+      ctx.fillStyle = el.clr && el.clr !== 'transparent' ? el.clr : '#ffffff';
+      ctx.textAlign = el.align || 'left';
+      const tx = el.x * sx;
+      let ty = (el.y + el.size) * sy;
+      const maxW = el.w * sx;
+      const lh = fs * (el.line || 1.3);
+      const lines = String(el.txt).split('\n');
+      for (const rawLine of lines) {
+        const words = rawLine.split(' ');
+        let seg = '';
+        for (const word of words) {
+          const test = seg + (seg ? ' ' : '') + word;
+          if (ctx.measureText(test).width > maxW && seg) {
+            ctx.fillText(seg, tx, ty); seg = word; ty += lh;
+          } else { seg = test; }
+        }
+        if (seg) ctx.fillText(seg, tx, ty);
+        ty += lh;
+      }
+      ctx.restore();
+    }
+  }
+  return canvas;
+}
+
 export class WebXREngine {
   constructor({ mountEl, statusEl, overlayEl, videoEl, gift, previewMode = false }) {
     this.mountEl = mountEl;
@@ -216,7 +288,7 @@ export class WebXREngine {
     dir.position.set(2, 4, 2);
     this.scene.add(dir);
 
-    this.buildGiftMeshes();
+    await this.buildGiftMeshes();
     this.bindStageGestures();
     this.scene.add(this.contentGroup);
     this.renderer.setAnimationLoop((time, frame) => this.render(time, frame));
@@ -255,17 +327,20 @@ export class WebXREngine {
     }
   }
 
-  buildGiftMeshes() {
-    const title = this.gift.frontTitle || this.gift.templateName || 'CHARIEL';
-    const frontCanvas = buildTextCanvas({
-      background: this.gift.frontColor || '#7c3aed',
-      accent: this.gift.accentColor || '#f59e0b',
-      title,
-      subtitle: this.gift.frontSubtitle || '',
-      body: this.gift.frontText || this.gift.message || 'A special message is waiting for you.',
-      footer: `From ${this.gift.senderName || 'Someone special'}`,
-      photoData: this.gift.photoData || ''
-    });
+  async buildGiftMeshes() {
+    const cf = this.gift.cardFace;
+    const hasMiniCard = cf && (cf.bg || (cf.els && cf.els.length > 0));
+    const frontCanvas = hasMiniCard
+      ? await buildMiniCardCanvas(cf)
+      : buildTextCanvas({
+          background: this.gift.frontColor || '#7c3aed',
+          accent: this.gift.accentColor || '#f59e0b',
+          title: this.gift.frontTitle || this.gift.templateName || 'CHARIEL',
+          subtitle: this.gift.frontSubtitle || '',
+          body: this.gift.frontText || this.gift.message || 'A special message is waiting for you.',
+          footer: `From ${this.gift.senderName || 'Someone special'}`,
+          photoData: this.gift.photoData || ''
+        });
 
     const backCanvas = buildTextCanvas({
       background: '#0b1224',

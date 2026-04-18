@@ -1761,6 +1761,7 @@ function getFormData() {
     mediaR2Key: mediaState.r2Key,
     mediaStart: mediaState.inSec,
     mediaEnd: mediaState.outSec,
+    cardFace: (miniState.els.length > 0 || miniState.bg) ? { bg: miniState.bg, els: miniState.els } : null,
     clips: clipState.clips.map(c => {
       if (c.type === 'video') return { type: 'video', inSec: c.inSec, outSec: c.outSec, duration: c.duration, r2Key: c.r2Key };
       if (c.type === 'stop') return { type: 'stop', message: c.message };

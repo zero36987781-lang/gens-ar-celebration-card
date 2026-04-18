@@ -45,13 +45,13 @@
 
     <section id="env-panel" class="card-panel hidden">
       <h2>Device Setup</h2>
-      <p>To experience the AR Celebration Card, please allow the following hardware features.</p>
+      <p>AR 카드를 열려면 아래 기능 허용이 필요해요. 버튼을 눌러 권한을 승인해 주세요.</p>
 
       <div class="env-list">
         <div class="env-item">
           <div class="env-item__info">
-            <div class="env-item__name">📍 GPS Location</div>
-            <div class="env-item__desc">To verify the card spot.</div>
+            <div class="env-item__name">📍 GPS 위치</div>
+            <div class="env-item__desc">카드가 열리는 장소인지 확인해요.</div>
           </div>
           <div id="env-gps-status" class="env-item__status pending">Pending</div>
         </div>
@@ -73,9 +73,7 @@
         </div>
       </div>
 
-      <div id="env-warning" class="status-box error hidden">
-        If a permission is blocked, please open your phone's <strong>Settings > Safari (or Chrome)</strong> to allow access, then refresh this page.
-      </div>
+      <div id="env-warning" class="status-box error hidden"></div>
 
       <div class="inline-actions">
         <button id="btn-env-check" class="btn btn-primary">Grant & Check</button>
@@ -101,10 +99,7 @@
         </div>
         <div class="inline-actions ar-head__actions">
           <!-- ★ Camera AR toggle button for buyer preview -->
-          <button id="toggle-camera-ar" class="btn btn-secondary hidden" type="button" style="display:inline-flex;align-items:center;gap:8px;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
-            Camera AR
-          </button>
+          <button id="toggle-camera-ar" class="btn btn-secondary hidden" type="button" style="display:inline-flex;align-items:center;gap:8px;">화면뷰</button>
           <a id="cta-button" class="btn btn-secondary hidden" href="#" target="_blank" rel="noreferrer">Open link</a>
           <button id="replay-sequence" class="btn btn-secondary" type="button">Replay</button>
         </div>

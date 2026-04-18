@@ -142,6 +142,7 @@ async function runEnvironmentCheck() {
     els.btnEnvCheck.classList.add('hidden');
     els.btnEnvContinue.classList.remove('hidden');
   } else {
+    els.envWarning.innerHTML = '📍 카드를 열려면 <strong>위치 접근 권한</strong>이 필요해요.<br>팝업에서 "허용"을 선택하거나, 브라우저 설정 → 사이트 권한 → 위치에서 허용해 주세요. 설정 후 아래 버튼을 다시 눌러주세요 😊';
     els.envWarning.classList.remove('hidden');
     els.btnEnvContinue.classList.add('hidden');
   }
@@ -210,7 +211,10 @@ function getSeqClips() {
 
 async function startClipSequence() {
   showPanel(els.arPanel);
-  if (els.toggleCameraAr) els.toggleCameraAr.classList.remove('hidden');
+  if (els.toggleCameraAr) {
+    els.toggleCameraAr.classList.remove('hidden');
+    if (!cameraArActive) els.toggleCameraAr.innerHTML = `${CAM_ICON_OFF} 화면뷰`;
+  }
   _seqIdx = 0;
   processNextClip();
 }
@@ -367,9 +371,11 @@ async function checkDistance() {
      a background behind the 3D card.
      Available in BOTH preview and live mode.
    ══════════════════════════════════════════ */
+const CAM_ICON_OFF = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>';
+const CAM_ICON_ON = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/></svg>';
+
 async function toggleCameraAr() {
   if (cameraArActive) {
-    // ── Stop camera ──
     if (cameraStream) {
       cameraStream.getTracks().forEach(track => track.stop());
       cameraStream = null;
@@ -379,20 +385,15 @@ async function toggleCameraAr() {
       els.cameraFeed.classList.add('hidden');
     }
     els.arStage?.classList.remove('camera-ar-mode');
-    if (els.toggleCameraAr) els.toggleCameraAr.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg> Camera AR';
+    if (els.toggleCameraAr) els.toggleCameraAr.innerHTML = `${CAM_ICON_OFF} 화면뷰`;
     cameraArActive = false;
-    setStatus(els.arStatus, 'Camera AR stopped. 3D preview continues.', 'muted');
+    setStatus(els.arStatus, '월드뷰로 전환됐어요. 3D 카드를 자유롭게 감상하세요.', 'muted');
     return;
   }
 
-  // ── Start camera ──
   try {
     cameraStream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: 'environment',
-        width: { ideal: 1280 },
-        height: { ideal: 720 }
-      },
+      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
       audio: false
     });
     if (els.cameraFeed) {
@@ -401,11 +402,11 @@ async function toggleCameraAr() {
       try { await els.cameraFeed.play(); } catch { /* autoplay attr handles it */ }
     }
     els.arStage?.classList.add('camera-ar-mode');
-    if (els.toggleCameraAr) els.toggleCameraAr.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="2" x2="22" y2="22"/><path d="M15 15l-1.5-1.5"/><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9c0 1.1.9 2 2 2h12.5"/><path d="M22 17.5V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg> Stop Camera';
+    if (els.toggleCameraAr) els.toggleCameraAr.innerHTML = `${CAM_ICON_ON} 월드뷰`;
     cameraArActive = true;
-    setStatus(els.arStatus, 'Camera AR active — you can see the 3D card overlaid on your camera feed, just like a real recipient.', 'success');
+    setStatus(els.arStatus, '화면뷰 켜짐 — 실제 공간에 3D 카드가 겹쳐 보여요.', 'success');
   } catch (err) {
-    setStatus(els.arStatus, 'Camera access denied: ' + (err.message || 'Unknown error. Please allow camera access in your browser settings.'), 'error');
+    setStatus(els.arStatus, '카메라 접근이 거부됐어요. 브라우저 설정에서 카메라 권한을 허용해 주세요.', 'error');
   }
 }
 
