@@ -271,7 +271,7 @@ export class WebXREngine {
 
   async init() {
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(this.previewMode ? 0x09101f : 0x000000);
+    this.scene.background = null;
     this.camera = new THREE.PerspectiveCamera(50, 1, 0.01, 100);
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });

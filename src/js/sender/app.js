@@ -370,6 +370,7 @@ function secToHms(t) {
    Media Manager — Upload, Timeline Edit, R2 Export
    ═══════════════════════════════════════════════════ */
 
+let _ffmpegInstance = null;
 const mediaState = {
   ownerToken: '',
   mediaId: '',
@@ -1038,29 +1039,33 @@ async function onMediaExportClip(onProgress) {
   const clipDuration = mediaState.outSec - mediaState.inSec;
   if (clipDuration <= 0 || clipDuration > 60) { showMediaStatus('Clip must be 1–60 seconds.', 'error'); return; }
 
-  onProgress?.('준비 중… (약 30초 소요)', 0);
+  onProgress?.('준비 중…', 0);
   if (btn) { btn.disabled = true; btn.textContent = 'Loading FFmpeg…'; }
   try {
-    const { toBlobURL } = await import('https://unpkg.com/@ffmpeg/util@0.12.1/dist/esm/index.js');
-    const ffmpegPkgBase = 'https://unpkg.com/@ffmpeg/ffmpeg@0.12.7/dist/esm';
-    const workerBlobURL = await toBlobURL(`${ffmpegPkgBase}/worker.js`, 'text/javascript');
-    onProgress?.('FFmpeg 불러오는 중…', 20);
+    let ffmpeg = _ffmpegInstance;
+    if (!ffmpeg) {
+      const CDN_UTIL   = 'https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/esm/index.js';
+      const CDN_PKG    = 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.7/dist/esm';
+      const CDN_CORE   = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.4/dist/esm';
+      onProgress?.('FFmpeg 불러오는 중…', 20);
+      const { toBlobURL } = await import(CDN_UTIL);
+      const workerBlobURL = await toBlobURL(`${CDN_PKG}/worker.js`, 'text/javascript');
 
-    // cross-origin worker 제한 우회: FFmpeg 생성자 내부의 Worker 호출을 blob URL로 교체
-    const OrigWorker = self.Worker;
-    self.Worker = class extends OrigWorker {
-      constructor(url, opts) { super(workerBlobURL, opts); }
-    };
-    const { FFmpeg } = await import(`${ffmpegPkgBase}/index.js`);
-    const ffmpeg = new FFmpeg();
+      const OrigWorker = self.Worker;
+      self.Worker = class extends OrigWorker {
+        constructor(url, opts) { super(workerBlobURL, opts); }
+      };
+      const { FFmpeg } = await import(`${CDN_PKG}/index.js`);
+      ffmpeg = new FFmpeg();
+      await ffmpeg.load({
+        coreURL: await toBlobURL(`${CDN_CORE}/ffmpeg-core.js`,   'text/javascript'),
+        wasmURL: await toBlobURL(`${CDN_CORE}/ffmpeg-core.wasm`, 'application/wasm')
+      });
+      self.Worker = OrigWorker;
+      _ffmpegInstance = ffmpeg;
+    }
 
     if (btn) btn.textContent = 'Processing…';
-    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.4/dist/esm';
-    await ffmpeg.load({
-      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`,   'text/javascript'),
-      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm')
-    });
-    self.Worker = OrigWorker;
     onProgress?.('클립 추출 중…', 45);
     const inFile  = 'input.mp4';
     const outFile = 'clip.mp4';
