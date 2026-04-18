@@ -251,7 +251,7 @@ async function handleStep3Complete() {
   if (!mediaState.objectUrl) { goPage(4); return; }
 
   const alreadyExported = clipState.clips.some(
-    c => c.type === 'video' && c.inSec === mediaState.inSec && c.outSec === mediaState.outSec
+    c => c.type === 'video' && c.r2Key && c.inSec === mediaState.inSec && c.outSec === mediaState.outSec
   );
   if (alreadyExported) { goPage(4); return; }
 
@@ -945,7 +945,13 @@ function bindFilmstripNav() {
 function bindCompleteBtn() {
   const btn = qs('#media-complete-btn');
   if (!btn) return;
-  btn.addEventListener('click', () => {
+  btn.addEventListener('click', async () => {
+    const selClip = clipState.clips[clipState.selectedIdx];
+    if (selClip?.type === 'video' && !selClip.r2Key) {
+      btn.disabled = true;
+      await onMediaExportClip();
+      btn.disabled = false;
+    }
     btn.innerHTML = '완료됨';
     btn.classList.add('media-editor__btn--complete--done');
     setTimeout(() => {

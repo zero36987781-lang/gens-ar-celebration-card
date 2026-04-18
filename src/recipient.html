@@ -129,6 +129,17 @@
           </div>
         </div>
       </div>
+      <!-- 카메라 권한 안내 오버레이 -->
+      <div id="camera-permission-overlay" class="stop-page-overlay hidden">
+        <div class="stop-page-overlay__box">
+          <p class="stop-page-overlay__msg" style="font-size:1.6rem">📷</p>
+          <p id="camera-permission-msg" class="stop-page-overlay__msg" style="white-space:pre-line"></p>
+          <div class="stop-page-overlay__actions">
+            <button id="camera-permission-retry" class="btn btn-primary" type="button">다시 시도</button>
+            <button id="camera-permission-close" class="btn btn-secondary" type="button">닫기</button>
+          </div>
+        </div>
+      </div>
     </section>
 
     <section id="thanks-panel" class="card-panel thanks-panel hidden">

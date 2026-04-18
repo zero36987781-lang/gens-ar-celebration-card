@@ -61,7 +61,11 @@ const els = {
   stopPageOverlay: qs('#stop-page-overlay'),
   stopPageMsg: qs('#stop-page-msg'),
   stopPageYes: qs('#stop-page-yes'),
-  stopPageNo: qs('#stop-page-no')
+  stopPageNo: qs('#stop-page-no'),
+  cameraPermissionOverlay: qs('#camera-permission-overlay'),
+  cameraPermissionMsg: qs('#camera-permission-msg'),
+  cameraPermissionRetry: qs('#camera-permission-retry'),
+  cameraPermissionClose: qs('#camera-permission-close')
 };
 
 let gift = null;
@@ -374,6 +378,19 @@ async function checkDistance() {
 const CAM_ICON_OFF = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>';
 const CAM_ICON_ON = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/></svg>';
 
+function showCameraPermissionDialog(msg) {
+  if (!els.cameraPermissionOverlay) return;
+  els.cameraPermissionMsg.textContent = msg;
+  els.cameraPermissionOverlay.classList.remove('hidden');
+  els.cameraPermissionRetry.onclick = () => {
+    els.cameraPermissionOverlay.classList.add('hidden');
+    toggleCameraAr();
+  };
+  els.cameraPermissionClose.onclick = () => {
+    els.cameraPermissionOverlay.classList.add('hidden');
+  };
+}
+
 async function toggleCameraAr() {
   if (cameraArActive) {
     if (cameraStream) {
@@ -391,11 +408,22 @@ async function toggleCameraAr() {
     return;
   }
 
+  if (!navigator.mediaDevices?.getUserMedia) {
+    showCameraPermissionDialog('이 브라우저는 카메라를 지원하지 않아요.\nChrome 또는 Safari 최신 버전을 사용해 주세요.');
+    return;
+  }
+
   try {
-    cameraStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
-      audio: false
-    });
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false
+      });
+    } catch {
+      stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    }
+    cameraStream = stream;
     if (els.cameraFeed) {
       els.cameraFeed.srcObject = cameraStream;
       els.cameraFeed.classList.remove('hidden');
@@ -406,7 +434,13 @@ async function toggleCameraAr() {
     cameraArActive = true;
     setStatus(els.arStatus, '화면뷰 켜짐 — 실제 공간에 3D 카드가 겹쳐 보여요.', 'success');
   } catch (err) {
-    setStatus(els.arStatus, '카메라 접근이 거부됐어요. 브라우저 설정에서 카메라 권한을 허용해 주세요.', 'error');
+    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+      showCameraPermissionDialog('카메라 접근 권한이 필요해요.\n브라우저 주소창 왼쪽 🔒 아이콘을 탭하여\n카메라 권한을 "허용"으로 변경 후 다시 시도해 주세요.');
+    } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+      showCameraPermissionDialog('카메라를 찾을 수 없어요.\n카메라가 연결되어 있는지 확인해 주세요.');
+    } else {
+      showCameraPermissionDialog('카메라를 시작할 수 없어요.\n잠시 후 다시 시도해 주세요.');
+    }
   }
 }
 
