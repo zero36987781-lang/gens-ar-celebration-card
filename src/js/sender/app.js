@@ -254,6 +254,60 @@ function withTimeout(promise, ms, msg) {
   ]);
 }
 
+async function _tryLoadFFmpegFromCDN(util, pkg, core) {
+  const { toBlobURL } = await withTimeout(import(util), 15000, 'util timeout');
+  const [coreJS, coreWasm, workerBlobURL] = await withTimeout(
+    Promise.all([
+      toBlobURL(`${core}/ffmpeg-core.js`,   'text/javascript'),
+      toBlobURL(`${core}/ffmpeg-core.wasm`, 'application/wasm'),
+      toBlobURL(`${pkg}/worker.js`,          'text/javascript'),
+    ]),
+    25000, 'wasm timeout'
+  );
+  const OrigWorker = self.Worker;
+  self.Worker = class extends OrigWorker {
+    constructor(url, opts) { super(workerBlobURL, opts); }
+  };
+  const { FFmpeg } = await import(`${pkg}/index.js`);
+  const ffmpeg = new FFmpeg();
+  await withTimeout(ffmpeg.load({ coreURL: coreJS, wasmURL: coreWasm }), 20000, 'load timeout');
+  self.Worker = OrigWorker;
+  return ffmpeg;
+}
+
+function loadFFmpeg() {
+  if (_ffmpegInstance) return Promise.resolve(_ffmpegInstance);
+  if (_ffmpegLoading) return _ffmpegLoading;
+
+  const CDNS = [
+    {
+      util: 'https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/esm/index.js',
+      pkg:  'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.7/dist/esm',
+      core: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.4/dist/esm',
+    },
+    {
+      util: 'https://unpkg.com/@ffmpeg/util@0.12.1/dist/esm/index.js',
+      pkg:  'https://unpkg.com/@ffmpeg/ffmpeg@0.12.7/dist/esm',
+      core: 'https://unpkg.com/@ffmpeg/core@0.12.4/dist/esm',
+    },
+  ];
+
+  _ffmpegLoading = (async () => {
+    for (const cdn of CDNS) {
+      try {
+        const ffmpeg = await _tryLoadFFmpegFromCDN(cdn.util, cdn.pkg, cdn.core);
+        _ffmpegInstance = ffmpeg;
+        _ffmpegLoading = null;
+        return ffmpeg;
+      } catch (_) {}
+    }
+    _ffmpegLoading = null;
+    throw new Error('FFmpeg 로드 실패 (네트워크를 확인하세요)');
+  })();
+
+  return _ffmpegLoading;
+}
+
 function showMediaProgress(label, pct) {
   const wrap = qs('#media-progress');
   const bar  = qs('#media-progress-bar');
@@ -378,6 +432,7 @@ function secToHms(t) {
    ═══════════════════════════════════════════════════ */
 
 let _ffmpegInstance = null;
+let _ffmpegLoading = null;
 const mediaState = {
   ownerToken: '',
   mediaId: '',
@@ -682,6 +737,7 @@ function bindTimelineHandles(trackWrap, duration) {
 }
 
 async function activateEditor(blobUrl, duration) {
+  loadFFmpeg().catch(() => {});
   if (mediaState.objectUrl && mediaState.objectUrl !== blobUrl) URL.revokeObjectURL(mediaState.objectUrl);
   mediaState.objectUrl = blobUrl;
   mediaState.duration  = duration;
@@ -1049,35 +1105,8 @@ async function onMediaExportClip(onProgress) {
   onProgress?.('준비 중…', 0);
   if (btn) { btn.disabled = true; btn.textContent = 'Loading FFmpeg…'; }
   try {
-    let ffmpeg = _ffmpegInstance;
-    if (!ffmpeg) {
-      const CDN_UTIL   = 'https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/esm/index.js';
-      const CDN_PKG    = 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.7/dist/esm';
-      const CDN_CORE   = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.4/dist/esm';
-      onProgress?.('FFmpeg 불러오는 중…', 20);
-      const { toBlobURL } = await withTimeout(import(CDN_UTIL), 15000, 'FFmpeg 유틸 로드 시간 초과');
-      const [coreJS, coreWasm, workerBlobURL] = await withTimeout(
-        Promise.all([
-          toBlobURL(`${CDN_CORE}/ffmpeg-core.js`,   'text/javascript'),
-          toBlobURL(`${CDN_CORE}/ffmpeg-core.wasm`, 'application/wasm'),
-          toBlobURL(`${CDN_PKG}/worker.js`,          'text/javascript'),
-        ]),
-        25000, 'FFmpeg WASM 다운로드 시간 초과 (네트워크를 확인하세요)'
-      );
-
-      const OrigWorker = self.Worker;
-      self.Worker = class extends OrigWorker {
-        constructor(url, opts) { super(workerBlobURL, opts); }
-      };
-      const { FFmpeg } = await import(`${CDN_PKG}/index.js`);
-      ffmpeg = new FFmpeg();
-      await withTimeout(
-        ffmpeg.load({ coreURL: coreJS, wasmURL: coreWasm }),
-        20000, 'FFmpeg 초기화 시간 초과'
-      );
-      self.Worker = OrigWorker;
-      _ffmpegInstance = ffmpeg;
-    }
+    if (!_ffmpegInstance) onProgress?.('FFmpeg 불러오는 중…', 20);
+    const ffmpeg = await loadFFmpeg();
 
     if (btn) btn.textContent = 'Processing…';
     onProgress?.('클립 추출 중…', 45);
