@@ -247,6 +247,20 @@ function setNavNextEnabled(enabled) {
   if (btn) btn.disabled = !enabled;
 }
 
+function showMediaProgress(label, pct) {
+  const wrap = qs('#media-progress');
+  const bar  = qs('#media-progress-bar');
+  const lbl  = qs('#media-progress-label');
+  if (!wrap) return;
+  wrap.hidden = false;
+  bar.style.width = pct + '%';
+  lbl.textContent = label;
+}
+function hideMediaProgress() {
+  const wrap = qs('#media-progress');
+  if (wrap) wrap.hidden = true;
+}
+
 async function handleStep3Complete() {
   if (!mediaState.objectUrl) { goPage(4); return; }
 
@@ -257,15 +271,16 @@ async function handleStep3Complete() {
 
   setNavNextEnabled(false);
   const btn = qs('#nav-next');
-  if (btn) btn.textContent = '처리 중…';
+  if (btn) btn.textContent = '처리 중';
   try {
-    await onMediaExportClip();
+    await onMediaExportClip(showMediaProgress);
     goPage(4);
   } catch (e) {
     // 에러는 onMediaExportClip 내부 showMediaStatus로 표시
   } finally {
     setNavNextEnabled(true);
     if (btn) btn.textContent = 'Next ▶';
+    hideMediaProgress();
   }
 }
 function prevPage() { goPage(state.page - 1); }
@@ -949,8 +964,12 @@ function bindCompleteBtn() {
     const selClip = clipState.clips[clipState.selectedIdx];
     if (selClip?.type === 'video' && !selClip.r2Key) {
       btn.disabled = true;
-      await onMediaExportClip();
-      btn.disabled = false;
+      try {
+        await onMediaExportClip(showMediaProgress);
+      } finally {
+        btn.disabled = false;
+        hideMediaProgress();
+      }
     }
     btn.innerHTML = '완료됨';
     btn.classList.add('media-editor__btn--complete--done');
@@ -1013,17 +1032,19 @@ function clearValidationError() {
   if (el) { el.hidden = true; el.innerHTML = ''; }
 }
 
-async function onMediaExportClip() {
+async function onMediaExportClip(onProgress) {
   const btn = qs('#media-export-btn');
   if (!mediaState.objectUrl || !mediaState.duration) return;
   const clipDuration = mediaState.outSec - mediaState.inSec;
   if (clipDuration <= 0 || clipDuration > 60) { showMediaStatus('Clip must be 1–60 seconds.', 'error'); return; }
 
+  onProgress?.('준비 중… (약 30초 소요)', 0);
   if (btn) { btn.disabled = true; btn.textContent = 'Loading FFmpeg…'; }
   try {
     const { toBlobURL } = await import('https://unpkg.com/@ffmpeg/util@0.12.1/dist/esm/index.js');
     const ffmpegPkgBase = 'https://unpkg.com/@ffmpeg/ffmpeg@0.12.7/dist/esm';
     const workerBlobURL = await toBlobURL(`${ffmpegPkgBase}/worker.js`, 'text/javascript');
+    onProgress?.('FFmpeg 불러오는 중…', 20);
 
     // cross-origin worker 제한 우회: FFmpeg 생성자 내부의 Worker 호출을 blob URL로 교체
     const OrigWorker = self.Worker;
@@ -1040,6 +1061,7 @@ async function onMediaExportClip() {
       wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm')
     });
     self.Worker = OrigWorker;
+    onProgress?.('클립 추출 중…', 45);
     const inFile  = 'input.mp4';
     const outFile = 'clip.mp4';
     const buf = await fetch(mediaState.objectUrl).then(r => r.arrayBuffer());
@@ -1047,6 +1069,7 @@ async function onMediaExportClip() {
     await ffmpeg.exec(['-i', inFile, '-ss', String(mediaState.inSec), '-t', String(clipDuration), '-c', 'copy', outFile]);
     const data = await ffmpeg.readFile(outFile);
     const blob = new Blob([data.buffer], { type: 'video/mp4' });
+    onProgress?.('저장 중…', 75);
     if (btn) btn.textContent = 'Uploading clip…';
     const email = 'test@test.com';
     if (!mediaState.cardId) mediaState.cardId = Math.floor(Date.now() / 1000);
@@ -1058,6 +1081,7 @@ async function onMediaExportClip() {
     fd.append('ownerToken', mediaState.ownerToken);
     const res    = await fetch('/api/media/upload', { method: 'POST', body: fd });
     const result = await res.json();
+    onProgress?.('완료!', 100);
     mediaState.r2Key = result.key;
     // 선택된 video 클립에 r2Key 저장
     const selClip = clipState.clips[clipState.selectedIdx];
