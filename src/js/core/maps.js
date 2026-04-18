@@ -33,6 +33,9 @@ export class MapPicker {
     const centerPin = document.createElement('div');
     centerPin.className = 'map-center-pin';
     this.mapEl.appendChild(centerPin);
+    const centerDot = document.createElement('div');
+    centerDot.className = 'map-center-dot';
+    this.mapEl.appendChild(centerDot);
 
     this.circle = L.circle([defaultLat, defaultLng], {
       radius: Number(this.radiusInput?.value) || 50,
