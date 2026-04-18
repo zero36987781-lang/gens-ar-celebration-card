@@ -1032,7 +1032,6 @@ async function onMediaExportClip() {
     };
     const { FFmpeg } = await import(`${ffmpegPkgBase}/index.js`);
     const ffmpeg = new FFmpeg();
-    self.Worker = OrigWorker;
 
     if (btn) btn.textContent = 'Processing…';
     const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.4/dist/esm';
@@ -1040,6 +1039,7 @@ async function onMediaExportClip() {
       coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`,   'text/javascript'),
       wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm')
     });
+    self.Worker = OrigWorker;
     const inFile  = 'input.mp4';
     const outFile = 'clip.mp4';
     const buf = await fetch(mediaState.objectUrl).then(r => r.arrayBuffer());
