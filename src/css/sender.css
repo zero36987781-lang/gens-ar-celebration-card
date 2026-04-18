@@ -2511,6 +2511,17 @@
 .media-editor__btn--cut:hover {
   background: #333;
 }
+.media-editor__btn--complete {
+  background: #007aff;
+  color: #fff;
+  border: none;
+}
+.media-editor__btn--complete:hover {
+  background: #0062cc;
+}
+.media-editor__btn--complete--done {
+  background: #34c759 !important;
+}
 
 /* ── Status message (editor 내부) ── */
 .media-editor__status {

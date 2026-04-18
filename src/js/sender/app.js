@@ -942,6 +942,19 @@ function bindFilmstripNav() {
   video?.addEventListener('ended', updatePlayBtn);
 }
 
+function bindCompleteBtn() {
+  const btn = qs('#media-complete-btn');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    btn.innerHTML = '완료됨';
+    btn.classList.add('media-editor__btn--complete--done');
+    setTimeout(() => {
+      btn.innerHTML = '편집<br>완료';
+      btn.classList.remove('media-editor__btn--complete--done');
+    }, 2000);
+  });
+}
+
 function bindCutClip() {
   const cutBtn = qs('#media-cut-btn');
   if (!cutBtn) return;
@@ -1085,6 +1098,7 @@ function bindMediaDrop() {
   bindTransportControls();
   bindFilmstripNav();
   bindCutClip();
+  bindCompleteBtn();
 
   // 여백 탭 시 IN/OUT 활성화 해제
   qs('#media-editor')?.addEventListener('pointerdown', e => {
@@ -1120,13 +1134,6 @@ function bindMediaDrop() {
   });
 
   rstBtn?.addEventListener('click', () => {
-    // 선택된 video 클립을 filmstrip에서 제거
-    const idx = clipState.selectedIdx;
-    if (idx >= 0 && clipState.clips[idx]?.type === 'video') {
-      clipState.clips.splice(idx, 1);
-      clipState.selectedIdx = clipState.clips.length === 0 ? -1 : Math.min(idx, clipState.clips.length - 1);
-      renderFilmstrip();
-    }
     if (editor)   editor.hidden   = true;
     if (uploader) uploader.hidden = false;
     if (progress) progress.hidden = true;
