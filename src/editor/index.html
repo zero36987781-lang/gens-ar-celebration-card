@@ -1147,57 +1147,5 @@ document.addEventListener('DOMContentLoaded',function(){
   });
 })();
 </script>
-<script>
-(function () {
-  let initialized = false;
-
-  function boot() {
-    if (initialized) return;
-
-    // CanvasEditor 구조 대응
-    if (window.Editor && typeof window.Editor.init === 'function') {
-      console.log('[BOOT] Editor.init 실행');
-      window.Editor.init();
-      initialized = true;
-      return;
-    }
-
-    // 혹시 다른 이름 대비
-    if (typeof init === 'function') {
-      console.log('[BOOT] init 실행');
-      init();
-      initialized = true;
-      return;
-    }
-
-    console.error('[BOOT] init 함수 없음');
-  }
-
-  // iframe 메시지
-  window.addEventListener('message', (e) => {
-    if (e.data && e.data.type === 'INIT') {
-      boot();
-    }
-  });
-
-  // standalone fallback
-  window.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => {
-      if (!initialized) {
-        console.log('[BOOT] fallback 실행');
-        boot();
-      }
-    }, 50);
-  });
-})();
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  if (typeof init === 'function') {
-    console.log('[AUTO INIT]');
-    init();
-  }
-});
-</script>
 </body>
 </html>
