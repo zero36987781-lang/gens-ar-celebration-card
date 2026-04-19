@@ -632,6 +632,10 @@ function init(){
     if(PGate.isLocked()&&!PGate.owns(e.pointerId))return;
     onUp(e);
   });
+  document.addEventListener('pointercancel',function(e){
+    if(PGate.isLocked()&&!PGate.owns(e.pointerId))return;
+    onUp(e);
+  });
 
   /* ===== 전역 pointerdown 가드: Gate 잠금 시 비소유 포인터 차단 ===== */
   document.addEventListener('pointerdown',function(e){
@@ -967,6 +971,8 @@ function onUp(e){
   if(S.gradAngleDrag){PGate.release(S.gradAngleDrag.pid);focusUnlock();S.gradAngleDrag=null;}
   if(S.gradStopDrag){PGate.release(S.gradStopDrag.pid);S.gradStopDrag=null;}
   clearTimeout(S.longTmr);
+  /* pointercancel 등으로 Gate가 잠긴 채 남지 않도록 강제 해제 */
+  if(!S.drag&&!S.zoomDrag&&!S.divDrag&&!S.vdrag&&!S.gradAngleDrag&&!S.gradStopDrag){PGate.release(e.pointerId);if(S.focusLocked)focusUnlock();}
 }
 
 /* ===== Snap + guide alignment ===== */
