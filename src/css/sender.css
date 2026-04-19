@@ -731,17 +731,24 @@
     }
 
     .element.selected.image-el{
-      outline:2px dashed var(--primary);
+      outline:2px solid var(--primary);
       outline-offset:4px;
       border-radius:10px;
       box-shadow:0 0 0 2px rgba(109,93,252,.15);
     }
 
     .element.selected.text-el{
-      outline:2px dashed var(--primary);
+      outline:2px solid var(--primary);
       outline-offset:4px;
       border-radius:10px;
       box-shadow:0 0 0 2px rgba(109,93,252,.15);
+    }
+
+    .element.editing.text-el{
+      outline:2px dashed var(--primary);
+      outline-offset:4px;
+      border-radius:10px;
+      box-shadow:0 0 0 2px rgba(109,93,252,.2);
     }
 
     .text-el{
@@ -940,6 +947,7 @@
       padding:12px 14px;
       font-size:14px;
       color:#111827;
+      caret-color:#6d5dfc;
       outline:none;
     }
 

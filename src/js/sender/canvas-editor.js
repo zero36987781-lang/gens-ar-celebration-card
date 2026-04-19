@@ -436,6 +436,7 @@ window.CanvasEditor = (() => {
   mode:'basic',
   side:'front',
   selectionId:null,
+  editingId:null,
   activeTab:'text',
   history:[],
   historyIndex:-1,
@@ -608,9 +609,11 @@ window.CanvasEditor = (() => {
         ? 'Basic allows wording edits only. Styling and layout changes are locked.'
         : 'Edit your text content here. Styling stays in the tool panel.';
       refs.textContentInput.value = el.text || '';
+      appState.editingId = el.id;
       refs.overlay.classList.add('show');
       refs.textSheet.classList.add('show');
       refs.upgradeSheet.classList.remove('show');
+      renderCanvas();
       setTimeout(()=> refs.textContentInput.focus(), 30);
     }
 
@@ -618,6 +621,8 @@ window.CanvasEditor = (() => {
       refs.overlay.classList.remove('show');
       refs.textSheet.classList.remove('show');
       refs.upgradeSheet.classList.remove('show');
+      appState.editingId = null;
+      renderCanvas();
     }
 
     function openUpgradeSheet(){
@@ -769,7 +774,7 @@ window.CanvasEditor = (() => {
 
       side.elements.forEach(el=>{
         const node = document.createElement('div');
-        node.className = `element ${el.type==='text'?'text-el':'image-el'} ${appState.selectionId===el.id?'selected':''} ${appState.mode==='basic'?'locked-basic':''}`;
+        node.className = `element ${el.type==='text'?'text-el':'image-el'} ${appState.selectionId===el.id?'selected':''} ${appState.editingId===el.id?'editing':''} ${appState.mode==='basic'?'locked-basic':''}`;
         node.dataset.id = el.id;
         node.style.left = `${el.x}px`;
         node.style.top = `${el.y}px`;
