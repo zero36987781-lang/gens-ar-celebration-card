@@ -418,6 +418,7 @@ async function toggleCameraAr() {
       els.cameraFeed.srcObject = null;
       els.cameraFeed.classList.add('hidden');
     }
+    engine?.disableDeviceOrientation();
     els.arStage?.classList.remove('camera-ar-mode');
     if (els.toggleCameraAr) els.toggleCameraAr.innerHTML = `${CAM_ICON_OFF} 화면뷰`;
     cameraArActive = false;
@@ -455,6 +456,22 @@ async function toggleCameraAr() {
       try { await els.cameraFeed.play(); } catch (e) { console.warn('camera play:', e); }
     }
     els.arStage?.classList.add('camera-ar-mode');
+
+    if (engine) {
+      if (typeof DeviceOrientationEvent !== 'undefined' &&
+          typeof DeviceOrientationEvent.requestPermission === 'function') {
+        try {
+          const perm = await DeviceOrientationEvent.requestPermission();
+          if (perm === 'granted') engine.enableDeviceOrientation();
+        } catch (e) {
+          console.warn('DeviceOrientation permission denied:', e);
+          engine.enableDeviceOrientation();
+        }
+      } else {
+        engine.enableDeviceOrientation();
+      }
+    }
+
     if (els.toggleCameraAr) els.toggleCameraAr.innerHTML = `${CAM_ICON_ON} 월드뷰`;
     cameraArActive = true;
     setStatus(els.arStatus, '화면뷰 켜짐 — 실제 공간에 3D 카드가 겹쳐 보여요.', 'success');

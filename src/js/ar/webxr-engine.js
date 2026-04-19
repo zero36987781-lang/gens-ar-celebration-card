@@ -508,7 +508,7 @@ export class WebXREngine {
       return;
     }
 
-    if (this.gestureMode === 'view') {
+    if (this.gestureMode === 'view' && !this._deviceOrientationActive) {
       this.yawOffset -= dx * 0.007;
       this.pitchOffset = clamp(this.pitchOffset + dy * 0.0055, -0.9, 0.9);
       this.applyPlacement();
@@ -564,6 +564,19 @@ export class WebXREngine {
 
   applyPlacement() {
     if (!this.placed) return;
+
+    if (this._deviceOrientationActive) {
+      const right = new THREE.Vector3().crossVectors(this.anchorForward, new THREE.Vector3(0, 1, 0)).normalize();
+      const up = new THREE.Vector3(0, 1, 0);
+      this.placementVector.copy(this.anchorForward).multiplyScalar(this.forwardDistance)
+        .add(right.multiplyScalar(this.localOffsetX))
+        .add(up.multiplyScalar(this.heightOffset + this.localOffsetY));
+      this.contentGroup.position.copy(this.anchorOrigin).add(this.placementVector);
+      this.contentGroup.scale.setScalar(this.baseScale);
+      // 카드는 월드 고정 — 카메라 방향 추적 없이 배치 시 정면을 유지
+      this.contentGroup.rotation.set(this.pitchOffset, this.yawOffset, 0);
+      return;
+    }
 
     if (this.previewMode || !this.session) {
       this.contentGroup.position.set(this.localOffsetX, this.heightOffset - 1.2 + this.localOffsetY, -this.forwardDistance);
@@ -710,11 +723,73 @@ export class WebXREngine {
       this.startSequence();
     }
 
-    if (!this.previewMode && this.placed && this.session) {
+    if (this._deviceOrientationActive) {
+      this._applyDeviceOrientationToCamera();
+      this.applyPlacement();
+    } else if (!this.previewMode && this.placed && this.session) {
       this.orientTowardCamera();
     }
 
     this.renderer.render(this.scene, this.camera);
+  }
+
+  enableDeviceOrientation() {
+    this._devOrient = null;
+    this._devOrientRef = null; // 기준 quaternion (ON 시점 방향)
+    this._deviceOrientationActive = true;
+
+    this._onDeviceOrientation = (e) => {
+      if (e.alpha == null) return;
+      const raw = { alpha: e.alpha, beta: e.beta, gamma: e.gamma };
+      this._devOrient = raw;
+      // 첫 이벤트 수신 시 현재 방향을 기준으로 앵커 설정
+      if (!this._devOrientRef) {
+        this._devOrientRef = raw;
+        this._applyDeviceOrientationToCamera();
+        // 카메라가 기준 방향으로 회전된 상태에서 앞쪽에 카드 배치
+        this.camera.position.set(0, 0, 0);
+        this.anchorOrigin.set(0, 0, 0);
+        this.camera.getWorldDirection(this._tmp = this._tmp || new THREE.Vector3());
+        this._tmp.y = 0;
+        if (this._tmp.lengthSq() < 0.0001) this._tmp.set(0, 0, -1);
+        this._tmp.normalize();
+        this.anchorForward.copy(this._tmp);
+        this.placeNow();
+      }
+    };
+
+    window.addEventListener('deviceorientation', this._onDeviceOrientation, true);
+    // 카메라를 원점으로 이동 (회전 추적만 사용)
+    this.camera.position.set(0, 0, 0);
+  }
+
+  disableDeviceOrientation() {
+    if (this._onDeviceOrientation) {
+      window.removeEventListener('deviceorientation', this._onDeviceOrientation, true);
+      this._onDeviceOrientation = null;
+    }
+    this._deviceOrientationActive = false;
+    this._devOrient = null;
+    this.camera.position.set(0, 1.6, 3.0);
+    this.camera.rotation.set(0, 0, 0);
+    this.camera.lookAt(new THREE.Vector3(0, 1.2, 0));
+  }
+
+  _applyDeviceOrientationToCamera() {
+    if (!this._devOrient) return;
+    const { alpha, beta, gamma } = this._devOrient;
+    const orient = ((window.screen?.orientation?.angle ?? window.orientation ?? 0)) * (Math.PI / 180);
+    const euler = new THREE.Euler(
+      THREE.MathUtils.degToRad(beta),
+      THREE.MathUtils.degToRad(alpha),
+      THREE.MathUtils.degToRad(-gamma),
+      'YXZ'
+    );
+    const q = new THREE.Quaternion().setFromEuler(euler);
+    const correction = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
+    q.multiply(correction);
+    q.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -orient));
+    this.camera.quaternion.copy(q);
   }
 
   setStatus(message, tone = 'muted') {
