@@ -208,12 +208,24 @@ function revealThanksPanel() {
 
 // ── 클립 순서 기반 시퀀스 플레이어 ──
 let _seqIdx = 0;
+const _preloadMap = {};
 
 function getSeqClips() {
   return gift?.clips?.length ? gift.clips : [{ type: 'card' }];
 }
 
+function preloadVideoClips(clips) {
+  clips.filter(c => c.type === 'video' && c.r2Key).forEach(clip => {
+    if (_preloadMap[clip.r2Key]) return;
+    const v = document.createElement('video');
+    v.preload = 'auto';
+    v.src = `/api/media/stream?key=${encodeURIComponent(clip.r2Key)}`;
+    _preloadMap[clip.r2Key] = v;
+  });
+}
+
 async function startClipSequence() {
+  preloadVideoClips(getSeqClips());
   showPanel(els.arPanel);
   if (els.toggleCameraAr) {
     els.toggleCameraAr.classList.remove('hidden');
@@ -278,6 +290,7 @@ function runVideoClip(clip) {
   return new Promise(resolve => {
     const video = els.giftVideo;
     if (!video) { resolve(); return; }
+    video.preload = 'auto';
     video.src = `/api/media/stream?key=${encodeURIComponent(clip.r2Key)}`;
     video.classList.remove('hidden');
     video.onended = () => { video.classList.add('hidden'); resolve(); };

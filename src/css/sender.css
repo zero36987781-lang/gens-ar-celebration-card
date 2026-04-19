@@ -1977,161 +1977,6 @@
   opacity: 0;
 }
 
-/* ── Timeline ── */
-.media-editor__timeline {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-.media-tl__track-wrap {
-  position: relative;
-  height: 52px;
-  border-radius: 6px;
-  overflow: hidden;
-  cursor: pointer;
-  touch-action: none;
-  background: #e8e8e8;
-  border: 1px solid rgba(0,0,0,0.15);
-}
-#media-tl-canvas {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  border-radius: 6px;
-  object-fit: cover;
-}
-.media-tl__range {
-  position: absolute;
-  top: 0;
-  height: 100%;
-  background: rgba(0,0,0,0.08);
-  border-top: 2px solid #000;
-  border-bottom: 2px solid #000;
-  pointer-events: none;
-  z-index: 2;
-}
-.media-tl__handle {
-  position: absolute;
-  top: 0;
-  width: 18px;
-  height: 100%;
-  background: #000;
-  cursor: ew-resize;
-  touch-action: none;
-  z-index: 4;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s ease-out;
-  will-change: left;
-}
-.media-tl__handle:hover,
-.media-tl__handle:active {
-  background: #333;
-}
-.media-tl__handle::after {
-  content: '';
-  width: 3px;
-  height: 22px;
-  border-radius: 2px;
-  background: rgba(255,255,255,0.4);
-}
-.media-tl__handle--in {
-  border-radius: 4px 0 0 4px;
-}
-.media-tl__handle--out {
-  border-radius: 0 4px 4px 0;
-  transform: translateX(-100%);
-}
-.media-tl__handle--dragging,
-.media-tl__handle--active {
-  background: #e02020 !important;
-}
-.media-tl__handle--dragging::after,
-.media-tl__handle--active::after {
-  background: rgba(255,255,255,0.7);
-}
-.media-tl__playhead {
-  position: absolute;
-  top: -3px;
-  bottom: -3px;
-  width: 2px;
-  background: #000;
-  pointer-events: none;
-  z-index: 5;
-  border-radius: 1px;
-  will-change: left;
-}
-.media-tl__ruler {
-  position: relative;
-  height: 0;
-  overflow: hidden;
-}
-.media-tl__tick {
-  position: absolute;
-  transform: translateX(-50%);
-  font-size: 13px;
-  font-weight: 600;
-  color: rgba(0,0,0,0.45);
-  pointer-events: none;
-  white-space: nowrap;
-}
-
-/* ── Scrub inputs ── */
-.media-editor__scrubs {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-.media-scrub {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  border-radius: 8px;
-  background: #f8f8f8;
-  border: 1px solid rgba(0,0,0,0.12);
-}
-.media-scrub__label {
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(0,0,0,0.4);
-  flex-shrink: 0;
-}
-.media-scrub__val {
-  font-size: 15px;
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-  cursor: ew-resize;
-  touch-action: none;
-  border: 1.5px solid transparent;
-  border-radius: 6px;
-  padding: 3px 8px;
-  color: #000;
-  transition: border-color 0.15s ease-out, background 0.15s ease-out;
-  user-select: none;
-  -webkit-user-select: none;
-  min-width: 44px;
-  text-align: center;
-  backface-visibility: hidden;
-}
-.media-scrub__val:hover {
-  border-color: rgba(0,0,0,0.3);
-  background: rgba(0,0,0,0.04);
-}
-.media-scrub--active,
-.media-scrub--scrubbing {
-  border-color: #e02020 !important;
-  box-shadow: 0 0 0 2px rgba(224,32,32,0.18);
-}
-.media-scrub--active .media-scrub__label,
-.media-scrub--scrubbing .media-scrub__label {
-  color: #e02020;
-}
 
 /* ── Filmstrip ── */
 .media-filmstrip {
@@ -2344,10 +2189,6 @@
 .media-transport__btn:active {
   transform: scale(0.95);
 }
-.media-transport__btn--highlight {
-  border-color: #e02020 !important;
-  color: #e02020;
-}
 .media-transport__btn--play {
   background: #000;
   color: #fff;
@@ -2511,14 +2352,6 @@
   color: #dc2626;
   border-color: rgba(220,38,38,0.3);
 }
-.media-editor__btn--cut {
-  background: #1a1a1a;
-  color: #fff;
-  border: none;
-}
-.media-editor__btn--cut:hover {
-  background: #333;
-}
 .media-editor__btn--complete {
   background: #007aff;
   color: #fff;
@@ -2555,29 +2388,6 @@
   color: rgba(0,0,0,0.7);
 }
 
-/* ── 처리 진행률 바 ── */
-.media-progress {
-  margin-top: 10px;
-}
-.media-progress__bar-wrap {
-  height: 6px;
-  border-radius: 3px;
-  background: rgba(0,0,0,0.1);
-  overflow: hidden;
-}
-.media-progress__bar {
-  height: 100%;
-  width: 0%;
-  background: #007aff;
-  border-radius: 3px;
-  transition: width 400ms ease-out;
-}
-.media-progress__label {
-  margin: 5px 0 0;
-  font-size: 12px;
-  color: rgba(0,0,0,0.55);
-  text-align: center;
-}
 
 /* ── Step 4: Delivery Rules ── */
 [data-step="4"] { font-size: 13px; color: #000; }

@@ -247,102 +247,8 @@ function setNavNextEnabled(enabled) {
   if (btn) btn.disabled = !enabled;
 }
 
-function withTimeout(promise, ms, msg) {
-  return Promise.race([
-    promise,
-    new Promise((_, reject) => setTimeout(() => reject(new Error(msg)), ms))
-  ]);
-}
-
-async function _tryLoadFFmpegFromCDN(util, pkg, core) {
-  const { toBlobURL } = await withTimeout(import(util), 15000, 'util timeout');
-  const [coreJS, coreWasm, workerBlobURL] = await withTimeout(
-    Promise.all([
-      toBlobURL(`${core}/ffmpeg-core.js`,   'text/javascript'),
-      toBlobURL(`${core}/ffmpeg-core.wasm`, 'application/wasm'),
-      toBlobURL(`${pkg}/worker.js`,          'text/javascript'),
-    ]),
-    25000, 'wasm timeout'
-  );
-  const OrigWorker = self.Worker;
-  self.Worker = class extends OrigWorker {
-    constructor(url, opts) { super(workerBlobURL, opts); }
-  };
-  const { FFmpeg } = await import(`${pkg}/index.js`);
-  const ffmpeg = new FFmpeg();
-  await withTimeout(ffmpeg.load({ coreURL: coreJS, wasmURL: coreWasm }), 20000, 'load timeout');
-  self.Worker = OrigWorker;
-  return ffmpeg;
-}
-
-function loadFFmpeg() {
-  if (_ffmpegInstance) return Promise.resolve(_ffmpegInstance);
-  if (_ffmpegLoading) return _ffmpegLoading;
-
-  const CDNS = [
-    {
-      util: 'https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/esm/index.js',
-      pkg:  'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.7/dist/esm',
-      core: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.4/dist/esm',
-    },
-    {
-      util: 'https://unpkg.com/@ffmpeg/util@0.12.1/dist/esm/index.js',
-      pkg:  'https://unpkg.com/@ffmpeg/ffmpeg@0.12.7/dist/esm',
-      core: 'https://unpkg.com/@ffmpeg/core@0.12.4/dist/esm',
-    },
-  ];
-
-  _ffmpegLoading = (async () => {
-    for (const cdn of CDNS) {
-      try {
-        const ffmpeg = await _tryLoadFFmpegFromCDN(cdn.util, cdn.pkg, cdn.core);
-        _ffmpegInstance = ffmpeg;
-        _ffmpegLoading = null;
-        return ffmpeg;
-      } catch (_) {}
-    }
-    _ffmpegLoading = null;
-    throw new Error('FFmpeg 로드 실패 (네트워크를 확인하세요)');
-  })();
-
-  return _ffmpegLoading;
-}
-
-function showMediaProgress(label, pct) {
-  const wrap = qs('#media-progress');
-  const bar  = qs('#media-progress-bar');
-  const lbl  = qs('#media-progress-label');
-  if (!wrap) return;
-  wrap.hidden = false;
-  bar.style.width = pct + '%';
-  lbl.textContent = label;
-}
-function hideMediaProgress() {
-  const wrap = qs('#media-progress');
-  if (wrap) wrap.hidden = true;
-}
-
-async function handleStep3Complete() {
-  if (!mediaState.objectUrl) { goPage(4); return; }
-
-  const alreadyExported = clipState.clips.some(
-    c => c.type === 'video' && c.r2Key && c.inSec === mediaState.inSec && c.outSec === mediaState.outSec
-  );
-  if (alreadyExported) { goPage(4); return; }
-
-  setNavNextEnabled(false);
-  const btn = qs('#nav-next');
-  if (btn) btn.textContent = '처리 중';
-  try {
-    await onMediaExportClip(showMediaProgress);
-    goPage(4);
-  } catch (e) {
-    // 에러는 onMediaExportClip 내부 showMediaStatus로 표시
-  } finally {
-    setNavNextEnabled(true);
-    if (btn) btn.textContent = 'Next ▶';
-    hideMediaProgress();
-  }
+function handleStep3Complete() {
+  goPage(4);
 }
 function prevPage() { goPage(state.page - 1); }
 
@@ -431,21 +337,14 @@ function secToHms(t) {
    Media Manager — Upload, Timeline Edit, R2 Export
    ═══════════════════════════════════════════════════ */
 
-let _ffmpegInstance = null;
-let _ffmpegLoading = null;
 const mediaState = {
   ownerToken: '',
   mediaId: '',
   r2Key: '',
   duration: 0,
-  inSec: 0,
-  outSec: 0,
   uploaded: false,
   objectUrl: '',
-  activeXhr: null,
-  cardId: '',
-  exportCount: 0,
-  activeField: null
+  activeXhr: null
 };
 
 const clipState = {
@@ -463,11 +362,7 @@ function getOrCreateOwnerToken() {
 async function validateFile(file) {
   const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
   if (file.size > 130 * 1024 * 1024) {
-    return {
-      ok: false,
-      error: `File too large (${sizeMB} MB).`,
-      tip: 'Max 130 MB. Export at 720p H.264 in HandBrake (free) or iMovie/Premiere to reduce size.'
-    };
+    return { ok: false, error: `용량이 초과되었습니다. (${sizeMB} MB)` };
   }
   return new Promise(resolve => {
     const url = URL.createObjectURL(file);
@@ -476,29 +371,19 @@ async function validateFile(file) {
     let settled = false;
     const done = r => { if (settled) return; settled = true; URL.revokeObjectURL(url); resolve(r); };
     v.onloadedmetadata = () => {
-      const w = v.videoWidth, h = v.videoHeight;
       const dur = v.duration;
       if (!isFinite(dur) || dur <= 0) {
-        done({ ok: false, error: 'Could not read video duration.', tip: 'Make sure the file is a valid H.264 MP4.' });
+        done({ ok: false, error: 'Could not read video duration.' });
         return;
       }
-      if (dur > 300) {
-        const m = Math.floor(dur / 60), s = Math.round(dur % 60);
-        done({ ok: false, error: `Video too long (${m}m ${s}s).`, tip: 'Trim to 5 minutes or less, then re-upload.' });
-        return;
-      }
-      if (w > 0 && h > 0 && w * h > 1280 * 720) {
-        done({ ok: false, error: `Resolution too high (${w}×${h}).`, tip: 'Export at 720p (1280×720) or lower. H.264 + 720p also reduces file size.' });
+      if (dur > 60) {
+        done({ ok: false, error: 'Video too long. Please upload a video under 1 minute.' });
         return;
       }
       done({ ok: true, duration: dur });
     };
-    v.onerror = () => done({
-      ok: false,
-      error: 'Cannot play this video file.',
-      tip: 'Only H.264 (AVC) + AAC MP4 is supported. Convert with HandBrake (free), or try a video recorded directly on iPhone or Android.'
-    });
-    setTimeout(() => done({ ok: false, error: 'Timed out reading file.', tip: 'The file may be corrupted or in an unsupported format. Try a different file.' }), 12000);
+    v.onerror = () => done({ ok: false, error: 'Cannot play this video file.' });
+    setTimeout(() => done({ ok: false, error: 'Timed out reading file.' }), 12000);
     v.src = url;
   });
 }
@@ -529,249 +414,15 @@ function uploadMediaFile(file, onProgress) {
   });
 }
 
-/* ── ScrubInput: 클릭 토글 + 드래그 스크럽 + 하이라이트 ── */
-class ScrubInput {
-  constructor(el, { min = 0, max = 300, step = 1, onChange, field = null } = {}) {
-    this.el = el;
-    this.container = el.closest?.('.media-scrub') || el;
-    this.field = field;
-    this.min = min; this.max = max; this.step = step; this.onChange = onChange;
-    this.value = min; this._dragging = false; this._startX = 0; this._startVal = 0; this._moved = false;
-    this.buttonActive = false;
-    el.style.touchAction = 'none';
-    el.addEventListener('pointerdown',   this._onDown.bind(this));
-    el.addEventListener('pointermove',   this._onMove.bind(this));
-    el.addEventListener('pointerup',     this._onUp.bind(this));
-    el.addEventListener('pointercancel', this._onUp.bind(this));
-    el.addEventListener('wheel', this._onWheel.bind(this), { passive: false });
-  }
-  setValue(v) {
-    this.value = Math.max(this.min, Math.min(this.max, Math.round(v)));
-    this._updateDOM();
-  }
-  _updateDOM() {
-    const s = Math.round(this.value);
-    const m = Math.floor(s / 60);
-    this.el.textContent = m > 0 ? `${m}:${String(s % 60).padStart(2, '0')}` : `${s}s`;
-  }
-  _onDown(e) {
-    e.preventDefault();
-    this._dragging = true; this._startX = e.clientX; this._startVal = this.value; this._moved = false;
-    this.el.setPointerCapture(e.pointerId);
-  }
-  _onMove(e) {
-    if (!this._dragging) return;
-    if (!this._moved && Math.abs(e.clientX - this._startX) > 4) {
-      this._moved = true;
-      this.container.classList.add('media-scrub--scrubbing');
-      _mediaSetArrowHighlight(true);
-    }
-    if (this._moved) {
-      const newVal = Math.max(this.min, Math.min(this.max, Math.round(this._startVal + (e.clientX - this._startX) * this.step)));
-      this.value = newVal; this._updateDOM(); this.onChange?.(newVal);
-    }
-  }
-  _onUp(e) {
-    if (!this._dragging) return;
-    this._dragging = false;
-    this.el.releasePointerCapture(e.pointerId);
-    if (this._moved) {
-      this.container.classList.remove('media-scrub--scrubbing');
-      _mediaSetArrowHighlight(this.buttonActive);
-    } else {
-      _mediaToggleActiveField(this.field);
-    }
-  }
-  _onWheel(e) {
-    e.preventDefault();
-    const newVal = Math.max(this.min, Math.min(this.max, this.value + (e.deltaY > 0 ? -this.step : this.step)));
-    this.value = newVal; this._updateDOM(); this.onChange?.(newVal);
-  }
-}
 
-let scrubIn = null, scrubOut = null;
-
-function _mediaSetArrowHighlight(active) {
-  ['#media-t-minus5','#media-t-minus1','#media-t-plus1','#media-t-plus5'].forEach(id => {
-    qs(id)?.classList.toggle('media-transport__btn--highlight', active);
-  });
-}
-
-function _mediaToggleActiveField(field) {
-  const isActive = mediaState.activeField === field;
-  mediaState.activeField = isActive ? null : field;
-  const inCt  = qs('.media-editor__scrubs [data-field="in"]');
-  const outCt = qs('.media-editor__scrubs [data-field="out"]');
-  inCt?.classList.toggle('media-scrub--active', mediaState.activeField === 'in');
-  outCt?.classList.toggle('media-scrub--active', mediaState.activeField === 'out');
-  if (scrubIn)  scrubIn.buttonActive  = (mediaState.activeField === 'in');
-  if (scrubOut) scrubOut.buttonActive = (mediaState.activeField === 'out');
-  _mediaSetArrowHighlight(mediaState.activeField !== null);
-  qs('#media-tl-handle-in')?.classList.toggle('media-tl__handle--active', mediaState.activeField === 'in');
-  qs('#media-tl-handle-out')?.classList.toggle('media-tl__handle--active', mediaState.activeField === 'out');
-}
-
-function _mediaDeactivate() {
-  mediaState.activeField = null;
-  qs('.media-editor__scrubs [data-field="in"]')?.classList.remove('media-scrub--active');
-  qs('.media-editor__scrubs [data-field="out"]')?.classList.remove('media-scrub--active');
-  if (scrubIn)  scrubIn.buttonActive = false;
-  if (scrubOut) scrubOut.buttonActive = false;
-  _mediaSetArrowHighlight(false);
-  qs('#media-tl-handle-in')?.classList.remove('media-tl__handle--active');
-  qs('#media-tl-handle-out')?.classList.remove('media-tl__handle--active');
-}
-
-function syncTimeline() {
-  const track = qs('#media-tl-track');
-  if (!track || !mediaState.duration) return;
-  const W = track.offsetWidth;
-  const dur = mediaState.duration;
-  const inX  = (mediaState.inSec  / dur) * W;
-  const outX = (mediaState.outSec / dur) * W;
-  const handleIn  = qs('#media-tl-handle-in');
-  const handleOut = qs('#media-tl-handle-out');
-  const range     = qs('#media-tl-range');
-  if (handleIn)  handleIn.style.left  = inX  + 'px';
-  if (handleOut) handleOut.style.left = outX + 'px';
-  if (range) { range.style.left = inX + 'px'; range.style.width = (outX - inX) + 'px'; }
-  if (scrubIn)  scrubIn.setValue(mediaState.inSec);
-  if (scrubOut) scrubOut.setValue(mediaState.outSec);
-}
-
-function buildTimelineRuler(duration) {
-  const ruler = qs('#media-tl-ruler');
-  if (!ruler) return;
-  const step = duration <= 60 ? 5 : duration <= 120 ? 10 : duration <= 300 ? 30 : 60;
-  let html = '';
-  for (let t = 0; t <= duration; t += step) {
-    const pct = (t / duration * 100).toFixed(2);
-    const lbl = t >= 60 ? `${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}` : `${t}s`;
-    html += `<span class="media-tl__tick" style="left:${pct}%">${lbl}</span>`;
-  }
-  ruler.innerHTML = html;
-}
-
-async function drawThumbnailStrip(videoEl, canvasEl, duration) {
-  const W = canvasEl.offsetWidth || canvasEl.parentElement?.offsetWidth || 300;
-  const H = 52;
-  canvasEl.width = W; canvasEl.height = H;
-  const ctx = canvasEl.getContext('2d');
-  const FRAMES = Math.max(4, Math.min(20, Math.floor(W / 12)));
-  const fw = W / FRAMES;
-  for (let i = 0; i < FRAMES; i++) {
-    videoEl.currentTime = (i / (FRAMES - 1)) * duration;
-    await Promise.race([
-      new Promise(r => videoEl.addEventListener('seeked', r, { once: true })),
-      new Promise(r => setTimeout(r, 400))
-    ]);
-    try { ctx.drawImage(videoEl, fw * i, 0, fw, H); } catch { /* frame unavailable */ }
-  }
-}
-
-function bindTimelineHandles(trackWrap, duration) {
-  const handleIn  = qs('#media-tl-handle-in');
-  const handleOut = qs('#media-tl-handle-out');
-  const video     = qs('#media-preview');
-
-  function makeHandleDrag(handle, field) {
-    let startX, startVal, moved;
-    const scrubCt = qs(`.media-editor__scrubs [data-field="${field}"]`);
-    const onMove = e => {
-      if (!moved) moved = true;
-      const W = trackWrap.offsetWidth;
-      let newVal = Math.round(startVal + ((e.clientX - startX) / W) * duration);
-      if (field === 'in') {
-        newVal = Math.max(0, Math.min(mediaState.outSec - 1, newVal));
-        mediaState.inSec = newVal;
-      } else {
-        newVal = Math.max(mediaState.inSec + 1, Math.min(Math.floor(duration), newVal));
-        mediaState.outSec = newVal;
-      }
-      syncTimeline();
-    };
-    const onUp = () => {
-      handle.classList.remove('media-tl__handle--dragging');
-      scrubCt?.classList.remove('media-scrub--scrubbing');
-      if (!moved) {
-        _mediaToggleActiveField(field);
-      } else {
-        _mediaSetArrowHighlight(mediaState.activeField !== null);
-      }
-      moved = false;
-      handle.removeEventListener('pointermove', onMove);
-      handle.removeEventListener('pointerup',   onUp);
-      handle.removeEventListener('pointercancel', onUp);
-    };
-    handle.addEventListener('pointerdown', e => {
-      e.stopPropagation();
-      moved = false;
-      handle.setPointerCapture(e.pointerId);
-      startX = e.clientX;
-      startVal = field === 'in' ? mediaState.inSec : mediaState.outSec;
-      handle.classList.add('media-tl__handle--dragging');
-      scrubCt?.classList.add('media-scrub--scrubbing');
-      _mediaSetArrowHighlight(true);
-      handle.addEventListener('pointermove', onMove);
-      handle.addEventListener('pointerup',   onUp, { once: true });
-      handle.addEventListener('pointercancel', onUp, { once: true });
-    });
-  }
-
-  makeHandleDrag(handleIn,  'in');
-  makeHandleDrag(handleOut, 'out');
-
-  trackWrap.addEventListener('pointerdown', e => {
-    if (e.target === handleIn || e.target === handleOut) return;
-    const rect = trackWrap.getBoundingClientRect();
-    if (video) video.currentTime = Math.max(0, Math.min(duration, ((e.clientX - rect.left) / rect.width) * duration));
-  });
-
-  if (video) {
-    video.addEventListener('timeupdate', () => {
-      const playhead = qs('#media-tl-playhead');
-      if (!playhead || !mediaState.duration) return;
-      playhead.style.left = (video.currentTime / mediaState.duration * trackWrap.offsetWidth) + 'px';
-    });
-  }
-}
-
-async function activateEditor(blobUrl, duration) {
-  loadFFmpeg().catch(() => {});
+function activateEditor(blobUrl, duration) {
   if (mediaState.objectUrl && mediaState.objectUrl !== blobUrl) URL.revokeObjectURL(mediaState.objectUrl);
   mediaState.objectUrl = blobUrl;
   mediaState.duration  = duration;
-  mediaState.inSec     = 0;
-  mediaState.outSec    = Math.floor(duration);
-  mediaState.activeField = null;
 
-  const video  = qs('#media-preview');
-  const canvas = qs('#media-tl-canvas');
-  const track  = qs('#media-tl-track');
-
+  const video = qs('#media-preview');
   if (video) { video.src = blobUrl; video.load(); }
-  if (canvas && track) await drawThumbnailStrip(video, canvas, duration);
-  buildTimelineRuler(duration);
 
-  scrubIn = new ScrubInput(qs('#media-scrub-in'), {
-    min: 0, max: Math.floor(duration) - 1, step: 1, field: 'in',
-    onChange: v => { mediaState.inSec = v; syncTimeline(); }
-  });
-  scrubOut = new ScrubInput(qs('#media-scrub-out'), {
-    min: 1, max: Math.floor(duration), step: 1, field: 'out',
-    onChange: v => { mediaState.outSec = v; syncTimeline(); }
-  });
-  scrubIn.setValue(0);
-  scrubOut.setValue(mediaState.outSec);
-
-  if (track) {
-    bindTimelineHandles(track, duration);
-    if (window.ResizeObserver) new ResizeObserver(() => syncTimeline()).observe(track);
-  }
-
-  syncTimeline();
-
-  clipState.selectedIdx = -1;
   renderFilmstrip();
   setPlayOverlay(true);
 
@@ -793,14 +444,6 @@ function bindTransportControls() {
   if (!video || !playBtn) return;
 
   const nudgeTime = delta => {
-    if (mediaState.activeField === 'in') {
-      mediaState.inSec = Math.max(0, Math.min(mediaState.outSec - 1, mediaState.inSec + delta));
-      syncTimeline(); return;
-    }
-    if (mediaState.activeField === 'out') {
-      mediaState.outSec = Math.max(mediaState.inSec + 1, Math.min(Math.floor(mediaState.duration || 0), mediaState.outSec + delta));
-      syncTimeline(); return;
-    }
     video.currentTime = Math.max(0, Math.min(mediaState.duration || video.duration || 0, video.currentTime + delta));
   };
 
@@ -815,19 +458,7 @@ function bindTransportControls() {
   };
 
   playBtn.addEventListener('click', () => {
-    if (video.paused) {
-      video.currentTime = mediaState.inSec || 0;
-      video.play();
-    } else {
-      video.pause();
-    }
-  });
-
-  video.addEventListener('timeupdate', () => {
-    if (!video.paused && mediaState.outSec && video.currentTime >= mediaState.outSec) {
-      video.pause();
-      video.currentTime = mediaState.outSec;
-    }
+    if (video.paused) { video.play(); } else { video.pause(); }
   });
 
   video.addEventListener('play',  () => setPlay(true));
@@ -878,16 +509,7 @@ function insertCardClip() {
   renderFilmstrip();
 }
 
-function autoInsertStopPage() {
-  const clips = clipState.clips;
-  if (!clips.length) return;
-  const last = clips[clips.length - 1];
-  if (last.type === 'card' || last.type === 'stop') {
-    if (last.type !== 'stop') {
-      clips.push({ type: 'stop', message: '준비된 영상을 시청하시겠어요?' });
-    }
-  }
-}
+function autoInsertStopPage() {}
 
 const FILMSTRIP_SLOTS = 5;
 const FILMSTRIP_MAX_DURATION = 60;
@@ -930,13 +552,6 @@ function renderFilmstrip() {
           <path d="M8 7h8M8 11h8M8 15h4" stroke-linecap="round"/>
         </svg><span class="media-filmstrip__type-label">Card</span>`;
       }
-    } else if (clip.type === 'stop') {
-      el.className = `media-filmstrip__clip media-filmstrip__clip--stop${activeClass}`;
-      el.title = clip.message;
-      el.innerHTML = `<svg class="media-filmstrip__type-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-        <circle cx="12" cy="12" r="9"/>
-        <rect x="9" y="9" width="6" height="6" rx="1" fill="currentColor" stroke="none"/>
-      </svg><span class="media-filmstrip__type-label">Stop</span>`;
     } else {
       el.className = `media-filmstrip__clip${activeClass}`;
       if (clip.thumbDataUrl) {
@@ -996,20 +611,9 @@ function bindFilmstripNav() {
     if (!video || clipState.selectedIdx < 0) return;
     const clip = clipState.clips[clipState.selectedIdx];
     if (!clip) return;
-    if (!video.paused) {
-      video.pause();
-      return;
-    }
-    video.currentTime = clip.inSec;
+    if (!video.paused) { video.pause(); return; }
+    video.currentTime = 0;
     video.play();
-    // 구간 끝에서 정지
-    const stopAt = () => {
-      if (video.currentTime >= clip.outSec) {
-        video.pause();
-        video.removeEventListener('timeupdate', stopAt);
-      }
-    };
-    video.addEventListener('timeupdate', stopAt);
   });
 
   const updatePlayBtn = () => {
@@ -1021,57 +625,45 @@ function bindFilmstripNav() {
   video?.addEventListener('ended', updatePlayBtn);
 }
 
-function bindCompleteBtn() {
-  const btn = qs('#media-complete-btn');
+function bindApplyBtn() {
+  const btn = qs('#media-apply-btn');
   if (!btn) return;
   btn.addEventListener('click', async () => {
-    const selClip = clipState.clips[clipState.selectedIdx];
-    if (selClip?.type === 'video' && !selClip.r2Key) {
-      btn.disabled = true;
-      try {
-        await onMediaExportClip(showMediaProgress);
-      } finally {
-        btn.disabled = false;
-        hideMediaProgress();
-      }
+    if (!mediaState.r2Key || !mediaState.duration) {
+      showMediaStatus('Upload a video first.', 'error'); return;
     }
-    btn.innerHTML = '완료됨';
-    btn.classList.add('media-editor__btn--complete--done');
-    setTimeout(() => {
-      btn.innerHTML = '편집<br>완료';
-      btn.classList.remove('media-editor__btn--complete--done');
-    }, 2000);
+    const videoEl = qs('#media-preview');
+    const thumbUrl = videoEl ? await captureThumb(videoEl, videoEl.currentTime) : null;
+    clipState.clips.push({
+      type: 'video',
+      duration: mediaState.duration,
+      r2Key: mediaState.r2Key,
+      thumbDataUrl: thumbUrl
+    });
+    clipState.selectedIdx = clipState.clips.length - 1;
+    renderFilmstrip();
+    showMediaStatus('Added to strap!', 'success');
+    resetMediaEditor();
   });
 }
 
-function bindCutClip() {
-  const cutBtn = qs('#media-cut-btn');
-  if (!cutBtn) return;
-  cutBtn.addEventListener('click', async () => {
-    const dur = mediaState.outSec - mediaState.inSec;
-    if (dur <= 0) { showMediaStatus('Set IN/OUT range first.', 'error'); return; }
-    autoInsertStopPage();
-    const newClip = {
-      type: 'video',
-      inSec: mediaState.inSec,
-      outSec: mediaState.outSec,
-      duration: dur,
-      thumbDataUrl: null,
-      r2Key: null
-    };
-    clipState.clips.push(newClip);
-    clipState.selectedIdx = clipState.clips.length - 1;
-    renderFilmstrip();
-    const videoCount = clipState.clips.filter(c => c.type === 'video').length;
-    showMediaStatus(`Clip ${videoCount} added (${Math.round(dur)}s)`, 'success');
-    const videoEl = qs('#media-preview');
-    if (videoEl) {
-      captureThumb(videoEl, mediaState.inSec).then(url => {
-        newClip.thumbDataUrl = url;
-        renderFilmstrip();
-      });
-    }
-  });
+function resetMediaEditor() {
+  const uploader = qs('#media-uploader');
+  const editor   = qs('#media-editor');
+  if (uploader) uploader.hidden = false;
+  if (editor)   editor.hidden   = true;
+  const video = qs('#media-preview');
+  if (video) { video.pause(); video.src = ''; video.load(); }
+  mediaState.objectUrl = '';
+  mediaState.r2Key     = '';
+  mediaState.duration  = 0;
+  mediaState.uploaded  = false;
+  const zone = qs('#media-drop-zone');
+  zone?.classList.remove('media-drop__zone--has-file');
+  clearValidationError();
+  setPlayOverlay(false);
+  const tPlayBtn = qs('#media-t-play');
+  if (tPlayBtn) tPlayBtn.classList.remove('is-playing');
 }
 
 function showMediaStatus(msg, tone) {
@@ -1087,7 +679,7 @@ function showMediaStatus(msg, tone) {
 function showValidationError(result) {
   const el = qs('#media-validation-msg');
   if (!el) return;
-  el.innerHTML = `<strong>${result.error}</strong>${result.tip ? `<span class="media-val__tip">💡 ${result.tip}</span>` : ''}`;
+  el.innerHTML = `<strong>${result.error}</strong>`;
   el.hidden = false;
 }
 
@@ -1096,67 +688,6 @@ function clearValidationError() {
   if (el) { el.hidden = true; el.innerHTML = ''; }
 }
 
-async function onMediaExportClip(onProgress) {
-  const btn = qs('#media-export-btn');
-  if (!mediaState.objectUrl || !mediaState.duration) return;
-  const clipDuration = mediaState.outSec - mediaState.inSec;
-  if (clipDuration <= 0 || clipDuration > 60) { showMediaStatus('Clip must be 1–60 seconds.', 'error'); return; }
-
-  onProgress?.('준비 중…', 0);
-  if (btn) { btn.disabled = true; btn.textContent = 'Loading FFmpeg…'; }
-  try {
-    if (!_ffmpegInstance) onProgress?.('FFmpeg 불러오는 중…', 20);
-    const ffmpeg = await loadFFmpeg();
-
-    if (btn) btn.textContent = 'Processing…';
-    onProgress?.('클립 추출 중…', 45);
-    const inFile  = 'input.mp4';
-    const outFile = 'clip.mp4';
-    const buf = await fetch(mediaState.objectUrl).then(r => r.arrayBuffer());
-    await ffmpeg.writeFile(inFile, new Uint8Array(buf));
-    await ffmpeg.exec(['-i', inFile, '-ss', String(mediaState.inSec), '-t', String(clipDuration), '-c', 'copy', outFile]);
-    const data = await ffmpeg.readFile(outFile);
-    const blob = new Blob([data.buffer], { type: 'video/mp4' });
-    onProgress?.('저장 중…', 75);
-    if (btn) btn.textContent = 'Uploading clip…';
-    const email = 'test@test.com';
-    if (!mediaState.cardId) mediaState.cardId = Math.floor(Date.now() / 1000);
-    const order = ++mediaState.exportCount;
-    const r2Key = getR2Key(email, mediaState.cardId, `video_${order}.mp4`);
-    const fd = new FormData();
-    fd.append('file', blob, `video_${order}.mp4`);
-    fd.append('key', r2Key);
-    fd.append('ownerToken', mediaState.ownerToken);
-    const res    = await fetch('/api/media/upload', { method: 'POST', body: fd });
-    const result = await res.json();
-    onProgress?.('완료!', 100);
-    mediaState.r2Key = result.key;
-    // 선택된 video 클립에 r2Key 저장
-    const selClip = clipState.clips[clipState.selectedIdx];
-    if (selClip && selClip.type === 'video') {
-      selClip.r2Key = result.key;
-    } else {
-      // 선택된 클립이 없으면 새 video 클립 추가
-      autoInsertStopPage();
-      clipState.clips.push({
-        type: 'video',
-        inSec: mediaState.inSec,
-        outSec: mediaState.outSec,
-        duration: clipDuration,
-        thumbDataUrl: null,
-        r2Key: result.key
-      });
-      clipState.selectedIdx = clipState.clips.length - 1;
-    }
-    renderFilmstrip();
-    showMediaStatus('Clip exported and saved!', 'success');
-  } catch (err) {
-    hideMediaProgress();
-    showMediaStatus('Export failed: ' + err.message, 'error');
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = 'Export Clip'; }
-  }
-}
 
 function bindMediaDrop() {
   const zone     = qs('#media-drop-zone');
@@ -1173,21 +704,10 @@ function bindMediaDrop() {
 
   mediaState.ownerToken = getOrCreateOwnerToken();
 
-  // 트랜스포트 / 필름스트랩 / Cut 바인딩 (1회)
+  // 트랜스포트 / 필름스트랩 / Apply 바인딩 (1회)
   bindTransportControls();
   bindFilmstripNav();
-  bindCutClip();
-  bindCompleteBtn();
-
-  // 여백 탭 시 IN/OUT 활성화 해제
-  qs('#media-editor')?.addEventListener('pointerdown', e => {
-    const keep = e.target.closest(
-      '#media-tl-handle-in, #media-tl-handle-out,' +
-      ' .media-scrub[data-field="in"], .media-scrub[data-field="out"],' +
-      ' #media-t-minus5, #media-t-minus1, #media-t-plus1, #media-t-plus5'
-    );
-    if (!keep && mediaState.activeField !== null) _mediaDeactivate();
-  }, true);
+  bindApplyBtn();
 
   zone.addEventListener('click',   () => input.click());
   zone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') input.click(); });
@@ -1213,23 +733,9 @@ function bindMediaDrop() {
   });
 
   rstBtn?.addEventListener('click', () => {
-    if (editor)   editor.hidden   = true;
-    if (uploader) uploader.hidden = false;
     if (progress) progress.hidden = true;
-    zone.classList.remove('media-drop__zone--has-file');
-    mediaState.uploaded = false;
-    clearValidationError();
-    if (mediaState.objectUrl) { URL.revokeObjectURL(mediaState.objectUrl); mediaState.objectUrl = ''; }
-    mediaState.objectUrl = '';
-    mediaState.duration  = 0;
-    mediaState.inSec     = 0;
-    mediaState.outSec    = 0;
-    setPlayOverlay(false);
-    const tPlayBtn = qs('#media-t-play');
-    if (tPlayBtn) tPlayBtn.classList.remove('is-playing');
-    const video = qs('#media-preview');
-    if (video) { video.pause(); video.src = ''; }
-    _mediaDeactivate();
+    if (mediaState.objectUrl) URL.revokeObjectURL(mediaState.objectUrl);
+    resetMediaEditor();
   });
 
   async function processFile(file) {
@@ -1839,12 +1345,9 @@ function getFormData() {
     canvasData: canvasData,
     frontColor: tpl.frontColor, accentColor: tpl.accentColor,
     mediaR2Key: mediaState.r2Key,
-    mediaStart: mediaState.inSec,
-    mediaEnd: mediaState.outSec,
     cardFace: (miniState.els.length > 0 || miniState.bg) ? { bg: miniState.bg, els: miniState.els } : null,
     clips: clipState.clips.map(c => {
-      if (c.type === 'video') return { type: 'video', inSec: c.inSec, outSec: c.outSec, duration: c.duration, r2Key: c.r2Key };
-      if (c.type === 'stop') return { type: 'stop', message: c.message };
+      if (c.type === 'video') return { type: 'video', duration: c.duration, r2Key: c.r2Key };
       return { type: 'card', templateId: c.templateId };
     }),
     ctaLink: f.ctaLink.value.trim(),

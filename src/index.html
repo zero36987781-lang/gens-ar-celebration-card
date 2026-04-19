@@ -120,7 +120,7 @@
               </svg>
               <div class="media-drop__text">
                 <strong class="media-drop__label">Tap to Upload</strong>
-                <span class="media-drop__sublabel">H.264 · AAC · 720p · 30fps · 130MB</span>
+                <span class="media-drop__sublabel">Please upload a single video under 1 minute that you filmed directly.</span>
               </div>
             </div>
           </div>
@@ -183,18 +183,6 @@
             </div>
           </div>
 
-          <!-- 타임라인 -->
-          <div class="media-editor__timeline">
-            <div class="media-tl__track-wrap" id="media-tl-track">
-              <canvas id="media-tl-canvas"></canvas>
-              <div class="media-tl__range" id="media-tl-range"></div>
-              <div class="media-tl__handle media-tl__handle--in" id="media-tl-handle-in" role="slider" aria-label="In point"></div>
-              <div class="media-tl__handle media-tl__handle--out" id="media-tl-handle-out" role="slider" aria-label="Out point"></div>
-              <div class="media-tl__playhead" id="media-tl-playhead"></div>
-            </div>
-            <div class="media-tl__ruler" id="media-tl-ruler"></div>
-          </div>
-
           <!-- 트랜스포트 컨트롤 -->
           <div class="media-editor__transport">
             <button class="media-transport__btn" id="media-t-minus5" type="button" title="-5s">
@@ -218,35 +206,14 @@
             </button>
           </div>
 
-          <!-- 스크럽 숫자 입력 -->
-          <div class="media-editor__scrubs">
-            <div class="media-scrub" data-field="in">
-              <span class="media-scrub__label">IN</span>
-              <span class="media-scrub__val" id="media-scrub-in" data-unit="s">0s</span>
-            </div>
-            <div class="media-scrub" data-field="out">
-              <span class="media-scrub__label">OUT</span>
-              <span class="media-scrub__val" id="media-scrub-out" data-unit="s">0s</span>
-            </div>
-          </div>
-
           <!-- 액션 버튼 -->
           <div class="media-editor__actions">
-            <button class="media-editor__btn media-editor__btn--cut" id="media-cut-btn" type="button">Cut<br>Clip</button>
-            <button class="media-editor__btn media-editor__btn--complete" id="media-complete-btn" type="button">편집<br>완료</button>
+            <button class="media-editor__btn media-editor__btn--complete" id="media-apply-btn" type="button">Apply</button>
             <button class="media-editor__btn media-editor__btn--reset" id="media-reset-btn" type="button" title="Delete clip &amp; clear"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></button>
           </div>
 
           <!-- 상태 메시지 -->
           <div class="media-editor__status" id="media-editor-status" hidden></div>
-
-          <!-- 처리 진행률 -->
-          <div class="media-progress" id="media-progress" hidden>
-            <div class="media-progress__bar-wrap">
-              <div class="media-progress__bar" id="media-progress-bar"></div>
-            </div>
-            <p class="media-progress__label" id="media-progress-label"></p>
-          </div>
         </div>
       </section>
 
