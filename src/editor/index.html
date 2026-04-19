@@ -1076,8 +1076,12 @@ async function loadTemplate(id){
     const res=await fetch('/api/template/'+encodeURIComponent(id));
     if(!res.ok){console.warn('loadTemplate: not found',id);return;}
     const data=await res.json();
-    S.els=Array.isArray(data.els)?data.els:[];S.bg=data.bg||null;
-    S.elsBack=Array.isArray(data.elsBack)?data.elsBack:[];S.bgBack=data.bgBack||null;
+    S.els=Array.isArray(data.els)?data.els:[];
+    S.els.forEach(e=>{if(e.type==='text'&&(!e.h||!e.w))autoResizeTextBox(e);});
+    S.bg=data.bg||null;
+    S.elsBack=Array.isArray(data.elsBack)?data.elsBack:[];
+    S.elsBack.forEach(e=>{if(e.type==='text'&&(!e.h||!e.w))autoResizeTextBox(e);});
+    S.bgBack=data.bgBack||null;
     S.side='front';
     document.querySelectorAll('[data-side]').forEach(b=>b.classList.toggle('active',b.dataset.side==='front'));
     draw();saveHist();updHistBtns();updBackBtn();$('delBtn').disabled=true;$('editBtn').disabled=true;
