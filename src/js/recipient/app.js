@@ -442,9 +442,17 @@ async function toggleCameraAr() {
     }
     cameraStream = stream;
     if (els.cameraFeed) {
+      if (els.arStage && !els.arStage.contains(els.cameraFeed)) {
+        els.arStage.insertBefore(els.cameraFeed, els.arStage.firstChild);
+      }
       els.cameraFeed.srcObject = cameraStream;
       els.cameraFeed.classList.remove('hidden');
-      try { await els.cameraFeed.play(); } catch { /* autoplay attr handles it */ }
+      await new Promise((resolve) => {
+        if (els.cameraFeed.readyState >= 1) { resolve(); return; }
+        els.cameraFeed.onloadedmetadata = () => resolve();
+        setTimeout(resolve, 1500);
+      });
+      try { await els.cameraFeed.play(); } catch (e) { console.warn('camera play:', e); }
     }
     els.arStage?.classList.add('camera-ar-mode');
     if (els.toggleCameraAr) els.toggleCameraAr.innerHTML = `${CAM_ICON_ON} 월드뷰`;

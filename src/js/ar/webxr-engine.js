@@ -275,10 +275,12 @@ export class WebXREngine {
     this.camera = new THREE.PerspectiveCamera(50, 1, 0.01, 100);
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+    this.renderer.setClearColor(0x000000, 0);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     this.renderer.setSize(this.mountEl.clientWidth || window.innerWidth, 620);
     this.renderer.xr.enabled = !this.previewMode;
-    this.mountEl.innerHTML = '';
+    const _oldCanvas = this.mountEl.querySelector('canvas');
+    if (_oldCanvas) _oldCanvas.remove();
     this.mountEl.appendChild(this.renderer.domElement);
     this.renderer.domElement.style.touchAction = 'none';
 

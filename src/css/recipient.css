@@ -69,7 +69,7 @@
 /* When camera-ar-mode is on, make the stage background transparent
    so the camera feed shows through behind the 3D canvas */
 .ar-stage.camera-ar-mode {
-  background: transparent;
+  background: transparent !important;
 }
 
 /* Ensure the 3D canvas sits on top of the camera feed */
