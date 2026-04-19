@@ -169,7 +169,7 @@ function updatePage() {
 
   const shell = qs('.sender-shell');
   if (shell) {
-    shell.style.overflowY = 'auto'; // Always allow scroll to secure workspace
+    shell.style.overflowY = state.page === 2 ? '' : 'auto';
     shell.classList.toggle('studio-active', state.page === 2);
     shell.classList.toggle('map-active', state.page === 5);
   }
