@@ -333,8 +333,8 @@ input:checked+.sw-sl{background:#000;}input:checked+.sw-sl::before{transform:tra
 
 <div class="phone">
 <div class="phone-screen" id="phoneScreen">
-<div id="focusLockOverlay"></div>
 <div class="top-area" id="topArea">
+<div id="focusLockOverlay"></div>
   <div class="canvas-viewport" id="canvasViewport">
     <div class="canvas-scaler" id="canvasScaler">
       <div class="card" id="cardEl"><div id="canvas"></div></div>
@@ -473,7 +473,7 @@ function focusUnlock(){S.focusLocked=false;$('focusLockOverlay').classList.remov
   if(!ov)return;
   ov.addEventListener('touchstart',function(e){e.preventDefault();e.stopPropagation();},{passive:false});
   ov.addEventListener('touchmove',function(e){e.preventDefault();e.stopPropagation();},{passive:false});
-  ov.addEventListener('touchend',function(e){e.stopPropagation();},{passive:false});
+  ov.addEventListener('touchend',function(e){e.stopPropagation();if(S.focusLocked&&!S.drag&&!S.zoomDrag&&!S.divDrag&&!S.vdrag&&!S.gradAngleDrag&&!S.gradStopDrag){PGate.release();focusUnlock();}},{passive:false});
 })();
 
 function shDirSVG(dir){const thick=3.5,thin=1;const dirs={'top-left':{top:thick,right:thin,bottom:thin,left:thick},'top-right':{top:thick,right:thick,bottom:thin,left:thin},'bottom-left':{top:thin,right:thin,bottom:thick,left:thick},'bottom-right':{top:thin,right:thick,bottom:thick,left:thin}};const d=dirs[dir]||dirs['bottom-right'];return`<svg viewBox="0 0 20 20" fill="none"><rect x="2" y="2" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1" fill="none"/><line x1="2" y1="2" x2="18" y2="2" stroke="currentColor" stroke-width="${d.top}" stroke-linecap="round"/><line x1="18" y1="2" x2="18" y2="18" stroke="currentColor" stroke-width="${d.right}" stroke-linecap="round"/><line x1="2" y1="18" x2="18" y2="18" stroke="currentColor" stroke-width="${d.bottom}" stroke-linecap="round"/><line x1="2" y1="2" x2="2" y2="18" stroke="currentColor" stroke-width="${d.left}" stroke-linecap="round"/></svg>`;}
