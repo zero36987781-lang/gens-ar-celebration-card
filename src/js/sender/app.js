@@ -185,12 +185,6 @@ function updatePage() {
 
   if (state.page === 2) {
     if (shell) shell.scrollTo({ top: 0 });
-    setTimeout(() => {
-      const frame = qs('#editor-frame');
-      if (frame?.contentWindow) {
-        frame.contentWindow.postMessage({ type: 'loadTemplate', id: state.templateId }, '*');
-      }
-    }, 50);
   }
 
   if (state.page === 5) {
@@ -1297,7 +1291,6 @@ function applyTemplate(id) {
     window.CanvasEditor.setCurrentTemplate(id);
     window.CanvasEditor.applyTemplateToLayers(tpl);
   }
-  postToEditor({ type: 'loadTemplate', id });
   renderPreviewCard();
 }
 
