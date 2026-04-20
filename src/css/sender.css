@@ -184,7 +184,7 @@
 .map-btn:disabled{opacity:0.6;}
 
 /* ══ Studio split layout ══ */
-.sender-shell.studio-active{padding:0!important;overflow:hidden!important;-webkit-overflow-scrolling:auto!important;}
+.sender-shell.studio-active{padding:0 0 calc(56px + var(--sab)) 0!important;overflow:hidden!important;-webkit-overflow-scrolling:auto!important;}
 .studio-page{
   display:flex;flex-direction:column;
   height:calc(100vh - 60px);height:calc(100dvh - 60px);
@@ -195,7 +195,7 @@
 /* ══ Embedded editor iframe ══ */
 .studio-embed-page{display:none;flex-direction:column;flex:1;min-height:0;}
 .studio-embed-page:not(.page-hidden){display:flex;}
-.studio-embed-page iframe{flex:1;min-height:0;width:100%;border:none;display:block;touch-action:none;}
+.studio-embed-page iframe{flex:1;min-height:0;width:100%;border:none;display:block;}
 
 .studio-canvas-area{
   position:relative;flex:1;
